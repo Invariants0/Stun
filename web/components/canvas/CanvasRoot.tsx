@@ -187,6 +187,38 @@ export default function CanvasRoot({ boardId }: Props) {
         className="canvas-layer-excalidraw"
       />
 
+      <div className="canvas-topbar">
+        <button type="button" className="canvas-topbar__btn">
+          <span className="canvas-topbar__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" role="presentation">
+              <path
+                d="M7.5 12a3 3 0 1 0-3-3 3 3 0 0 0 3 3zM16.5 11a2.5 2.5 0 1 0-2.5-2.5A2.5 2.5 0 0 0 16.5 11zM4 19.5a4.5 4.5 0 0 1 9 0M13.5 19.5a3.5 3.5 0 0 1 7 0"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </span>
+          Collab
+        </button>
+        <button type="button" className="canvas-topbar__btn">
+          <span className="canvas-topbar__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" role="presentation">
+              <path
+                d="M7 12a3 3 0 1 0 3-3M17 8a3 3 0 1 0 3 3M7.5 9.5l7-3M7.5 14.5l7 3"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </span>
+          Share
+        </button>
+      </div>
     </section>
   );
 }

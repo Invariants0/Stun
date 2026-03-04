@@ -13,6 +13,7 @@
 
 "use client";
 
+import React, { useMemo } from "react";
 import ReactFlow, {
   Background,
   Controls,
@@ -59,6 +60,10 @@ export default function ReactFlowGraphLayer({
   showBackground = true,
   onInit,
 }: ReactFlowGraphLayerProps) {
+  // Memoize nodeTypes/edgeTypes to prevent React Flow re-creation warnings
+  const nodeTypes = useMemo(() => NodeRenderer, []);
+  const edgeTypes = useMemo(() => EdgeRenderer, []);
+
   return (
     <div
       className={className}
@@ -67,13 +72,13 @@ export default function ReactFlowGraphLayer({
         inset: 0,
         width: "100%",
         height: "100%",
-        zIndex: 2,
-        pointerEvents: "none", // Allow clicks to pass through to Excalidraw
+        zIndex: 3, // Layer 3: Knowledge Graph (Top - nodes and relationships)
+        pointerEvents: "none", // Background pass-through to Excalidraw
       }}
     >
-      <div 
-        style={{ 
-          width: "100%", 
+      <div
+        style={{
+          width: "100%",
           height: "100%",
           pointerEvents: "none", // Keep pass-through
         }}
@@ -81,8 +86,8 @@ export default function ReactFlowGraphLayer({
         <ReactFlow
           nodes={nodes}
           edges={edges}
-          nodeTypes={NodeRenderer}
-          edgeTypes={EdgeRenderer}
+          nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}

@@ -31,7 +31,7 @@ export default function TLDrawWorkspace({
   const handleMount = useCallback(
     (editor: Editor) => {
       editorRef.current = editor;
-      
+
       // Subscribe to camera changes
       const unsubscribe = editor.store.listen(
         () => {
@@ -54,19 +54,32 @@ export default function TLDrawWorkspace({
   return (
     <div
       className={className}
+      suppressHydrationWarning={true}
       style={{
         position: "absolute",
         inset: 0,
         width: "100%",
         height: "100%",
-        zIndex: 1,
-        // allow TLDraw to receive input for camera control
-        pointerEvents: "auto",
+        zIndex: 1, // Backbone layer
+        pointerEvents: "auto", // Allow panning/zooming
       }}
     >
       <Tldraw
         onMount={handleMount}
-        hideUi={true} // toolbar hidden – we still capture gestures for infinite camera
+        hideUi={true}
+        autoFocus={true}
+        components={{
+          Toolbar: null,
+          Menu: null,
+          NavigationPanel: null,
+          PageMenu: null,
+          StylePanel: null,
+          HelpMenu: null,
+          ContextMenu: null,
+          ActionsMenu: null,
+          SharePanel: null,
+          TopPanel: null,
+        } as any}
       />
     </div>
   );

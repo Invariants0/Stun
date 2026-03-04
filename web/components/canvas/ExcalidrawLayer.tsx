@@ -13,9 +13,13 @@
 "use client";
 
 import React, { useCallback, useImperativeHandle, useRef } from "react";
-import { Excalidraw } from "@excalidraw/excalidraw";
-// Excalidraw's type definitions currently omit the ref, so we'll treat it as any when we need
-const ExcalidrawAny = Excalidraw as any;
+import dynamic from "next/dynamic";
+
+// Use Next dynamic import with ssr:false so Excalidraw only loads in the browser
+const ExcalidrawAny: any = dynamic(
+  () => import("@excalidraw/excalidraw").then((mod) => (mod as any).Excalidraw ?? (mod as any).default ?? mod),
+  { ssr: false, loading: () => <div style={{ width: "100%", height: "100%", pointerEvents: "none" }} /> }
+);
 import type { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
 import type { AppState } from "@excalidraw/excalidraw/types/types";
 
@@ -57,7 +61,7 @@ const ExcalidrawLayer = React.forwardRef<any, ExcalidrawLayerProps>(
           inset: 0,
           width: "100%",
           height: "100%",
-          zIndex: 3, // Top layer - primary user interaction
+          zIndex: 2, // Layer 2: Visual Content
           pointerEvents: "auto",
         }}
       >

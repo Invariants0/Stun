@@ -21,7 +21,6 @@ import type { AppState } from "@excalidraw/excalidraw/types/types";
 import TLDrawWorkspace from "./TLDrawWorkspace";
 import ExcalidrawLayer from "./ExcalidrawLayer";
 import ReactFlowGraphLayer from "./ReactFlowGraphLayer";
-import VoiceOrb from "@/components/voice/VoiceOrb";
 import { useBoard } from "@/hooks/useBoard";
 import { cameraSyncService } from "@/lib/camera-sync";
 import { canvasMappingService } from "@/lib/canvas-mapping";
@@ -163,7 +162,7 @@ export default function CanvasRoot({ boardId }: Props) {
         className="canvas-layer-tldraw"
       />
 
-      {/* Layer 2: React Flow Knowledge Graph - AI-controlled, pointer-events limited */}
+      {/* Layer 2: React Flow Knowledge Graph - AI-driven infrastructure (z: 3) */}
       <ReactFlowGraphLayer
         nodes={nodes}
         edges={edges}
@@ -188,8 +187,6 @@ export default function CanvasRoot({ boardId }: Props) {
         className="canvas-layer-excalidraw"
       />
 
-      {/* Voice Command Interface - Floating above all */}
-      <VoiceOrb />
     </section>
   );
 }

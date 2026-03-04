@@ -1,22 +1,29 @@
+"use client";
+
 import CanvasRoot from "@/components/canvas/CanvasRoot";
-import SidePanel from "@/components/layout/SidePanel";
 import TopBar from "@/components/layout/TopBar";
+import { useState } from "react";
 
 export default function BoardPage({ params }: { params: { id: string } }) {
+  const [showSidePanel] = useState(false); // Will be toggled later
+
   return (
     <main
       style={{
         height: "100vh",
-        display: "grid",
-        gridTemplateRows: "56px 1fr",
-        gridTemplateColumns: "280px 1fr",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+        background: "#0f172a",
       }}
     >
-      <div style={{ gridColumn: "1 / -1" }}>
-        <TopBar boardId={params.id} />
+      {/* Top Navigation Bar */}
+      <TopBar boardId={params.id} />
+
+      {/* Canvas Area */}
+      <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
+        <CanvasRoot boardId={params.id} />
       </div>
-      <SidePanel boardId={params.id} />
-      <CanvasRoot boardId={params.id} />
     </main>
   );
 }

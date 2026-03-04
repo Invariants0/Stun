@@ -1,6 +1,7 @@
 import "./globals.scss";
 import "reactflow/dist/style.css";
 import "tldraw/tldraw.css";
+import "@excalidraw/excalidraw/index.css";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { ToastContainer } from "@/components/Toast";
@@ -12,8 +13,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
-      <body style={{ margin: 0, padding: 0, overflow: "hidden" }}>
+    <html lang="en" suppressHydrationWarning>
+      <body style={{ margin: 0, padding: 0, overflow: "hidden" }} suppressHydrationWarning>
         {children}
         <ToastContainer />
       </body>

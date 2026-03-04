@@ -3,27 +3,28 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "cross-env NODE_OPTIONS=--max-old-space-size=8192 next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
-    "@excalidraw/excalidraw": "^0.17.0",
+    "@excalidraw/excalidraw": "^0.18.0",
     "axios": "^1.8.2",
     "firebase": "^12.10.0",
     "html2canvas": "^1.4.1",
     "next": "14.2.23",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
     "reactflow": "^11.11.4",
-    "tldraw": "^2.0.0",
+    "tldraw": "2.4.6",
     "zustand": "^5.0.3"
   },
   "devDependencies": {
     "@types/node": "^25.3.3",
-    "@types/react": "^18.2.0",
-    "@types/react-dom": "^18.2.0",
+    "@types/react": "18.2.0",
+    "@types/react-dom": "18.2.0",
+    "cross-env": "^10.1.0",
     "sass": "^1.85.1",
     "typescript": "^5.8.2"
   }

@@ -81,7 +81,7 @@ export function useBoard(boardId: string) {
 
   // Load saved state or use defaults
   const savedState = loadBoardState(boardId);
-  const initialNodes = savedState?.nodes || defaultInitialNodes;
+  let initialNodes = savedState?.nodes || defaultInitialNodes;
   const initialEdges = savedState?.edges || defaultInitialEdges;
   const initialExcalidrawElements = savedState?.excalidrawElements || [];
 

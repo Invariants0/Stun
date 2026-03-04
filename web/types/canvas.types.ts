@@ -43,21 +43,21 @@ export interface CanvasMapping {
 export interface UnifiedCameraState {
   // TLDraw camera (primary source of truth)
   tldrawCamera: TLCamera;
-  
+
   // React Flow viewport (synchronized)
   reactFlowViewport: {
     x: number;
     y: number;
     zoom: number;
   };
-  
+
   // Excalidraw transform (synchronized)
   excalidrawTransform: {
     x: number;
     y: number;
     zoom: number;
   };
-  
+
   lastUpdated: number;
   source: "tldraw" | "reactflow" | "excalidraw";
 }
@@ -206,14 +206,14 @@ export type NodeData =
 
 export interface CanvasEvent {
   type:
-    | "element-created"
-    | "element-updated"
-    | "element-deleted"
-    | "node-created"
-    | "node-updated"
-    | "node-deleted"
-    | "camera-changed"
-    | "selection-changed";
+  | "element-created"
+  | "element-updated"
+  | "element-deleted"
+  | "node-created"
+  | "node-updated"
+  | "node-deleted"
+  | "camera-changed"
+  | "selection-changed";
   timestamp: number;
   source: "excalidraw" | "tldraw" | "reactflow" | "ai";
   data: unknown;

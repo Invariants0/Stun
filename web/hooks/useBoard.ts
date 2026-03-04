@@ -29,6 +29,7 @@ function loadBoardState(boardId: string): {
   nodes: Node[];
   edges: Edge[];
   excalidrawElements: readonly ExcalidrawElement[];
+  tldrawCamera?: { x: number; y: number; zoom: number };
 } | null {
   if (typeof window === "undefined") return null;
 
@@ -41,6 +42,7 @@ function loadBoardState(boardId: string): {
       nodes: parsed.nodes || [],
       edges: parsed.edges || [],
       excalidrawElements: parsed.excalidrawElements || [],
+      tldrawCamera: parsed.tldrawCamera,
     };
   } catch (error) {
     console.error("Failed to load board state:", error);
@@ -53,17 +55,21 @@ function saveBoardState(
   boardId: string,
   nodes: Node[],
   edges: Edge[],
-  excalidrawElements: readonly ExcalidrawElement[]
+  excalidrawElements: readonly ExcalidrawElement[],
+  tldrawCamera?: { x: number; y: number; zoom: number }
 ) {
   if (typeof window === "undefined") return;
 
   try {
-    const state = {
+    const state: any = {
       nodes,
       edges,
       excalidrawElements,
       lastSaved: Date.now(),
     };
+    if (tldrawCamera) {
+      state.tldrawCamera = tldrawCamera;
+    }
     localStorage.setItem(`stun-board-${boardId}`, JSON.stringify(state));
   } catch (error) {
     console.error("Failed to save board state:", error);
@@ -90,6 +96,11 @@ export function useBoard(boardId: string) {
 
   // TLDraw state
   const [tldrawEditor, setTldrawEditor] = useState<Editor | null>(null);
+  const [initialTldrawCamera, setInitialTldrawCamera] = useState<{
+    x: number;
+    y: number;
+    zoom: number;
+  } | null>(null);
 
   // Board store actions
   const {
@@ -104,6 +115,10 @@ export function useBoard(boardId: string) {
   useEffect(() => {
     createBoard(boardId);
     setActiveBoard(boardId);
+    // if saved state contained a TLDraw camera, remember it for later
+    if (savedState?.tldrawCamera) {
+      setInitialTldrawCamera(savedState.tldrawCamera);
+    }
     setIsLoaded(true);
   }, [boardId, createBoard, setActiveBoard]);
 
@@ -112,11 +127,20 @@ export function useBoard(boardId: string) {
     if (!isLoaded) return; // Don't save during initial load
 
     const timeoutId = setTimeout(() => {
-      saveBoardState(boardId, nodes, edges, excalidrawElements);
+      const cam = tldrawEditor?.getCamera();
+      saveBoardState(
+        boardId,
+        nodes,
+        edges,
+        excalidrawElements,
+        cam
+          ? { x: cam.x, y: cam.y, zoom: cam.z }
+          : undefined
+      );
     }, 500); // Debounce saves by 500ms
 
     return () => clearTimeout(timeoutId);
-  }, [boardId, nodes, edges, excalidrawElements, isLoaded]);
+  }, [boardId, nodes, edges, excalidrawElements, isLoaded, tldrawEditor]);
 
   // Sync React Flow state to store
   useEffect(() => {
@@ -145,8 +169,16 @@ export function useBoard(boardId: string) {
     (editor: Editor | null) => {
       setTldrawEditor(editor);
       storeSetTldrawEditor(boardId, editor);
+      // if we have an initial camera saved, apply it once
+      if (editor && initialTldrawCamera) {
+        editor.setCamera({
+          x: initialTldrawCamera.x,
+          y: initialTldrawCamera.y,
+          z: initialTldrawCamera.zoom,
+        } as any);
+      }
     },
-    [boardId, storeSetTldrawEditor]
+    [boardId, storeSetTldrawEditor, initialTldrawCamera]
   );
 
   return {

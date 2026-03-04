@@ -27,6 +27,8 @@ import ReactFlow, {
 import NodeRenderer from "./NodeRenderer";
 import EdgeRenderer from "./EdgeRenderer";
 
+import type { ReactFlowInstance } from "reactflow";
+
 interface ReactFlowGraphLayerProps {
   nodes: Node[];
   edges: Edge[];
@@ -37,6 +39,8 @@ interface ReactFlowGraphLayerProps {
   showMiniMap?: boolean;
   showControls?: boolean;
   showBackground?: boolean;
+  // callback to expose internal ReactFlow instance for imperative control
+  onInit?: (instance: ReactFlowInstance) => void;
 }
 
 const fitViewOptions: FitViewOptions = {
@@ -53,6 +57,7 @@ export default function ReactFlowGraphLayer({
   showMiniMap = true,
   showControls = true,
   showBackground = true,
+  onInit,
 }: ReactFlowGraphLayerProps) {
   return (
     <div
@@ -81,12 +86,11 @@ export default function ReactFlowGraphLayer({
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
-          fitView
-          fitViewOptions={fitViewOptions}
           proOptions={{ hideAttribution: true }}
           nodesDraggable={false}
           nodesConnectable={false}
           elementsSelectable={false}
+          onInit={onInit}
         >
           {showBackground && <Background />}
           {showControls && <Controls />}

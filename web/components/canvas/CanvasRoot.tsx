@@ -46,13 +46,68 @@ export default function CanvasRoot({ boardId }: Props) {
 
   const canvasRootRef = useRef<HTMLDivElement>(null);
 
+  // viewport refs & state
+  const reactFlowRef = useRef<any>(null);
+  const excalidrawRef = useRef<any>(null);
+
   // ============================================================================
-  // TLDraw Camera Synchronization
+  // Camera synchronization
   // ============================================================================
 
+  // When TLDraw camera changes we push into the sync service
   const handleTLDrawCameraChange = useCallback((camera: TLCamera) => {
     cameraSyncService.updateFromTLDraw(camera);
   }, []);
+
+  // When Excalidraw's view changes we notify the service
+  const handleExcalidrawAppStateChange = useCallback(
+    (appState: Partial<AppState>) => {
+      // ts doesn't know about viewX/viewY on Partial<AppState>, so cast
+      const state: any = appState;
+      const x: number = state.viewX ?? 0;
+      const y: number = state.viewY ?? 0;
+      let zoomVal: any = state.zoom ?? 1;
+      if (typeof zoomVal === "object" && zoomVal !== null && "value" in zoomVal) {
+        zoomVal = zoomVal.value;
+      }
+      const zoomNum: number = typeof zoomVal === "number" ? zoomVal : 1;
+
+      cameraSyncService.updateFromExcalidraw({ x, y, zoom: zoomNum });
+    },
+    []
+  );
+
+  // Subscribe once to unified camera updates and apply to layers
+  useEffect(() => {
+    const unsub = cameraSyncService.subscribe((cam) => {
+      // Update React Flow viewport
+      if (reactFlowRef.current) {
+        reactFlowRef.current.setViewport(cam.reactFlowViewport);
+      }
+
+      // Update Excalidraw view
+      if (excalidrawRef.current) {
+        try {
+          excalidrawRef.current.updateScene({
+            appState: {
+              viewX: cam.excalidrawTransform.x,
+              viewY: cam.excalidrawTransform.y,
+              zoom: cam.excalidrawTransform.zoom,
+            },
+          });
+        } catch (e) {
+          // ignore if API not available yet
+        }
+      }
+
+      // Keep TLDraw editor in sync (optional)
+      if (tldrawEditor) {
+        tldrawEditor.setCamera(cam.tldrawCamera);
+      }
+    });
+
+    return unsub;
+  }, [tldrawEditor]);
 
   const handleTLDrawEditorMount = useCallback(
     (editor: Editor) => {
@@ -73,14 +128,6 @@ export default function CanvasRoot({ boardId }: Props) {
       // For now, we'll implement basic mapping later
     },
     [onExcalidrawElementsChange]
-  );
-
-  const handleExcalidrawAppStateChange = useCallback(
-    (appState: Partial<AppState>) => {
-      // Handle Excalidraw app state changes if needed
-      // Can be used for camera synchronization
-    },
-    []
   );
 
   // ============================================================================
@@ -127,10 +174,14 @@ export default function CanvasRoot({ boardId }: Props) {
         showMiniMap={false}
         showControls={false}
         showBackground={false}
+        onInit={(instance) => {
+          reactFlowRef.current = instance;
+        }}
       />
 
       {/* Layer 3: Excalidraw Visual Editing - Primary user interaction */}
       <ExcalidrawLayer
+        ref={excalidrawRef}
         initialElements={excalidrawElements}
         onElementsChange={handleExcalidrawElementsChange}
         onAppStateChange={handleExcalidrawAppStateChange}

@@ -12,10 +12,12 @@
 
 "use client";
 
+import React, { useCallback, useImperativeHandle, useRef } from "react";
 import { Excalidraw } from "@excalidraw/excalidraw";
+// Excalidraw's type definitions currently omit the ref, so we'll treat it as any when we need
+const ExcalidrawAny = Excalidraw as any;
 import type { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
 import type { AppState } from "@excalidraw/excalidraw/types/types";
-import { useCallback } from "react";
 
 interface ExcalidrawLayerProps {
   initialElements?: readonly ExcalidrawElement[];
@@ -24,54 +26,70 @@ interface ExcalidrawLayerProps {
   className?: string;
 }
 
-export default function ExcalidrawLayer({
-  initialElements = [],
-  onElementsChange,
-  onAppStateChange,
-  className = "",
-}: ExcalidrawLayerProps) {
-  const handleChange = useCallback(
-    (elements: readonly ExcalidrawElement[], appState: AppState) => {
-      onElementsChange?.(elements);
-      onAppStateChange?.(appState);
+const ExcalidrawLayer = React.forwardRef<any, ExcalidrawLayerProps>(
+  (
+    {
+      initialElements = [],
+      onElementsChange,
+      onAppStateChange,
+      className = "",
     },
-    [onElementsChange, onAppStateChange]
-  );
+    ref
+  ) => {
+    const internalRef = useRef<any>(null);
 
-  return (
-    <div
-      className={className}
-      style={{
-        position: "absolute",
-        inset: 0,
-        width: "100%",
-        height: "100%",
-        zIndex: 3, // Top layer - primary user interaction
-        pointerEvents: "auto",
-      }}
-    >
-      <Excalidraw
-        initialData={{
-          elements: initialElements,
-          appState: {
-            viewBackgroundColor: "transparent",
-            currentItemStrokeColor: "#1e293b",
-            currentItemBackgroundColor: "#f1f5f9",
-            currentItemFillStyle: "solid",
-            currentItemStrokeWidth: 2,
-            currentItemRoughness: 1,
-            currentItemOpacity: 100,
-          },
+    // expose the internal API to parent
+    useImperativeHandle(ref, () => internalRef.current);
+
+    const handleChange = useCallback(
+      (elements: readonly ExcalidrawElement[], appState: AppState) => {
+        onElementsChange?.(elements);
+        onAppStateChange?.(appState);
+      },
+      [onElementsChange, onAppStateChange]
+    );
+
+    return (
+      <div
+        className={className}
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          zIndex: 3, // Top layer - primary user interaction
+          pointerEvents: "auto",
         }}
-        onChange={handleChange}
-        UIOptions={{
-          canvasActions: {
-            clearCanvas: true,
-            loadScene: true,
-            saveToActiveFile: true,
-          },
-        }}
-      />
-    </div>
-  );
-}
+      >
+        <ExcalidrawAny
+          ref={internalRef}
+          initialData={{
+            elements: initialElements,
+            appState: {
+              viewBackgroundColor: "transparent",
+              currentItemStrokeColor: "#1e293b",
+              currentItemBackgroundColor: "#f1f5f9",
+              currentItemFillStyle: "solid",
+              currentItemStrokeWidth: 2,
+              currentItemRoughness: 1,
+              currentItemOpacity: 100,
+            },
+          }}
+          onChange={handleChange}
+          UIOptions={{
+            canvasActions: {
+              clearCanvas: true,
+              loadScene: true,
+              saveToActiveFile: true,
+            },
+          }}
+          // allow extremely small/large zoom levels; cameraSync will handle
+          minZoom={0.001}
+          maxZoom={100}
+        />
+      </div>
+    );
+  }
+);
+
+export default ExcalidrawLayer;

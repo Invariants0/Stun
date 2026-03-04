@@ -60,12 +60,13 @@ export default function TLDrawWorkspace({
         width: "100%",
         height: "100%",
         zIndex: 1,
-        pointerEvents: "none", // Infrastructure only, no direct interaction
+        // allow TLDraw to receive input for camera control
+        pointerEvents: "auto",
       }}
     >
       <Tldraw
         onMount={handleMount}
-        hideUi={true}
+        hideUi={true} // toolbar hidden – we still capture gestures for infinite camera
       />
     </div>
   );

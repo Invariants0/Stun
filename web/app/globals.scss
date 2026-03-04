@@ -32,3 +32,74 @@ a {
     box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
   }
 }
+
+/* ==========================================================================
+   Excalidraw UI Cleanup
+   ========================================================================== */
+
+/* 1. Hide Help button in bottom right of the window */
+.help-icon,
+.excalidraw-button.help,
+.dropdown-menu-item[aria-label="Help"] {
+  display: none !important;
+}
+
+/* 2. Hide Dark mode toggle in menu */
+.dropdown-menu-item[aria-label="Dark mode"],
+.dropdown-menu-item[aria-label*="Dark mode"],
+.dropdown-menu-item[aria-label*="mode"],
+.theme-toggle {
+  display: none !important;
+}
+
+/* 3. Hide entire Excalidraw links group and its trailing separator */
+.dropdown-menu-group:has(a[href*="github.com/excalidraw"]) {
+  display: none !important;
+}
+
+/* Hide the specific divider after the links group */
+.dropdown-menu-group:has(a[href*="github.com/excalidraw"])+div[style*="height: 1px"],
+.dropdown-menu div[style*="height: 1px"][style*="margin: 0.5rem 0px"]:first-child {
+  display: none !important;
+}
+
+
+/* ==========================================================================
+   TLDraw Backbone Cleanup
+   ========================================================================== */
+
+/* Standard accessibility utility - required for clean TLDraw v2.4.6 display */
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+.tl-ui,
+.tl-overlay,
+.tl-watermark,
+.tl-indicators,
+.tl-debug,
+.tl-help,
+.tl-ui-shapes,
+[id*="shapes-title"] {
+  display: none !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+.tl-container {
+  background: transparent !important;
+  pointer-events: auto !important;
+}
+
+div[data-radix-portal] {
+  pointer-events: none !important;
+}

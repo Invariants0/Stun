@@ -30,14 +30,19 @@ export class ActionExecutor {
    * Execute a complete AI action plan
    */
   async executePlan(plan: AIActionPlan): Promise<void> {
-    if (plan.executionOrder === "parallel") {
-      // Execute all actions in parallel
-      await Promise.all(plan.actions.map((action) => this.executeAction(action)));
-    } else {
-      // Execute actions sequentially
-      for (const action of plan.actions) {
-        await this.executeAction(action);
+    try {
+      if (plan.executionOrder === "parallel") {
+        // Execute all actions in parallel
+        await Promise.all(plan.actions.map((action) => this.executeAction(action)));
+      } else {
+        // Execute actions sequentially
+        for (const action of plan.actions) {
+          await this.executeAction(action);
+        }
       }
+    } catch (error: any) {
+      console.error("Action plan execution failed:", error);
+      throw new Error(`AI failed to execute action plan: ${error.message}`);
     }
   }
 
@@ -45,29 +50,34 @@ export class ActionExecutor {
    * Execute a single action
    */
   async executeAction(action: AIAction): Promise<void> {
-    console.log("Executing action:", action);
+    try {
+      console.log("Executing action:", action);
 
-    switch (action.type) {
-      case "move":
-        return this.executeMove(action);
-      case "connect":
-        return this.executeConnect(action);
-      case "highlight":
-        return this.executeHighlight(action);
-      case "zoom":
-        return this.executeZoom(action);
-      case "group":
-        return this.executeGroup(action);
-      case "cluster":
-        return this.executeCluster(action);
-      case "create":
-        return this.executeCreate(action);
-      case "delete":
-        return this.executeDelete(action);
-      case "transform":
-        return this.executeTransform(action);
-      default:
-        throw new Error(`Unsupported action type: ${(action as AIAction).type}`);
+      switch (action.type) {
+        case "move":
+          return await this.executeMove(action);
+        case "connect":
+          return await this.executeConnect(action);
+        case "highlight":
+          return await this.executeHighlight(action);
+        case "zoom":
+          return await this.executeZoom(action);
+        case "group":
+          return await this.executeGroup(action);
+        case "cluster":
+          return await this.executeCluster(action);
+        case "create":
+          return await this.executeCreate(action);
+        case "delete":
+          return await this.executeDelete(action);
+        case "transform":
+          return await this.executeTransform(action);
+        default:
+          throw new Error(`Unsupported action type: ${(action as AIAction).type}`);
+      }
+    } catch (error: any) {
+      console.error(`Failed to execute ${action.type} action:`, error);
+      throw error; // Re-throw to be caught by executePlan
     }
   }
 

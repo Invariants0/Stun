@@ -5,6 +5,7 @@ import "@excalidraw/excalidraw/index.css";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { ToastContainer } from "@/components/Toast";
+import AISidebarLauncher from "@/components/ai/AISidebarLauncher";
 
 export const metadata: Metadata = {
   title: "Stun - Spatial AI Thinking Environment",
@@ -16,6 +17,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en" suppressHydrationWarning>
       <body style={{ margin: 0, padding: 0, overflow: "hidden" }} suppressHydrationWarning>
         {children}
+        <AISidebarLauncher />
         <ToastContainer />
       </body>
     </html>

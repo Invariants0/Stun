@@ -1,5 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import { ZodError } from "zod";
+import { logger } from "../../config/logger";
+import { issue } from "zod/v4/core/util.cjs";
 
 export class AppError extends Error {
   constructor(
@@ -67,16 +69,18 @@ function mapServiceError(err: Error): AppError | null {
 
 export function errorMiddleware(
   err: Error,
-  _req: Request,
+  req: Request,
   res: Response,
   _next: NextFunction
 ): void {
   if (err instanceof ZodError) {
+    logger.warn(`[validation error] ${req.method} ${req.path}`, {issues: err.issues});
     res.status(400).json({ error: "Validation error", details: err.issues });
     return;
   }
 
   if (err instanceof AppError) {
+    logger.warn(`[${err.name}] ${req.method} ${req.path}: ${err.message}`);
     res.status(err.statusCode).json({ error: err.message });
     return;
   }
@@ -84,11 +88,12 @@ export function errorMiddleware(
   // Attempt to map known service-layer string errors
   const mapped = mapServiceError(err);
   if (mapped) {
+    logger.warn(`[${mapped.name}] ${req.method} ${req.path}: ${mapped.message}`);
     res.status(mapped.statusCode).json({ error: mapped.message });
     return;
   }
 
-  console.error("[unhandled error]", err);
+  logger.error(`[unhandled error] ${req.method} ${req.path}: ${err.message}`, { error: err });
   res.status(500).json({
     error: "Internal server error",
     message: process.env.NODE_ENV === "development" ? err.message : undefined,

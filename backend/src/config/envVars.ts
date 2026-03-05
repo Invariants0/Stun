@@ -27,14 +27,13 @@ const EnvConfigSchema = z.object({
   // GCP / Firebase
   GCP_PROJECT_ID: z.string().min(1, { message: "GCP_PROJECT_ID is required" }),
   GCP_REGION: z.string().default("us-central1"),
-  FIREBASE_SERVICE_ACCOUNT_KEY: z.string().min(1, {
-    message: "FIREBASE_SERVICE_ACCOUNT_KEY is required",
-  }),
+  // Optional in test mode (emulator doesn't need it)
+  FIREBASE_SERVICE_ACCOUNT_KEY: z.string().optional(),
   BOARDS_COLLECTION: z.string().default("boards"),
 
-  // Google OAuth
-  GOOGLE_CLIENT_ID: z.string().min(1, { message: "GOOGLE_CLIENT_ID is required" }),
-  GOOGLE_CLIENT_SECRET: z.string().min(1, { message: "GOOGLE_CLIENT_SECRET is required" }),
+  // Google OAuth - Optional in test mode
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
 
   // GenAI
   GEMINI_API_KEY: z.string().min(1, { message: "GEMINI_API_KEY is required" }),

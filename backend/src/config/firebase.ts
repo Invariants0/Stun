@@ -13,6 +13,18 @@ import { logger } from "./logger";
 export function initFirebase(): void {
   if (getApps().length > 0) return; // already initialised
 
+  // Test mode: use Firestore Emulator
+  if (process.env.NODE_ENV === "test" || process.env.FIRESTORE_EMULATOR_HOST) {
+    initializeApp({ projectId: envVars.GCP_PROJECT_ID || "test-project" });
+    logger.info("[firebase] Initialized in TEST mode with Firestore Emulator");
+    
+    // Verify emulator connection
+    if (process.env.FIRESTORE_EMULATOR_HOST) {
+      logger.info(`[firebase] Firestore Emulator: ${process.env.FIRESTORE_EMULATOR_HOST}`);
+    }
+    return;
+  }
+
   if (envVars.FIREBASE_SERVICE_ACCOUNT_KEY) {
     try {
       const serviceAccount = JSON.parse(envVars.FIREBASE_SERVICE_ACCOUNT_KEY);

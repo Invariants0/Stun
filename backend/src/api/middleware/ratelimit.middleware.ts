@@ -1,8 +1,10 @@
 import rateLimit from "express-rate-limit";
-import type { Request, Response } from "express";
+import type { Request } from "express";
 
+// Use user ID if authenticated, otherwise use a generic key
+// This avoids IPv6 issues with req.ip
 const keyGenerator = (req: Request): string => { 
-    return req.user?.uid || req.ip || "unknown";
+    return req.user?.uid || "anonymous";
 }
 
 export const aiRateLimiter = rateLimit({ 

@@ -1,10 +1,33 @@
 import { z } from "zod";
 
+// Size limits for request validation
+const MAX_SCREENSHOT_SIZE = 10 * 1024 * 1024; // 10MB in bytes
+const MAX_NODE_COUNT = 10000;
+
+/**
+ * Validates base64 screenshot size
+ */
+function validateScreenshotSize(screenshot: string): boolean {
+  // Remove data URL prefix if present
+  const base64Data = screenshot.replace(/^data:image\/\w+;base64,/, "");
+  // Calculate approximate size in bytes (base64 is ~4/3 of original size)
+  const sizeInBytes = (base64Data.length * 3) / 4;
+  return sizeInBytes <= MAX_SCREENSHOT_SIZE;
+}
+
 export const plannerRequestSchema = z.object({
   boardId: z.string().min(1),
   command: z.string().min(1),
-  screenshot: z.string().min(1),
-  nodes: z.array(z.object({ id: z.string() }).passthrough()).default([]),
+  screenshot: z.string().min(1).refine(
+    validateScreenshotSize,
+    { message: "Screenshot size exceeds 10MB limit" }
+  ),
+  nodes: z.array(z.object({ id: z.string() }).passthrough())
+    .default([])
+    .refine(
+      (nodes) => nodes.length <= MAX_NODE_COUNT,
+      { message: `Node count exceeds maximum of ${MAX_NODE_COUNT}` }
+    ),
 });
 
 export type PlannerRequest = z.infer<typeof plannerRequestSchema>;

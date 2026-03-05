@@ -69,7 +69,7 @@ export default function AISidebarLauncher() {
             <span className="ai-panel__input-text">What do you want to know?</span>
             <div className="ai-panel__input-actions">
               <span>Auto</span>
-              <span className="ai-panel__send" aria-hidden="true">></span>
+              <span className="ai-panel__send" aria-hidden="true">{'>'}</span>
             </div>
           </div>
 

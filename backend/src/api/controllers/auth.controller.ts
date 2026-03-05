@@ -1,44 +1,52 @@
 import type { NextFunction, Request, Response } from "express";
-import { getFirebaseAuth, envVars } from "../../config";
 import axios from "axios";
+import { getFirebaseAuth, envVars } from "../../config";
 
 const REDIRECT_URI = () => `${envVars.FRONTEND_URL}/auth/callback`;
 
+/**
+ * Decode a JWT payload without verifying the signature.
+ * Safe here because the token came directly from Google's token endpoint
+ * over HTTPS — we trust the source, not the signature.
+ */
+function decodeJwtPayload(token: string): Record<string, unknown> {
+  const base64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+  const padded = base64.padEnd(base64.length + (4 - (base64.length % 4)) % 4, "=");
+  return JSON.parse(Buffer.from(padded, "base64").toString("utf8"));
+}
+
 async function exchangeCodeForUser(code: string, redirectUri: string) {
-  const tokenRes = await axios.post("https://oauth2.googleapis.com/token", {
+  // Exchange authorization code for tokens at Google's token endpoint
+  // Must use application/x-www-form-urlencoded, not JSON
+  const params = new URLSearchParams({
     code,
     client_id: envVars.GOOGLE_CLIENT_ID,
     client_secret: envVars.GOOGLE_CLIENT_SECRET,
     redirect_uri: redirectUri,
     grant_type: "authorization_code",
   });
+  const { data: tokens } = await axios.post<{ id_token: string }>(
+    "https://oauth2.googleapis.com/token",
+    params,
+    { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
+  );
 
-  const idToken: string = tokenRes.data.id_token;
-  const auth = getFirebaseAuth();
-  const decoded = await auth.verifyIdToken(idToken);
+  if (!tokens.id_token) throw new Error("No id_token from Google");
 
-  // Upsert Firebase user
-  try {
-    await auth.getUser(decoded.uid);
-  } catch {
-    await auth.createUser({
-      uid: decoded.uid,
-      email: decoded.email,
-      displayName: (decoded as any).name,
-      photoURL: (decoded as any).picture,
-    });
-  }
+  // Decode payload to extract user info (uid, email, name, picture)
+  const payload = decodeJwtPayload(tokens.id_token);
+  const uid        = payload.sub         as string;
+  const email      = (payload.email      as string) ?? "";
+  const displayName = payload.name       as string | undefined;
+  const photoURL   = payload.picture     as string | undefined;
 
-  const customToken = await auth.createCustomToken(decoded.uid);
+  // Issue a Firebase custom token — the client SDK exchanges this
+  // for a proper Firebase ID token (auto-refreshed, long-lived).
+  const customToken = await getFirebaseAuth().createCustomToken(uid);
 
   return {
-    token: customToken,
-    user: {
-      uid: decoded.uid,
-      email: decoded.email,
-      displayName: (decoded as any).name,
-      photoURL: (decoded as any).picture,
-    },
+    customToken,
+    user: { uid, email, displayName, photoURL },
   };
 }
 

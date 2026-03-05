@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
-import { getFirebaseAuth } from "../../config";
+import { getFirebaseAuth, envVars } from "../../config";
 
 export async function requireAuth(
   req: Request,
@@ -14,14 +14,15 @@ export async function requireAuth(
       return;
     }
 
-    const decodedToken = await getFirebaseAuth().verifyIdToken(token);
-    req.user = { uid: decodedToken.uid, email: decodedToken.email };
+    // Verify Firebase ID token (issued by Firebase client SDK after signInWithCustomToken)
+    const decoded = await getFirebaseAuth().verifyIdToken(token);
+    req.user = { uid: decoded.uid, email: decoded.email ?? "" };
     next();
   } catch (err: any) {
     res.status(401).json({
       error: "Unauthorized",
       message: "Invalid or expired token",
-      details: process.env.NODE_ENV === "development" ? err.message : undefined,
+      details: envVars.NODE_ENV === "development" ? err.message : undefined,
     });
   }
 }

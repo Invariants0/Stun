@@ -1,23 +1,20 @@
 import type { NextFunction, Request, Response } from "express";
-import { getAuth } from "firebase-admin/auth";
+import { getFirebaseAuth, envVars } from "../../config";
 import axios from "axios";
 
-const REDIRECT_URI = () =>
-  process.env.FRONTEND_URL
-    ? `${process.env.FRONTEND_URL}/auth/callback`
-    : "http://localhost:3000/auth/callback";
+const REDIRECT_URI = () => `${envVars.FRONTEND_URL}/auth/callback`;
 
 async function exchangeCodeForUser(code: string, redirectUri: string) {
   const tokenRes = await axios.post("https://oauth2.googleapis.com/token", {
     code,
-    client_id: process.env.GOOGLE_CLIENT_ID,
-    client_secret: process.env.GOOGLE_CLIENT_SECRET,
+    client_id: envVars.GOOGLE_CLIENT_ID,
+    client_secret: envVars.GOOGLE_CLIENT_SECRET,
     redirect_uri: redirectUri,
     grant_type: "authorization_code",
   });
 
   const idToken: string = tokenRes.data.id_token;
-  const auth = getAuth();
+  const auth = getFirebaseAuth();
   const decoded = await auth.verifyIdToken(idToken);
 
   // Upsert Firebase user
@@ -48,15 +45,9 @@ async function exchangeCodeForUser(code: string, redirectUri: string) {
 export const authController = {
   /** Returns the Google OAuth authorization URL for the frontend to redirect to */
   getAuthUrl(req: Request, res: Response): void {
-    const clientId = process.env.GOOGLE_CLIENT_ID;
-    if (!clientId) {
-      res.status(500).json({ error: "GOOGLE_CLIENT_ID not configured" });
-      return;
-    }
-
     const redirectUri = (req.body?.redirectUri as string) ?? REDIRECT_URI();
     const params = new URLSearchParams({
-      client_id: clientId,
+      client_id: envVars.GOOGLE_CLIENT_ID,
       redirect_uri: redirectUri,
       response_type: "code",
       scope: "openid email profile",
@@ -105,7 +96,7 @@ export const authController = {
     }
 
     try {
-      const decoded = await getAuth().verifyIdToken(token);
+      const decoded = await getFirebaseAuth().verifyIdToken(token);
       res.json({
         success: true,
         valid: true,

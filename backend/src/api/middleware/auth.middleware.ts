@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
-import { getAuth } from "firebase-admin/auth";
+import { getFirebaseAuth } from "../../config";
 
 export async function requireAuth(
   req: Request,
@@ -14,7 +14,7 @@ export async function requireAuth(
       return;
     }
 
-    const decodedToken = await getAuth().verifyIdToken(token);
+    const decodedToken = await getFirebaseAuth().verifyIdToken(token);
     req.user = { uid: decodedToken.uid, email: decodedToken.email };
     next();
   } catch (err: any) {

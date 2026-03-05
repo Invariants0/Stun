@@ -2,20 +2,35 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createBoard, listBoards } from "@/lib/api";
+import { useAuth } from "@/hooks/useAuth";
+import { ProfileIcon } from "@/components/ProfileIcon";
 
 export default function HomePage() {
   const router = useRouter();
+  const { user, loading } = useAuth();
   const [boardId, setBoardId] = useState("demo-board");
+  const [boards, setBoards] = useState<string[]>([]);
 
-  const handleCreateBoard = () => {
-    const newBoardId = `board-${Date.now()}`;
-    router.push(`/board/${newBoardId}`);
+  const handleCreateBoard = async () => {
+    try {
+      const board = await createBoard();
+      router.push(`/board/${board.id}`);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const handleOpenBoard = () => {
     router.push(`/board/${boardId}`);
   };
+
+  useEffect(() => {
+    if (!loading && user) {
+      listBoards().then((list) => setBoards(list.map((b) => b.id))).catch(console.error);
+    }
+  }, [loading, user]);
 
   return (
     <main
@@ -29,6 +44,7 @@ export default function HomePage() {
         padding: 24,
       }}
     >
+      <ProfileIcon />
       <div style={{ maxWidth: 600, textAlign: "center" }}>
         <h1
           style={{
@@ -146,6 +162,20 @@ export default function HomePage() {
           <p style={{ marginBottom: 8 }}>🎨 Hybrid Canvas Architecture</p>
           <p>TLDraw + Excalidraw + React Flow</p>
         </div>
+        {boards.length > 0 && (
+          <div style={{ marginTop: 24, color: "#cbd5e1" }}>
+            <h4 style={{ marginBottom: 8 }}>Your boards</h4>
+            <ul>
+              {boards.map((id) => (
+                <li key={id}>
+                  <Link href={`/board/${id}`} style={{ color: "#60a5fa" }}>
+                    {id}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
     </main>
   );

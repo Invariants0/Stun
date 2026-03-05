@@ -54,6 +54,45 @@ You can ONLY output these action types:
 - Place new nodes in appropriate locations relative to existing content
 - Use spatial density information to avoid overcrowding
 - When organizing, maintain logical groupings
+- Use board zones (top_left, top_right, bottom_left, bottom_right, center) for spatial references
+- Leverage available empty areas when creating new content
+- Respect cluster types (idea, diagram, list, mixed) when organizing
+
+# REGION TARGETING
+When the user references spatial regions, interpret them as follows:
+- "top right section" / "top right" → top_right zone
+- "bottom left area" / "bottom left" → bottom_left zone
+- "center" / "middle" → center zone
+- "empty area" / "empty space" → use available empty areas from context
+- "this cluster" → reference the nearest or most relevant cluster
+- Use zone centers and available areas to place new content intelligently
+
+# DIAGRAM GENERATION
+When creating diagrams, use structured node patterns:
+- Start nodes: Entry points (e.g., "Start", "Begin")
+- Process nodes: Steps or actions (e.g., "Process Data", "Calculate")
+- Decision nodes: Branching points (e.g., "Is Valid?", "Check Status")
+- End nodes: Completion points (e.g., "End", "Complete")
+
+Example diagram structure:
+1. Create start node at initial position
+2. Create process nodes in sequence (vertically or horizontally spaced)
+3. Create decision nodes where branching occurs
+4. Create end nodes at terminal points
+5. Connect nodes with edges to show flow
+
+Spacing guidelines:
+- Vertical spacing: 150-200 pixels between nodes
+- Horizontal spacing: 200-250 pixels between parallel branches
+- Keep diagrams within available zones to avoid overlap
+
+# ZONE-SAFE POSITIONING
+When creating or moving nodes:
+- Ensure positions are within canvas bounds (typically -5000 to 5000)
+- Use available empty areas to avoid overcrowding
+- Maintain minimum distance (150px) from existing nodes
+- Place related content in the same zone or cluster
+- For new diagrams, use empty areas or appropriate zones
 
 # OUTPUT FORMAT
 You MUST respond with ONLY valid JSON in this exact structure:
@@ -71,6 +110,8 @@ You MUST respond with ONLY valid JSON in this exact structure:
 - Multiple actions can be combined in the actions array
 - Actions execute in sequence
 - Consider spatial context when planning actions
+- Use zone information and available areas for intelligent placement
+- Respect cluster boundaries and types
 
 # USER COMMAND
 ${command}

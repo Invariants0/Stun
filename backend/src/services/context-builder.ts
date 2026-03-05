@@ -6,9 +6,14 @@
 import {
   clusterNodes,
   calculateDensity,
+  detectBoardZones,
+  detectEmptyAreas,
+  calculateBounds,
   type CanvasNode,
   type NodeCluster,
-  type Point,
+  type ZoneDefinition,
+  type AvailableZone,
+  type BoundingBox,
 } from "../utils/spatial";
 
 export interface Edge {
@@ -38,6 +43,8 @@ export interface SpatialContext {
     maxX: number;
     maxY: number;
   };
+  zones?: ZoneDefinition[];
+  availableZones?: AvailableZone[];
 }
 
 export interface ContextBuilderInput {
@@ -76,6 +83,14 @@ export function buildSpatialContext(input: ContextBuilderInput): SpatialContext 
     minX = minY = maxX = maxY = 0;
   }
 
+  const boundingBox: BoundingBox = { x1: minX, y1: minY, x2: maxX, y2: maxY };
+
+  // Detect board zones (only if we have nodes)
+  const zones = nodes.length > 0 ? detectBoardZones(boundingBox) : undefined;
+
+  // Detect empty areas (only if we have nodes)
+  const availableZones = nodes.length > 0 ? detectEmptyAreas(nodes, boundingBox) : undefined;
+
   return {
     nodeCount: nodes.length,
     edgeCount: edges.length,
@@ -85,6 +100,8 @@ export function buildSpatialContext(input: ContextBuilderInput): SpatialContext 
     viewport,
     selectedNodes,
     bounds: { minX, minY, maxX, maxY },
+    zones,
+    availableZones,
   };
 }
 
@@ -108,10 +125,28 @@ export function generateContextSummary(context: SpatialContext): string {
     parts.push(`- Selected nodes: ${context.selectedNodes.length}`);
   }
 
+  // Board zones
+  if (context.zones && context.zones.length > 0) {
+    parts.push(`\nBoard Zones:`);
+    context.zones.forEach((zone) => {
+      parts.push(`- ${zone.zone}: center at (${Math.round(zone.center.x)}, ${Math.round(zone.center.y)})`);
+    });
+  }
+
+  // Spatial clusters with enhanced metadata
   if (context.clusters.length > 0) {
     parts.push(`\nSpatial Clusters:`);
     context.clusters.forEach((cluster, idx) => {
-      parts.push(`- Cluster ${idx + 1}: ${cluster.nodes.length} nodes at (${Math.round(cluster.center.x)}, ${Math.round(cluster.center.y)})`);
+      const typeInfo = cluster.typeHint ? ` [${cluster.typeHint}]` : '';
+      parts.push(`- Cluster ${idx + 1}${typeInfo}: ${cluster.nodes.length} nodes at (${Math.round(cluster.center.x)}, ${Math.round(cluster.center.y)}), radius ${Math.round(cluster.radius)}`);
+    });
+  }
+
+  // Available zones for new content
+  if (context.availableZones && context.availableZones.length > 0) {
+    parts.push(`\nAvailable Empty Areas (top ${Math.min(5, context.availableZones.length)}):`);
+    context.availableZones.slice(0, 5).forEach((zone, idx) => {
+      parts.push(`- Area ${idx + 1}: ${zone.width}x${zone.height} at (${zone.x}, ${zone.y})`);
     });
   }
 

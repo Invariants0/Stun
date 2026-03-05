@@ -14,7 +14,16 @@ export function initFirebase(): void {
   if (getApps().length > 0) return; // already initialised
 
   if (envVars.FIREBASE_SERVICE_ACCOUNT_KEY) {
-    initializeApp({ credential: cert(JSON.parse(envVars.FIREBASE_SERVICE_ACCOUNT_KEY)) });
+    try {
+      const serviceAccount = JSON.parse(envVars.FIREBASE_SERVICE_ACCOUNT_KEY);
+      initializeApp({
+        credential: cert(serviceAccount)});
+      logger.info("[firebase] Initialized with service account key");
+    } catch (error) {
+      logger.error("[firebase] Failed to initialize with service account key", error);
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Invalid FIREBASE_SERVICE_ACCOUNT_KEY. Error: ${message}`);
+    }
   } else {
     // Cloud Run Workload Identity or local emulator — ADC
     initializeApp({ projectId: envVars.GCP_PROJECT_ID });

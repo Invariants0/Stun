@@ -1,4 +1,5 @@
 import path from "path";
+import fs from "fs";
 import winston from "winston";
 import { format, transports } from "winston";
 
@@ -7,6 +8,11 @@ const { combine, timestamp, printf, colorize } = format;
 const loggerFormat = printf(({ level, message, timestamp }) => {
   return `${timestamp} ${level}: ${message}`;
 });
+
+const logsDir = path.join(process.cwd(), "logs");
+if (!fs.existsSync(logsDir)) {
+  fs.mkdirSync(logsDir, { recursive: true });
+}
 
 export const logger = winston.createLogger({
   level: process.env.NODE_ENV === "production" ? "info" : "debug",

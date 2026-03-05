@@ -9,7 +9,7 @@ let instance: GoogleGenAI | null = null;
 export function getGenAI(): GoogleGenAI {
   if (instance) return instance;
 
-  instance = new GoogleGenAI({ apiKey: envVars.GOOGLE_API_KEY });
+  instance = new GoogleGenAI({ apiKey: envVars.GEMINI_API_KEY });
   return instance;
 }
 

@@ -37,7 +37,7 @@ const EnvConfigSchema = z.object({
   GOOGLE_CLIENT_SECRET: z.string().min(1, { message: "GOOGLE_CLIENT_SECRET is required" }),
 
   // GenAI
-  GOOGLE_API_KEY: z.string().min(1, { message: "GOOGLE_API_KEY is required" }),
+  GEMINI_API_KEY: z.string().min(1, { message: "GEMINI_API_KEY is required" }),
   VERTEX_MODEL: z.string().default("gemini-2.0-flash-exp"),
 });
 
@@ -55,7 +55,7 @@ const rawConfig = {
   BOARDS_COLLECTION:           process.env.BOARDS_COLLECTION,
   GOOGLE_CLIENT_ID:            process.env.GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET:        process.env.GOOGLE_CLIENT_SECRET,
-  GOOGLE_API_KEY:              process.env.GOOGLE_API_KEY,
+  GEMINI_API_KEY:              process.env.GEMINI_API_KEY,
   VERTEX_MODEL:                process.env.VERTEX_MODEL,
 };
 
@@ -92,7 +92,7 @@ export const {
   BOARDS_COLLECTION,
   GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET,
-  GOOGLE_API_KEY,
+  GEMINI_API_KEY,
   VERTEX_MODEL,
 } = envVars;
 

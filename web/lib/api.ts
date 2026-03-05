@@ -1,8 +1,16 @@
 import axios from "axios";
+import { getStoredToken } from "@/lib/auth";
 
 export const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080",
-  timeout: 30000, // 30s timeout
+  timeout: 30000,
+});
+
+// Attach the Firebase ID token automatically on every request
+api.interceptors.request.use((config) => {
+  const token = getStoredToken();
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
 });
 
 export async function planActions(payload: {
@@ -26,5 +34,26 @@ export async function planActions(payload: {
       // Something happened in setting up the request
       throw new Error(error.message || "Failed to call AI planner");
     }
+  }
+}
+
+// board APIs
+export async function createBoard() {
+  try {
+    const { data } = await api.post("/boards", {});
+    return data;
+  } catch (err: any) {
+    console.error("API error in createBoard:", err);
+    throw err;
+  }
+}
+
+export async function listBoards() {
+  try {
+    const { data } = await api.get("/boards");
+    return data.boards as Array<any>;
+  } catch (err: any) {
+    console.error("API error in listBoards:", err);
+    throw err;
   }
 }

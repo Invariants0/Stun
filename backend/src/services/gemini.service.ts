@@ -11,13 +11,39 @@ import { orchestratePlanning } from "./orchestrator.service";
 
 /** Extract the first top-level JSON object from a freeform LLM response */
 function extractJson(text: string): unknown {
-  const match = text.match(/\{[\s\S]*\}/);
-  if (!match) throw new BadRequestError("AI response contained no JSON");
-  try {
-    return JSON.parse(match[0]);
-  } catch {
-    throw new BadRequestError("AI response was not valid JSON");
+  // Try to extract JSON from markdown code blocks first
+  const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (codeBlockMatch) {
+    try {
+      return JSON.parse(codeBlockMatch[1].trim());
+    } catch {
+      // Fall through to try other methods
+    }
   }
+
+  // Try to find the largest JSON object in the text
+  const jsonMatches = text.match(/\{[\s\S]*?\}/g);
+  if (!jsonMatches || jsonMatches.length === 0) {
+    throw new BadRequestError("AI response contained no JSON object");
+  }
+
+  // Sort by length descending to get the largest JSON object
+  const sortedMatches = jsonMatches.sort((a, b) => b.length - a.length);
+
+  // Try to parse each match until we find valid JSON
+  for (const match of sortedMatches) {
+    try {
+      const parsed = JSON.parse(match);
+      // Validate it's an object (not a primitive)
+      if (typeof parsed === "object" && parsed !== null) {
+        return parsed;
+      }
+    } catch {
+      // Continue to next match
+    }
+  }
+
+  throw new BadRequestError("AI response contained no valid JSON object");
 }
 
 export const geminiService = {

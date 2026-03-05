@@ -1,0 +1,10 @@
+[
+  "summarize the canvas",
+  "move node_23 20px left",
+  "generate diagram",
+  "connect node_1 to node_2",
+  "create a text node saying hello",
+  "highlight all nodes",
+  "zoom to fit all nodes",
+  "delete node_3"
+]

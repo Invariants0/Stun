@@ -1,0 +1,30 @@
+[
+  {
+    "id": "node_1",
+    "type": "text",
+    "text": "AI research notes",
+    "x": 100,
+    "y": 100
+  },
+  {
+    "id": "node_2",
+    "type": "text",
+    "text": "Machine learning summary",
+    "x": 300,
+    "y": 150
+  },
+  {
+    "id": "node_3",
+    "type": "text",
+    "text": "Neural networks overview",
+    "x": 500,
+    "y": 200
+  },
+  {
+    "id": "node_23",
+    "type": "text",
+    "text": "Test node for movement",
+    "x": 200,
+    "y": 250
+  }
+]

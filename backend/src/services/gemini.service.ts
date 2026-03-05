@@ -7,7 +7,7 @@ import {
   type PlannerRequest,
   type ActionPlan,
 } from "../validators/action.validator";
-import { orchestratePlanning } from "./orchestrator.service";
+import { orchestratePlanning, sanitizeActionPositions } from "./orchestrator.service";
 
 /** Extract the first top-level JSON object from a freeform LLM response */
 function extractJson(text: string): unknown {
@@ -85,6 +85,19 @@ export const geminiService = {
     const nodeIds = input.nodes.map((n) => n.id);
     validateNodeReferences(actionPlan.actions, nodeIds);
 
-    return actionPlan;
+    // Sanitize action positions to ensure zone-safe placement
+    const bounds = orchestrationContext.rawContext.bounds;
+    const boundingBox = {
+      x1: bounds.minX,
+      y1: bounds.minY,
+      x2: bounds.maxX,
+      y2: bounds.maxY,
+    };
+    const sanitizedActions = sanitizeActionPositions(
+      actionPlan.actions,
+      boundingBox
+    );
+
+    return { actions: sanitizedActions };
   },
 };

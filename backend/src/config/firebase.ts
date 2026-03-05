@@ -7,17 +7,18 @@
 import { cert, getApp, getApps, initializeApp } from "firebase-admin/app";
 import { getAuth, type Auth } from "firebase-admin/auth";
 import { getFirestore as getFirestoreSDK, type Firestore } from "firebase-admin/firestore";
-import { env } from "./env";
+import envVars from "./envVars";
+import { logger } from "./logger";
 
 export function initFirebase(): void {
   if (getApps().length > 0) return; // already initialised
 
-  if (env.firebaseServiceAccount) {
-    initializeApp({ credential: cert(JSON.parse(env.firebaseServiceAccount)) });
+  if (envVars.FIREBASE_SERVICE_ACCOUNT_KEY) {
+    initializeApp({ credential: cert(JSON.parse(envVars.FIREBASE_SERVICE_ACCOUNT_KEY)) });
   } else {
     // Cloud Run Workload Identity or local emulator — ADC
-    initializeApp({ projectId: env.gcpProjectId });
-    console.warn("[firebase] No FIREBASE_SERVICE_ACCOUNT_KEY — using Application Default Credentials");
+    initializeApp({ projectId: envVars.GCP_PROJECT_ID });
+    logger.warn("[firebase] No FIREBASE_SERVICE_ACCOUNT_KEY — using Application Default Credentials");
   }
 }
 
@@ -30,6 +31,6 @@ export function getFirebaseAuth(): Auth {
 }
 
 export const firestoreCollections = {
-  boards:   env.boardsCollection,
+  boards:   envVars.BOARDS_COLLECTION,
   presence: "board_presence",
 } as const;

@@ -2,23 +2,19 @@
  * Google GenAI (Gemini) client — singleton.
  */
 import { GoogleGenAI } from "@google/genai";
-import { env } from "./env";
+import envVars from "./envVars";
 
 let instance: GoogleGenAI | null = null;
 
 export function getGenAI(): GoogleGenAI {
   if (instance) return instance;
 
-  if (!env.googleApiKey) {
-    throw new Error("GOOGLE_API_KEY environment variable is required");
-  }
-
-  instance = new GoogleGenAI({ apiKey: env.googleApiKey });
+  instance = new GoogleGenAI({ apiKey: envVars.GOOGLE_API_KEY });
   return instance;
 }
 
 export const genAIConfig = {
-  model:    env.vertexModel,
-  location: env.gcpRegion,
-  project:  env.gcpProjectId,
+  model:    envVars.VERTEX_MODEL,
+  location: envVars.GCP_REGION,
+  project:  envVars.GCP_PROJECT_ID,
 } as const;

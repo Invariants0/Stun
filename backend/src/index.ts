@@ -1,22 +1,16 @@
-import { initializeApp, cert, getApps } from "firebase-admin/app";
+import { initFirebase, envVars, logger } from "./config";
 import { createApp } from "./app";
+import { startPresenceCleanup } from "./services/presence.service";
 
 // ─── Bootstrap Firebase Admin SDK (single init) ───────────────────────────────
-if (getApps().length === 0) {
-  const key = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
-  if (key) {
-    initializeApp({ credential: cert(JSON.parse(key)) });
-  } else {
-    // Cloud Run Workload Identity / local emulator – ADC handles auth
-    initializeApp({ projectId: process.env.GCP_PROJECT_ID });
-    console.warn("[firebase] No FIREBASE_SERVICE_ACCOUNT_KEY – using Application Default Credentials");
-  }
-}
+initFirebase();
+
+// ─── Start presence cleanup interval (every 5 min) ────────────────────────────
+startPresenceCleanup();
 
 // ─── Start Server ─────────────────────────────────────────────────────────────
 const app  = createApp();
-const port = Number(process.env.PORT ?? 8080);
 
-app.listen(port, () => {
-  console.log(`[stun] backend listening on :${port}`);
+app.listen(envVars.PORT, () => {
+  logger.info(`[stun] backend listening on :${envVars.PORT}`);
 });

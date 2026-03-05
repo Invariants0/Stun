@@ -1,233 +1,203 @@
-import { firestoreConfig, getFirestore } from "../config/firestore";
-import { boardAccessService, type BoardVisibility } from "./boardAccess.service";
+import { getFirestore, firestoreCollections } from "../config";
+import { NotFoundError, ForbiddenError, ConflictError } from "../api/middleware/error.middleware";
+import { boardAccessService, type BoardAccessData } from "./boardAccess.service";
 import { presenceService } from "./presence.service";
+import type { Board, BoardPayload, BoardVisibility } from "../api/models/board.model";
 
-type BoardPayload = {
-  nodes: unknown[];
-  edges: unknown[];
-  elements?: unknown[];
-};
-
-type BoardRecord = {
-  id: string;
-  ownerId: string;
+/** Raw shape stored in Firestore — no computed fields like activeUsers */
+type FirestoreBoard = BoardAccessData & {
   nodes: unknown[];
   edges: unknown[];
   elements: unknown[];
-  visibility: BoardVisibility;
-  collaborators: string[];
   activeUsers: number;
   lastActivity: string;
   createdAt: string;
   updatedAt: string;
 };
 
+/** Map a Firestore document + id + active user list → Board response */
+function docToBoard(
+  id: string,
+  data: FirestoreBoard,
+  activeUsers: string[]
+): Board {
+  return {
+    id,
+    ownerId:       data.ownerId,
+    nodes:         data.nodes        ?? [],
+    edges:         data.edges        ?? [],
+    elements:      data.elements     ?? [],
+    visibility:    data.visibility   ?? "private",
+    collaborators: data.collaborators ?? [],
+    activeUsers:   activeUsers.length,
+    lastActivity:  data.lastActivity  ?? data.updatedAt ?? "",
+    createdAt:     data.createdAt     ?? "",
+    updatedAt:     data.updatedAt     ?? "",
+  };
+}
+
 export const boardService = {
-  async createBoard(ownerId: string, payload: BoardPayload) {
-    const db = getFirestore();
-    const boardsRef = db.collection(firestoreConfig.collectionName);
-    
+  async createBoard(ownerId: string, payload: BoardPayload): Promise<Board> {
+    const db  = getFirestore();
+    const col = db.collection(firestoreCollections.boards);
     const now = new Date().toISOString();
-    const boardData = {
+
+    const data: FirestoreBoard = {
       ownerId,
-      nodes: payload.nodes ?? [],
-      edges: payload.edges ?? [],
-      elements: payload.elements ?? [],
-      visibility: "private" as BoardVisibility,
+      nodes:         payload.nodes    ?? [],
+      edges:         payload.edges    ?? [],
+      elements:      payload.elements ?? [],
+      visibility:    "private",
       collaborators: [],
-      activeUsers: 0,
-      lastActivity: now,
-      createdAt: now,
-      updatedAt: now,
+      activeUsers:   0,
+      lastActivity:  now,
+      createdAt:     now,
+      updatedAt:     now,
     };
 
-    const docRef = await boardsRef.add(boardData);
-    
-    return {
-      id: docRef.id,
-      ...boardData,
-    };
+    const docRef = await col.add(data);
+    return docToBoard(docRef.id, data, []);
   },
 
-  async getBoard(id: string, userId: string): Promise<BoardRecord> {
-    const db = getFirestore();
-    const docRef = db.collection(firestoreConfig.collectionName).doc(id);
-    const doc = await docRef.get();
+  async listBoards(ownerId: string): Promise<Board[]> {
+    const db  = getFirestore();
+    const col = db.collection(firestoreCollections.boards);
 
-    if (!doc.exists) {
-      throw new Error("Board not found");
+    // Parallel queries — owned and collaborated
+    const [ownedSnap, collabSnap] = await Promise.all([
+      col.where("ownerId",       "==",            ownerId).get(),
+      col.where("collaborators", "array-contains", ownerId).get(),
+    ]);
+
+    // Merge + dedupe by document id
+    const map = new Map<string, Board>();
+    for (const doc of [...ownedSnap.docs, ...collabSnap.docs]) {
+      if (!map.has(doc.id)) {
+        const data = doc.data() as FirestoreBoard;
+        map.set(doc.id, docToBoard(doc.id, data, []));
+      }
     }
-
-    const data = doc.data();
-    
-    // Check access permissions
-    const canView = await boardAccessService.canView(id, userId);
-    if (!canView) {
-      throw new Error("Unauthorized access to board");
-    }
-
-    // Update presence
-    await presenceService.updatePresence(id, userId);
-
-    // Get active users count
-    const activeUsers = await presenceService.getActiveUsers(id);
-
-    return {
-      id: doc.id,
-      ownerId: data?.ownerId ?? "",
-      nodes: data?.nodes ?? [],
-      edges: data?.edges ?? [],
-      elements: data?.elements ?? [],
-      visibility: data?.visibility ?? "private",
-      collaborators: data?.collaborators ?? [],
-      activeUsers: activeUsers.length,
-      lastActivity: data?.lastActivity ?? data?.updatedAt ?? "",
-      createdAt: data?.createdAt ?? "",
-      updatedAt: data?.updatedAt ?? "",
-    };
+    return Array.from(map.values());
   },
 
-  async updateBoard(id: string, userId: string, payload: BoardPayload): Promise<BoardRecord> {
-    const db = getFirestore();
-    const docRef = db.collection(firestoreConfig.collectionName).doc(id);
-    
-    const doc = await docRef.get();
-    if (!doc.exists) {
-      throw new Error("Board not found");
+  async getBoard(id: string, userId: string): Promise<Board> {
+    const db     = getFirestore();
+    const doc    = await db.collection(firestoreCollections.boards).doc(id).get();
+
+    if (!doc.exists) throw new NotFoundError("Board not found");
+
+    const data   = doc.data() as FirestoreBoard;
+    const access = boardAccessService.checkAccessFromData(data, userId);
+
+    if (access === "none") throw new ForbiddenError("Unauthorized access to board");
+
+    // Parallel: update presence + fetch active users
+    const [, activeUsers] = await Promise.all([
+      presenceService.updatePresence(id, userId),
+      presenceService.getActiveUsers(id),
+    ]);
+
+    return docToBoard(id, data, activeUsers);
+  },
+
+  async updateBoard(id: string, userId: string, payload: BoardPayload): Promise<Board> {
+    const db     = getFirestore();
+    const docRef = db.collection(firestoreCollections.boards).doc(id);
+    const doc    = await docRef.get();
+
+    if (!doc.exists) throw new NotFoundError("Board not found");
+
+    const data   = doc.data() as FirestoreBoard;
+    const access = boardAccessService.checkAccessFromData(data, userId);
+
+    if (access === "none" || access === "view") {
+      throw new ForbiddenError("Unauthorized access to board");
     }
 
-    // Check edit permissions
-    const canEdit = await boardAccessService.canEdit(id, userId);
-    if (!canEdit) {
-      throw new Error("Unauthorized access to board");
-    }
-
-    const data = doc.data();
-    const now = new Date().toISOString();
-    
+    const now        = new Date().toISOString();
     const updateData = {
-      nodes: payload.nodes ?? [],
-      edges: payload.edges ?? [],
-      elements: payload.elements ?? [],
+      nodes:        payload.nodes    ?? [],
+      edges:        payload.edges    ?? [],
+      elements:     payload.elements ?? [],
       lastActivity: now,
-      updatedAt: now,
+      updatedAt:    now,
     };
 
-    await docRef.update(updateData);
+    // Parallel: persist update + update presence
+    const [, activeUsers] = await Promise.all([
+      docRef.update(updateData),
+      presenceService.updatePresence(id, userId),
+      presenceService.getActiveUsers(id),
+    ]).then(([,, users]) => [undefined, users] as const);
 
-    // Update presence
-    await presenceService.updatePresence(id, userId);
-
-    // Get active users count
-    const activeUsers = await presenceService.getActiveUsers(id);
-
-    return {
-      id: doc.id,
-      ownerId: data?.ownerId ?? "",
-      nodes: updateData.nodes,
-      edges: updateData.edges,
-      elements: updateData.elements,
-      visibility: data?.visibility ?? "private",
-      collaborators: data?.collaborators ?? [],
-      activeUsers: activeUsers.length,
-      lastActivity: updateData.lastActivity,
-      createdAt: data?.createdAt ?? "",
-      updatedAt: updateData.updatedAt,
-    };
+    return docToBoard(id, { ...data, ...updateData }, activeUsers);
   },
 
-  async updateVisibility(
-    id: string,
-    userId: string,
-    visibility: BoardVisibility
-  ): Promise<void> {
-    const db = getFirestore();
-    const docRef = db.collection(firestoreConfig.collectionName).doc(id);
+  async updateVisibility(id: string, userId: string, visibility: BoardVisibility): Promise<void> {
+    const db     = getFirestore();
+    const docRef = db.collection(firestoreCollections.boards).doc(id);
+    const doc    = await docRef.get();
 
-    // Only owner can change visibility
-    const isOwner = await boardAccessService.isOwner(id, userId);
-    if (!isOwner) {
-      throw new Error("Only owner can change board visibility");
-    }
+    if (!doc.exists) throw new NotFoundError("Board not found");
 
-    await docRef.update({
-      visibility,
-      updatedAt: new Date().toISOString(),
-    });
+    const access = boardAccessService.checkAccessFromData(doc.data() as FirestoreBoard, userId);
+    if (access !== "owner") throw new ForbiddenError("Only owner can change board visibility");
+
+    await docRef.update({ visibility, updatedAt: new Date().toISOString() });
   },
 
   async addCollaborator(id: string, ownerId: string, collaboratorId: string): Promise<void> {
-    const db = getFirestore();
-    const docRef = db.collection(firestoreConfig.collectionName).doc(id);
+    const db     = getFirestore();
+    const docRef = db.collection(firestoreCollections.boards).doc(id);
+    const doc    = await docRef.get();
 
-    // Only owner can add collaborators
-    const isOwner = await boardAccessService.isOwner(id, ownerId);
-    if (!isOwner) {
-      throw new Error("Only owner can add collaborators");
+    if (!doc.exists) throw new NotFoundError("Board not found");
+
+    const data   = doc.data() as FirestoreBoard;
+    const access = boardAccessService.checkAccessFromData(data, ownerId);
+    if (access !== "owner") throw new ForbiddenError("Only owner can add collaborators");
+
+    if (data.ownerId === collaboratorId) {
+      throw new ConflictError("Owner is already a collaborator");
     }
-
-    const doc = await docRef.get();
-    if (!doc.exists) {
-      throw new Error("Board not found");
-    }
-
-    const data = doc.data();
-    const collaborators = data?.collaborators ?? [];
-
-    if (collaborators.includes(collaboratorId)) {
-      throw new Error("User is already a collaborator");
-    }
-
-    if (data?.ownerId === collaboratorId) {
-      throw new Error("Owner is already a collaborator");
+    if (data.collaborators?.includes(collaboratorId)) {
+      throw new ConflictError("User is already a collaborator");
     }
 
     await docRef.update({
-      collaborators: [...collaborators, collaboratorId],
-      updatedAt: new Date().toISOString(),
+      collaborators: [...(data.collaborators ?? []), collaboratorId],
+      updatedAt:     new Date().toISOString(),
     });
   },
 
   async removeCollaborator(id: string, ownerId: string, collaboratorId: string): Promise<void> {
-    const db = getFirestore();
-    const docRef = db.collection(firestoreConfig.collectionName).doc(id);
+    const db     = getFirestore();
+    const docRef = db.collection(firestoreCollections.boards).doc(id);
+    const doc    = await docRef.get();
 
-    // Only owner can remove collaborators
-    const isOwner = await boardAccessService.isOwner(id, ownerId);
-    if (!isOwner) {
-      throw new Error("Only owner can remove collaborators");
-    }
+    if (!doc.exists) throw new NotFoundError("Board not found");
 
-    const doc = await docRef.get();
-    if (!doc.exists) {
-      throw new Error("Board not found");
-    }
-
-    const data = doc.data();
-    const collaborators = data?.collaborators ?? [];
+    const data   = doc.data() as FirestoreBoard;
+    const access = boardAccessService.checkAccessFromData(data, ownerId);
+    if (access !== "owner") throw new ForbiddenError("Only owner can remove collaborators");
 
     await docRef.update({
-      collaborators: collaborators.filter((id: string) => id !== collaboratorId),
-      updatedAt: new Date().toISOString(),
+      // Fixed: was shadowing outer `id` parameter with `(id: string) =>`
+      collaborators: (data.collaborators ?? []).filter((uid) => uid !== collaboratorId),
+      updatedAt:     new Date().toISOString(),
     });
   },
 
   async getCollaborators(id: string, userId: string): Promise<string[]> {
-    const db = getFirestore();
-    const docRef = db.collection(firestoreConfig.collectionName).doc(id);
+    const db  = getFirestore();
+    const doc = await db.collection(firestoreCollections.boards).doc(id).get();
 
-    // User must have view access
-    const canView = await boardAccessService.canView(id, userId);
-    if (!canView) {
-      throw new Error("Unauthorized access to board");
-    }
+    if (!doc.exists) throw new NotFoundError("Board not found");
 
-    const doc = await docRef.get();
-    if (!doc.exists) {
-      throw new Error("Board not found");
-    }
+    const data   = doc.data() as FirestoreBoard;
+    const access = boardAccessService.checkAccessFromData(data, userId);
+    if (access === "none") throw new ForbiddenError("Unauthorized access to board");
 
-    const data = doc.data();
-    return data?.collaborators ?? [];
+    return data.collaborators ?? [];
   },
 };

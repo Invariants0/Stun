@@ -1,10 +1,10 @@
-import { firestoreConfig, getFirestore } from "../config/firestore";
+import { getFirestore, firestoreCollections } from "../config";
+import type { BoardVisibility } from "../api/models/board.model";
 
-export type BoardVisibility = "private" | "view" | "edit";
-
+export type { BoardVisibility };
 export type AccessLevel = "owner" | "edit" | "view" | "none";
 
-type BoardAccessData = {
+export type BoardAccessData = {
   ownerId: string;
   visibility: BoardVisibility;
   collaborators: string[];
@@ -12,43 +12,28 @@ type BoardAccessData = {
 
 export const boardAccessService = {
   /**
-   * Check user's access level to a board
+   * Derive access level from already-fetched board data — zero extra Firestore reads.
+   * Use this when the caller already has the board document.
    */
-  async checkAccess(boardId: string, userId: string): Promise<AccessLevel> {
-    const db = getFirestore();
-    const docRef = db.collection(firestoreConfig.collectionName).doc(boardId);
-    const doc = await docRef.get();
-
-    if (!doc.exists) {
-      return "none";
-    }
-
-    const data = doc.data() as BoardAccessData;
-
-    // Owner has full access
-    if (data.ownerId === userId) {
-      return "owner";
-    }
-
-    // Check collaborators for edit access
-    if (data.collaborators?.includes(userId)) {
-      return "edit";
-    }
-
-    // Check visibility for view access
-    if (data.visibility === "view" || data.visibility === "edit") {
-      return "view";
-    }
-
+  checkAccessFromData(data: BoardAccessData, userId: string): AccessLevel {
+    if (data.ownerId === userId) return "owner";
+    if (data.collaborators?.includes(userId)) return "edit";
+    if (data.visibility === "view" || data.visibility === "edit") return "view";
     return "none";
   },
 
   /**
-   * Verify user has at least view access
+   * Fetch board and derive access level. Use when the caller doesn't have the doc.
    */
+  async checkAccess(boardId: string, userId: string): Promise<AccessLevel> {
+    const db = getFirestore();
+    const doc = await db.collection(firestoreCollections.boards).doc(boardId).get();
+    if (!doc.exists) return "none";
+    return this.checkAccessFromData(doc.data() as BoardAccessData, userId);
+  },
+
   async canView(boardId: string, userId: string): Promise<boolean> {
-    const access = await this.checkAccess(boardId, userId);
-    return access !== "none";
+    return (await this.checkAccess(boardId, userId)) !== "none";
   },
 
   /**
@@ -63,7 +48,6 @@ export const boardAccessService = {
    * Verify user is owner
    */
   async isOwner(boardId: string, userId: string): Promise<boolean> {
-    const access = await this.checkAccess(boardId, userId);
-    return access === "owner";
+    return (await this.checkAccess(boardId, userId)) === "owner";
   },
 };

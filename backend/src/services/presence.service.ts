@@ -1,4 +1,5 @@
-import { getFirestore } from "../config/firestore";
+import { getFirestore, firestoreCollections } from "../config";
+import type { QueryDocumentSnapshot } from "firebase-admin/firestore";
 
 type PresenceData = {
   boardId: string;
@@ -10,7 +11,6 @@ type PresenceData = {
   };
 };
 
-const PRESENCE_COLLECTION = "board_presence";
 const PRESENCE_TIMEOUT_MS = 60000; // 1 minute
 
 export const presenceService = {
@@ -24,7 +24,7 @@ export const presenceService = {
   ): Promise<void> {
     const db = getFirestore();
     const presenceId = `${boardId}_${userId}`;
-    const presenceRef = db.collection(PRESENCE_COLLECTION).doc(presenceId);
+    const presenceRef = db.collection(firestoreCollections.presence).doc(presenceId);
 
     const presenceData: PresenceData = {
       boardId,
@@ -41,7 +41,7 @@ export const presenceService = {
    */
   async getActiveUsers(boardId: string): Promise<string[]> {
     const db = getFirestore();
-    const presenceRef = db.collection(PRESENCE_COLLECTION);
+    const presenceRef = db.collection(firestoreCollections.presence);
     
     const cutoffTime = new Date(Date.now() - PRESENCE_TIMEOUT_MS).toISOString();
     
@@ -50,7 +50,7 @@ export const presenceService = {
       .where("lastSeen", ">", cutoffTime)
       .get();
 
-    return snapshot.docs.map((doc) => {
+    return snapshot.docs.map((doc: QueryDocumentSnapshot) => {
       const data = doc.data() as PresenceData;
       return data.userId;
     });
@@ -62,7 +62,7 @@ export const presenceService = {
   async removePresence(boardId: string, userId: string): Promise<void> {
     const db = getFirestore();
     const presenceId = `${boardId}_${userId}`;
-    const presenceRef = db.collection(PRESENCE_COLLECTION).doc(presenceId);
+    const presenceRef = db.collection(firestoreCollections.presence).doc(presenceId);
 
     await presenceRef.delete();
   },
@@ -72,7 +72,7 @@ export const presenceService = {
    */
   async cleanupStalePresence(): Promise<void> {
     const db = getFirestore();
-    const presenceRef = db.collection(PRESENCE_COLLECTION);
+    const presenceRef = db.collection(firestoreCollections.presence);
     
     const cutoffTime = new Date(Date.now() - PRESENCE_TIMEOUT_MS).toISOString();
     
@@ -81,10 +81,23 @@ export const presenceService = {
       .get();
 
     const batch = db.batch();
-    snapshot.docs.forEach((doc) => {
+    snapshot.docs.forEach((doc: QueryDocumentSnapshot) => {
       batch.delete(doc.ref);
     });
 
     await batch.commit();
   },
 };
+
+/**
+ * Start a background interval to purge stale presence records.
+ * Call once at server startup (index.ts).
+ * Returns the interval handle so it can be cleared in tests.
+ */
+export function startPresenceCleanup(intervalMs = 5 * 60 * 1000): ReturnType<typeof setInterval> {
+  return setInterval(() => {
+    presenceService.cleanupStalePresence().catch((err) => {
+      console.error("[presence] cleanup error", err);
+    });
+  }, intervalMs);
+}

@@ -18,6 +18,10 @@ function decodeJwtPayload(token: string): Record<string, unknown> {
 async function exchangeCodeForUser(code: string, redirectUri: string) {
   // Exchange authorization code for tokens at Google's token endpoint
   // Must use application/x-www-form-urlencoded, not JSON
+  if (!envVars.GOOGLE_CLIENT_ID || !envVars.GOOGLE_CLIENT_SECRET) {
+    throw new Error("Google OAuth credentials not configured");
+  }
+  
   const params = new URLSearchParams({
     code,
     client_id: envVars.GOOGLE_CLIENT_ID,
@@ -53,6 +57,11 @@ async function exchangeCodeForUser(code: string, redirectUri: string) {
 export const authController = {
   /** Returns the Google OAuth authorization URL for the frontend to redirect to */
   getAuthUrl(req: Request, res: Response): void {
+    if (!envVars.GOOGLE_CLIENT_ID) {
+      res.status(500).json({ error: "OAuth not configured" });
+      return;
+    }
+    
     const redirectUri = (req.body?.redirectUri as string) ?? REDIRECT_URI();
     const params = new URLSearchParams({
       client_id: envVars.GOOGLE_CLIENT_ID,

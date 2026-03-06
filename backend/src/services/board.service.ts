@@ -55,29 +55,53 @@ export const boardService = {
       updatedAt:     now,
     };
 
-    const docRef = await col.add(data);
-    return docToBoard(docRef.id, data, []);
+    try {
+      const docRef = await col.add(data);
+      return docToBoard(docRef.id, data, []);
+    } catch (error: any) {
+      if (error.code === 5 || error.message?.includes('NOT_FOUND')) {
+        throw new Error(
+          'Firestore database not found. ' +
+          'For local dev: Start Firestore emulator with "firebase emulators:start --only firestore". ' +
+          'For production: Create a Firestore database in Google Cloud Console. ' +
+          'See FIRESTORE_SETUP.md for details.'
+        );
+      }
+      throw error;
+    }
   },
 
   async listBoards(ownerId: string): Promise<Board[]> {
     const db  = getFirestore();
     const col = db.collection(firestoreCollections.boards);
 
-    // Parallel queries — owned and collaborated
-    const [ownedSnap, collabSnap] = await Promise.all([
-      col.where("ownerId",       "==",            ownerId).get(),
-      col.where("collaborators", "array-contains", ownerId).get(),
-    ]);
+    try {
+      // Parallel queries — owned and collaborated
+      const [ownedSnap, collabSnap] = await Promise.all([
+        col.where("ownerId",       "==",            ownerId).get(),
+        col.where("collaborators", "array-contains", ownerId).get(),
+      ]);
 
-    // Merge + dedupe by document id
-    const map = new Map<string, Board>();
-    for (const doc of [...ownedSnap.docs, ...collabSnap.docs]) {
-      if (!map.has(doc.id)) {
-        const data = doc.data() as FirestoreBoard;
-        map.set(doc.id, docToBoard(doc.id, data, []));
+      // Merge + dedupe by document id
+      const map = new Map<string, Board>();
+      for (const doc of [...ownedSnap.docs, ...collabSnap.docs]) {
+        if (!map.has(doc.id)) {
+          const data = doc.data() as FirestoreBoard;
+          map.set(doc.id, docToBoard(doc.id, data, []));
+        }
       }
+      return Array.from(map.values());
+    } catch (error: any) {
+      if (error.code === 5 || error.message?.includes('NOT_FOUND')) {
+        throw new Error(
+          'Firestore database not found. ' +
+          'For local dev: Start Firestore emulator with "firebase emulators:start --only firestore". ' +
+          'For production: Create a Firestore database in Google Cloud Console. ' +
+          'See FIRESTORE_SETUP.md for details.'
+        );
+      }
+      throw error;
     }
-    return Array.from(map.values());
   },
 
   async getBoard(id: string, userId: string): Promise<Board> {

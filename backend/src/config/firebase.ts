@@ -21,6 +21,9 @@ export function initFirebase(): void {
     // Verify emulator connection
     if (process.env.FIRESTORE_EMULATOR_HOST) {
       logger.info(`[firebase] Firestore Emulator: ${process.env.FIRESTORE_EMULATOR_HOST}`);
+      logger.info(`[firebase] View data at: http://localhost:4000/firestore`);
+    } else {
+      logger.warn("[firebase] FIRESTORE_EMULATOR_HOST not set - expecting emulator on default port");
     }
     return;
   }

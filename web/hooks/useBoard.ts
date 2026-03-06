@@ -2,7 +2,7 @@
  * useBoard Hook - Hybrid Canvas State Management
  * 
  * Manages state for all three canvas layers with React Flow hooks
- * Includes localStorage persistence
+ * Includes backend persistence and localStorage fallback
  */
 
 "use client";
@@ -19,6 +19,8 @@ import {
 import type { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
 import type { Editor } from "tldraw";
 import { useBoardStore } from "@/store/board.store";
+import { getBoard } from "@/lib/api";
+import type { ApiError } from "@/lib/api-client";
 
 // Default initial state - empty canvas
 const defaultInitialNodes: Node[] = [];
@@ -78,6 +80,7 @@ function saveBoardState(
 
 export function useBoard(boardId: string) {
   const [isLoaded, setIsLoaded] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   // Load saved state or use defaults
   const savedState = loadBoardState(boardId);
@@ -109,20 +112,92 @@ export function useBoard(boardId: string) {
     setTldrawEditor: storeSetTldrawEditor,
     createBoard,
     setActiveBoard,
+    hydrateBoard,
+    enableAutosave,
+    disableAutosave,
   } = useBoardStore();
 
-  // Initialize board
+  // Load board from backend on mount
   useEffect(() => {
-    createBoard(boardId);
-    setActiveBoard(boardId);
-    // if saved state contained a TLDraw camera, remember it for later
-    if (savedState?.tldrawCamera) {
-      setInitialTldrawCamera(savedState.tldrawCamera);
-    }
-    setIsLoaded(true);
-  }, [boardId, createBoard, setActiveBoard]);
+    let mounted = true;
 
-  // Auto-save to localStorage whenever state changes
+    async function loadBoard() {
+      try {
+        // Disable autosave during initial load
+        disableAutosave();
+
+        // Initialize board in store
+        createBoard(boardId);
+        setActiveBoard(boardId);
+
+        // Try to load from backend
+        const boardData = await getBoard(boardId);
+        
+        if (!mounted) return;
+
+        // Hydrate state from backend
+        const backendNodes = (boardData.nodes || []) as Node[];
+        const backendEdges = (boardData.edges || []) as Edge[];
+        const backendElements = (boardData.elements || []) as ExcalidrawElement[];
+
+        // Update local state
+        setNodes(backendNodes);
+        setEdges(backendEdges);
+        setExcalidrawElements(backendElements);
+
+        // Hydrate store
+        hydrateBoard(boardId, {
+          nodes: backendNodes,
+          edges: backendEdges,
+          elements: backendElements,
+        });
+
+        // Save to localStorage as backup
+        saveBoardState(boardId, backendNodes, backendEdges, backendElements);
+
+        setLoadError(null);
+      } catch (error) {
+        console.error("Failed to load board from backend:", error);
+        
+        if (!mounted) return;
+
+        // Fallback to localStorage if backend fails
+        const localData = loadBoardState(boardId);
+        if (localData) {
+          setNodes(localData.nodes);
+          setEdges(localData.edges);
+          setExcalidrawElements(localData.excalidrawElements);
+          
+          hydrateBoard(boardId, {
+            nodes: localData.nodes,
+            edges: localData.edges,
+            elements: localData.excalidrawElements as ExcalidrawElement[],
+          });
+
+          if (localData.tldrawCamera) {
+            setInitialTldrawCamera(localData.tldrawCamera);
+          }
+        }
+
+        const apiError = error as ApiError;
+        setLoadError(apiError.message || "Failed to load board");
+      } finally {
+        if (mounted) {
+          setIsLoaded(true);
+          // Re-enable autosave after load completes
+          enableAutosave();
+        }
+      }
+    }
+
+    loadBoard();
+
+    return () => {
+      mounted = false;
+    };
+  }, [boardId, createBoard, setActiveBoard, hydrateBoard, enableAutosave, disableAutosave]);
+
+  // Auto-save to localStorage as backup (separate from backend autosave)
   useEffect(() => {
     if (!isLoaded) return; // Don't save during initial load
 
@@ -142,10 +217,11 @@ export function useBoard(boardId: string) {
     return () => clearTimeout(timeoutId);
   }, [boardId, nodes, edges, excalidrawElements, isLoaded, tldrawEditor]);
 
-  // Sync React Flow state to store
+  // Sync React Flow state to store (triggers backend autosave)
   useEffect(() => {
+    if (!isLoaded) return; // Don't trigger autosave during initial load
     setReactFlowData(boardId, { nodes, edges });
-  }, [boardId, nodes, edges, setReactFlowData]);
+  }, [boardId, nodes, edges, setReactFlowData, isLoaded]);
 
   // Handle connections
   const onConnect = useCallback(
@@ -159,9 +235,11 @@ export function useBoard(boardId: string) {
   const onExcalidrawElementsChange = useCallback(
     (elements: readonly ExcalidrawElement[]) => {
       setExcalidrawElements(elements);
-      storeSetExcalidrawElements(boardId, elements);
+      if (isLoaded) {
+        storeSetExcalidrawElements(boardId, elements);
+      }
     },
-    [boardId, storeSetExcalidrawElements]
+    [boardId, storeSetExcalidrawElements, isLoaded]
   );
 
   // Handle TLDraw editor mount
@@ -198,5 +276,9 @@ export function useBoard(boardId: string) {
     // TLDraw
     tldrawEditor,
     setTldrawEditor: handleSetTldrawEditor,
+
+    // Loading state
+    isLoaded,
+    loadError,
   };
 }

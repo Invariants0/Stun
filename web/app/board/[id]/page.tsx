@@ -1,6 +1,7 @@
 import CanvasRoot from "@/components/canvas/CanvasRoot";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ProfileIcon } from "@/components/ProfileIcon";
+import { CommandInterface } from "@/components/ui/CommandInterface";
 
 export default async function BoardPage({ params }: { params: { id: string } | Promise<{ id: string }> }) {
   const resolvedParams = await params;
@@ -21,6 +22,8 @@ export default async function BoardPage({ params }: { params: { id: string } | P
         <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
           <CanvasRoot boardId={boardId} />
         </div>
+        {/* Floating command interface — fixed positioned, above canvas */}
+        <CommandInterface boardId={boardId} />
       </main>
     </ErrorBoundary>
   );

@@ -163,7 +163,7 @@ async function testAICommand(boardId: string): Promise<boolean> {
       ],
     };
 
-    const result = await api.post("/ai/plan", payload);
+    const result = await api.post("/ai/plan", payload) as any;
     
     if (!result.actions || !Array.isArray(result.actions)) {
       throw new Error("AI response missing actions array");

@@ -54,85 +54,459 @@ export default function BoardsPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-600">Loading boards...</div>
+      <div style={{
+        minHeight: '100vh',
+        background: '#f8fafc',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          color: '#64748b',
+          fontSize: '0.9375rem',
+        }}>
+          <div style={{
+            width: '20px',
+            height: '20px',
+            border: '2px solid #e2e8f0',
+            borderTopColor: '#0f172a',
+            borderRadius: '50%',
+            animation: 'spin 0.8s linear infinite',
+          }} />
+          Loading your boards...
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">My Boards</h1>
+    <div style={{
+      minHeight: '100vh',
+      background: '#f8fafc',
+    }}>
+      {/* Top Navigation */}
+      <div style={{
+        position: 'sticky',
+        top: 0,
+        background: 'rgba(248, 250, 252, 0.8)',
+        backdropFilter: 'blur(12px)',
+        borderBottom: '1px solid rgba(226, 232, 240, 0.6)',
+        zIndex: 100,
+      }}>
+        <div style={{
+          maxWidth: '1400px',
+          margin: '0 auto',
+          padding: '16px 40px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <h1 style={{
+              fontFamily: 'Space Grotesk, Inter, sans-serif',
+              fontSize: '1.375rem',
+              fontWeight: 600,
+              color: '#0f172a',
+              letterSpacing: '-0.02em',
+              margin: 0,
+            }}>
+              STUN
+            </h1>
+            <span style={{
+              fontSize: '0.875rem',
+              color: '#94a3b8',
+              fontWeight: 400,
+            }}>
+              / The Infinite Canvas
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div style={{
+        maxWidth: '1400px',
+        margin: '0 auto',
+        padding: '40px 40px 80px',
+      }}>
+        {/* Header */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: '40px',
+        }}>
+          <div>
+            <h2 style={{
+              fontFamily: 'Space Grotesk, Inter, sans-serif',
+              fontSize: '2rem',
+              fontWeight: 600,
+              color: '#0f172a',
+              letterSpacing: '-0.03em',
+              margin: '0 0 8px 0',
+            }}>
+              My Boards
+            </h2>
+            <p style={{
+              fontSize: '0.9375rem',
+              color: '#64748b',
+              margin: 0,
+            }}>
+              {boards.length} {boards.length === 1 ? 'board' : 'boards'}
+            </p>
+          </div>
           <button
             onClick={handleCreateBoard}
             disabled={creating}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            style={{
+              padding: '10px 20px',
+              background: creating ? '#e2e8f0' : '#0f172a',
+              color: creating ? '#94a3b8' : 'white',
+              border: 'none',
+              borderRadius: '10px',
+              fontFamily: 'Inter, sans-serif',
+              fontSize: '0.875rem',
+              fontWeight: 500,
+              cursor: creating ? 'not-allowed' : 'pointer',
+              transition: 'all 0.2s ease',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              letterSpacing: '-0.01em',
+            }}
+            onMouseEnter={(e) => {
+              if (!creating) {
+                e.currentTarget.style.background = '#1e293b';
+                e.currentTarget.style.transform = 'translateY(-1px)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(15, 23, 42, 0.15)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!creating) {
+                e.currentTarget.style.background = '#0f172a';
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = 'none';
+              }
+            }}
           >
-            {creating ? "Creating..." : "+ New Board"}
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            {creating ? 'Creating...' : 'New Board'}
           </button>
         </div>
 
+        {/* Error Message */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+          <div style={{
+            marginBottom: '24px',
+            padding: '14px 18px',
+            background: '#fef2f2',
+            border: '1px solid #fecaca',
+            borderRadius: '12px',
+            fontSize: '0.875rem',
+            color: '#dc2626',
+            fontWeight: 500,
+          }}>
             {error}
           </div>
         )}
 
+        {/* Empty State */}
         {boards.length === 0 ? (
-          <div className="text-center py-16">
-            <p className="text-gray-600 mb-4">No boards yet. Create your first board to get started!</p>
+          <div style={{
+            textAlign: 'center',
+            padding: '80px 20px',
+          }}>
+            <div style={{
+              width: '120px',
+              height: '120px',
+              margin: '0 auto 24px',
+              background: 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)',
+              borderRadius: '24px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: '1px solid rgba(226, 232, 240, 0.8)',
+            }}>
+              <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <path d="M3 9h18" />
+                <path d="M9 21V9" />
+              </svg>
+            </div>
+            <h3 style={{
+              fontFamily: 'Space Grotesk, Inter, sans-serif',
+              fontSize: '1.25rem',
+              fontWeight: 600,
+              color: '#0f172a',
+              marginBottom: '8px',
+            }}>
+              No boards yet
+            </h3>
+            <p style={{
+              fontSize: '0.9375rem',
+              color: '#64748b',
+              marginBottom: '24px',
+              maxWidth: '400px',
+              margin: '0 auto 32px',
+              lineHeight: '1.6',
+            }}>
+              Create your first infinite canvas to start organizing ideas, brainstorming, and collaborating.
+            </p>
             <button
               onClick={handleCreateBoard}
               disabled={creating}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              style={{
+                padding: '12px 28px',
+                background: creating ? '#e2e8f0' : '#0f172a',
+                color: creating ? '#94a3b8' : 'white',
+                border: 'none',
+                borderRadius: '10px',
+                fontFamily: 'Inter, sans-serif',
+                fontSize: '0.9375rem',
+                fontWeight: 500,
+                cursor: creating ? 'not-allowed' : 'pointer',
+                transition: 'all 0.2s ease',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+              }}
+              onMouseEnter={(e) => {
+                if (!creating) {
+                  e.currentTarget.style.background = '#1e293b';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 8px 20px rgba(15, 23, 42, 0.2)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!creating) {
+                  e.currentTarget.style.background = '#0f172a';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }
+              }}
             >
-              {creating ? "Creating..." : "Create First Board"}
+              {creating ? 'Creating...' : 'Create First Board'}
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          /* Boards Grid */
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
+            gap: '20px',
+          }}>
             {boards.map((board) => (
               <div
                 key={board.id}
-                className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
+                onClick={() => router.push(`/board/${board.id}`)}
+                style={{
+                  background: 'white',
+                  borderRadius: '14px',
+                  border: '1px solid rgba(226, 232, 240, 0.8)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  overflow: 'hidden',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(15, 23, 42, 0.08)';
+                  e.currentTarget.style.borderColor = 'rgba(15, 23, 42, 0.12)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = 'none';
+                  e.currentTarget.style.borderColor = 'rgba(226, 232, 240, 0.8)';
+                }}
               >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                      Board {board.id.slice(0, 8)}
-                    </h3>
-                    <p className="text-sm text-gray-500">
-                      {new Date(board.updatedAt).toLocaleDateString()}
-                    </p>
+                {/* Board Preview Canvas */}
+                <div style={{
+                  height: '160px',
+                  background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+                  borderBottom: '1px solid rgba(226, 232, 240, 0.6)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  position: 'relative',
+                  overflow: 'hidden',
+                }}>
+                  {/* Abstract node visualization */}
+                  <div style={{
+                    position: 'absolute',
+                    inset: '20px',
+                    display: 'flex',
+                    gap: '8px',
+                    flexWrap: 'wrap',
+                    alignContent: 'center',
+                    justifyContent: 'center',
+                  }}>
+                    {Array.from({ length: Math.min(board.nodes.length, 6) }).map((_, i) => (
+                      <div
+                        key={i}
+                        style={{
+                          width: `${40 + (i % 3) * 15}px`,
+                          height: `${30 + (i % 2) * 12}px`,
+                          background: i % 3 === 0 ? 'rgba(15, 23, 42, 0.08)' : i % 2 === 0 ? 'rgba(59, 130, 246, 0.12)' : 'rgba(168, 85, 247, 0.1)',
+                          borderRadius: '6px',
+                          border: '1px solid rgba(15, 23, 42, 0.06)',
+                        }}
+                      />
+                    ))}
+                    {board.nodes.length === 0 && (
+                      <div style={{
+                        fontSize: '0.8125rem',
+                        color: '#cbd5e1',
+                        fontWeight: 500,
+                      }}>
+                        Empty canvas
+                      </div>
+                    )}
                   </div>
-                  <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded">
-                    {board.visibility}
-                  </span>
                 </div>
 
-                <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
-                  <span>{board.nodes.length} nodes</span>
-                  <span>{board.edges.length} edges</span>
-                  {board.activeUsers > 0 && (
-                    <span className="text-green-600">{board.activeUsers} active</span>
-                  )}
-                </div>
+                {/* Board Info */}
+                <div style={{ padding: '18px' }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    justifyContent: 'space-between',
+                    marginBottom: '12px',
+                  }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <h3 style={{
+                        fontFamily: 'Space Grotesk, Inter, sans-serif',
+                        fontSize: '1.0625rem',
+                        fontWeight: 600,
+                        color: '#0f172a',
+                        margin: '0 0 4px 0',
+                        letterSpacing: '-0.01em',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}>
+                        Board {board.id.slice(0, 8)}
+                      </h3>
+                      <p style={{
+                        fontSize: '0.8125rem',
+                        color: '#94a3b8',
+                        margin: 0,
+                        fontWeight: 500,
+                      }}>
+                        Updated {formatRelativeTime(board.updatedAt)}
+                      </p>
+                    </div>
+                    <span style={{
+                      padding: '4px 10px',
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      background: board.visibility === 'private' ? '#f1f5f9' : '#dbeafe',
+                      color: board.visibility === 'private' ? '#64748b' : '#1e40af',
+                      borderRadius: '6px',
+                      textTransform: 'capitalize',
+                      letterSpacing: '0.02em',
+                      flexShrink: 0,
+                    }}>
+                      {board.visibility}
+                    </span>
+                  </div>
 
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => router.push(`/board/${board.id}`)}
-                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-                  >
-                    Open
-                  </button>
+                  {/* Stats */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '16px',
+                    paddingTop: '12px',
+                    borderTop: '1px solid #f1f5f9',
+                  }}>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      fontSize: '0.8125rem',
+                      color: '#64748b',
+                      fontWeight: 500,
+                    }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="3" width="7" height="7" />
+                        <rect x="14" y="3" width="7" height="7" />
+                        <rect x="14" y="14" width="7" height="7" />
+                        <rect x="3" y="14" width="7" height="7" />
+                      </svg>
+                      {board.nodes.length}
+                    </div>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      fontSize: '0.8125rem',
+                      color: '#64748b',
+                      fontWeight: 500,
+                    }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                        <polyline points="7.5 4.21 12 6.81 16.5 4.21" />
+                        <polyline points="7.5 19.79 7.5 14.6 3 12" />
+                        <polyline points="21 12 16.5 14.6 16.5 19.79" />
+                        <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                        <line x1="12" y1="22.08" x2="12" y2="12" />
+                      </svg>
+                      {board.edges.length}
+                    </div>
+                    {board.activeUsers > 0 && (
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        fontSize: '0.8125rem',
+                        color: '#10b981',
+                        fontWeight: 600,
+                        marginLeft: 'auto',
+                      }}>
+                        <div style={{
+                          width: '6px',
+                          height: '6px',
+                          background: '#10b981',
+                          borderRadius: '50%',
+                          animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        }} />
+                        {board.activeUsers} active
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {/* Spinner Animation */}
+      <style>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
+}
+
+// Helper function to format relative time
+function formatRelativeTime(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffMins < 1) return 'just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+  
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }

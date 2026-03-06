@@ -31,6 +31,7 @@ export function usePresence(boardId: string | null): UsePresenceReturn {
       return;
     }
 
+    const currentBoardId = boardId; // Capture for type narrowing
     let mounted = true;
     let heartbeatInterval: NodeJS.Timeout | null = null;
     let pollInterval: NodeJS.Timeout | null = null;
@@ -38,7 +39,7 @@ export function usePresence(boardId: string | null): UsePresenceReturn {
     // Send heartbeat to backend
     async function sendHeartbeat() {
       try {
-        await updatePresence(boardId);
+        await updatePresence(currentBoardId);
         if (mounted) {
           setIsOnline(true);
           setError(null);
@@ -55,7 +56,7 @@ export function usePresence(boardId: string | null): UsePresenceReturn {
     // Poll for active users
     async function pollActiveUsers() {
       try {
-        const response = await getActiveUsers(boardId);
+        const response = await getActiveUsers(currentBoardId);
         if (mounted) {
           setActiveUsers(response.users);
           setError(null);

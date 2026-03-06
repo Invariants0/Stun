@@ -7,7 +7,7 @@ export default function HomePage() {
   const router = useRouter();
 
   const handleEnter = () => {
-    router.push("/board/demo-board");
+    router.push("/boards");
   };
 
   return <EnterPage onEnter={handleEnter} />;

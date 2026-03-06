@@ -1,7 +1,15 @@
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import { getFirestore, firestoreCollections } from "../src/config/firebase";
 
-describe("Firestore Operations", () => {
+// Skip Firestore tests if the emulator is not configured
+const emulatorHost = process.env.FIRESTORE_EMULATOR_HOST;
+const shouldSkip = !emulatorHost;
+
+if (shouldSkip) {
+  console.warn("[tests] FIRESTORE_EMULATOR_HOST not set; skipping Firestore Operations suite");
+}
+
+describe.skipIf(shouldSkip)("Firestore Operations", () => {
   const testCollection = firestoreCollections.boards;
   let testDocId: string;
 

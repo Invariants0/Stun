@@ -1,59 +1,87 @@
-import axios from "axios";
-import { getStoredToken } from "@/lib/auth";
+/**
+ * API Service Layer
+ * 
+ * High-level API functions for all backend endpoints
+ * Uses centralized api-client with retry logic and error handling
+ */
 
-export const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080",
-  timeout: 30000,
-});
+import { api } from "./api-client";
+import type {
+  Board,
+  BoardPayload,
+  BoardListResponse,
+  AIActionRequest,
+  AIActionPlan,
+  PresenceResponse,
+  CollaboratorsResponse,
+  SuccessResponse,
+  BoardVisibility,
+} from "@/types/api.types";
 
-// Attach the Firebase ID token automatically on every request
-api.interceptors.request.use((config) => {
-  const token = getStoredToken();
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
-});
+// ============================================================================
+// Board APIs
+// ============================================================================
 
-export async function planActions(payload: {
-  boardId: string;
-  command: string;
-  screenshot: string;
-  nodes: unknown[];
-}) {
-  try {
-    const { data } = await api.post("/ai/plan", payload);
-    return data;
-  } catch (error: any) {
-    console.error("API error in planActions:", error);
-    if (error.response) {
-      // Server responded with a status code outside the 2xx range
-      throw new Error(error.response.data?.message || `Server error: ${error.response.status}`);
-    } else if (error.request) {
-      // Request was made but no response was received
-      throw new Error("Network error: No response from server. Please check your connection.");
-    } else {
-      // Something happened in setting up the request
-      throw new Error(error.message || "Failed to call AI planner");
-    }
-  }
+export async function createBoard(payload?: BoardPayload): Promise<Board> {
+  return api.post<Board>("/boards", payload || { nodes: [], edges: [] });
 }
 
-// board APIs
-export async function createBoard() {
-  try {
-    const { data } = await api.post("/boards", {});
-    return data;
-  } catch (err: any) {
-    console.error("API error in createBoard:", err);
-    throw err;
-  }
+export async function listBoards(): Promise<Board[]> {
+  const response = await api.get<BoardListResponse>("/boards");
+  return response.boards;
 }
 
-export async function listBoards() {
-  try {
-    const { data } = await api.get("/boards");
-    return data.boards as Array<any>;
-  } catch (err: any) {
-    console.error("API error in listBoards:", err);
-    throw err;
-  }
+export async function getBoard(boardId: string): Promise<Board> {
+  return api.get<Board>(`/boards/${boardId}`);
+}
+
+export async function updateBoard(boardId: string, payload: BoardPayload): Promise<Board> {
+  return api.put<Board>(`/boards/${boardId}`, payload);
+}
+
+// Note: Board deletion not implemented in backend yet
+// export async function deleteBoard(boardId: string): Promise<SuccessResponse> {
+//   return api.delete<SuccessResponse>(`/boards/${boardId}`);
+// }
+
+export async function updateBoardVisibility(
+  boardId: string,
+  visibility: BoardVisibility
+): Promise<SuccessResponse> {
+  return api.patch<SuccessResponse>(`/boards/${boardId}/visibility`, { visibility });
+}
+
+export async function addCollaborator(boardId: string, userId: string): Promise<SuccessResponse> {
+  return api.post<SuccessResponse>(`/boards/${boardId}/share`, { userId });
+}
+
+export async function removeCollaborator(
+  boardId: string,
+  userId: string
+): Promise<SuccessResponse> {
+  return api.delete<SuccessResponse>(`/boards/${boardId}/share/${userId}`);
+}
+
+export async function getCollaborators(boardId: string): Promise<CollaboratorsResponse> {
+  return api.get<CollaboratorsResponse>(`/boards/${boardId}/collaborators`);
+}
+
+// ============================================================================
+// AI APIs
+// ============================================================================
+
+export async function planActions(payload: AIActionRequest): Promise<AIActionPlan> {
+  return api.post<AIActionPlan>("/ai/plan", payload);
+}
+
+// ============================================================================
+// Presence APIs
+// ============================================================================
+
+export async function updatePresence(boardId: string): Promise<SuccessResponse> {
+  return api.post<SuccessResponse>(`/presence/${boardId}`);
+}
+
+export async function getActiveUsers(boardId: string): Promise<PresenceResponse> {
+  return api.get<PresenceResponse>(`/presence/${boardId}`);
 }

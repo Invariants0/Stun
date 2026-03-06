@@ -50,7 +50,7 @@ const rawConfig = {
   FRONTEND_URL:                process.env.FRONTEND_URL,
   GCP_PROJECT_ID:              process.env.GCP_PROJECT_ID,
   GCP_REGION:                  process.env.GCP_REGION,
-  FIREBASE_SERVICE_ACCOUNT_KEY: process.env.FIREBASE_SERVICE_ACCOUNT_KEY,
+  FIREBASE_SERVICE_ACCOUNT_KEY:process.env.FIREBASE_SERVICE_ACCOUNT_KEY,
   BOARDS_COLLECTION:           process.env.BOARDS_COLLECTION,
   GOOGLE_CLIENT_ID:            process.env.GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET:        process.env.GOOGLE_CLIENT_SECRET,

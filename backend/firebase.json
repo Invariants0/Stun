@@ -3,7 +3,8 @@
     "singleProjectMode": true,
     "firestore": {
       "port": 8081,
-      "host": "127.0.0.1"
+      "host": "127.0.0.1",
+      "projectId": "stun-489205"
     },
     "ui": {
       "enabled": true,

@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { useToastStore } from "@/store/toast.store";
+import toast from "react-hot-toast";
 
 interface AsyncState<T> {
   data: T | null;
@@ -21,8 +21,6 @@ export function useAsync<T, Args extends any[]>(
     error: null,
   });
 
-  const { addToast } = useToastStore();
-
   const execute = useCallback(
     async (...args: Args) => {
       setState((s) => ({ ...s, loading: true, error: null }));
@@ -36,14 +34,14 @@ export function useAsync<T, Args extends any[]>(
         setState({ data: null, loading: false, error: err });
         
         if (options.showToast !== false) {
-          addToast(err.message || "An unexpected error occurred", "error");
+          toast.error(err.message || "An unexpected error occurred");
         }
         
         if (options.onError) options.onError(err);
         throw err;
       }
     },
-    [asyncFn, options, addToast]
+    [asyncFn, options]
   );
 
   return { ...state, execute };

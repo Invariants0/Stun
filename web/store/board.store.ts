@@ -131,6 +131,8 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   // React Flow data
   setReactFlowData: (boardId, data) =>
     set((state) => {
+      console.log("[BoardStore] setReactFlowData called for", boardId, "with", data.nodes.length, "nodes:", data.nodes);
+      
       const board = state.boards[boardId] || createEmptyBoard(boardId);
       const newState = {
         boards: {
@@ -145,6 +147,8 @@ export const useBoardStore = create<BoardState>((set, get) => ({
           },
         },
       };
+      
+      console.log("[BoardStore] New board state:", newState.boards[boardId].reactflow.nodes.length, "nodes");
       
       // Trigger autosave after state update
       setTimeout(() => get().triggerAutosave(boardId), 0);

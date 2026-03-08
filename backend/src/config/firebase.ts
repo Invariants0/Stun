@@ -13,26 +13,15 @@ import { logger } from "./logger";
 export function initFirebase(): void {
   if (getApps().length > 0) return; // already initialised
 
-  // Test mode: use Firestore Emulator
-  if (process.env.NODE_ENV === "test" || process.env.FIRESTORE_EMULATOR_HOST) {
-    initializeApp({ projectId: envVars.GCP_PROJECT_ID || "test-project" });
-    logger.info("[firebase] Initialized in TEST mode with Firestore Emulator");
-    
-    // Verify emulator connection
-    if (process.env.FIRESTORE_EMULATOR_HOST) {
-      logger.info(`[firebase] Firestore Emulator: ${process.env.FIRESTORE_EMULATOR_HOST}`);
-      logger.info(`[firebase] View data at: http://localhost:4000/firestore`);
-    } else {
-      logger.warn("[firebase] FIRESTORE_EMULATOR_HOST not set - expecting emulator on default port");
-    }
-    return;
-  }
-
+  // Always load service account credentials if available
+  // (needed for token minting even in emulator mode)
   if (envVars.FIREBASE_SERVICE_ACCOUNT_KEY) {
     try {
       const serviceAccount = JSON.parse(envVars.FIREBASE_SERVICE_ACCOUNT_KEY);
       initializeApp({
-        credential: cert(serviceAccount)});
+        credential: cert(serviceAccount),
+        projectId: envVars.GCP_PROJECT_ID,
+      });
       logger.info("[firebase] Initialized with service account key");
     } catch (error) {
       logger.error("[firebase] Failed to initialize with service account key", error);
@@ -43,6 +32,12 @@ export function initFirebase(): void {
     // Cloud Run Workload Identity or local emulator — ADC
     initializeApp({ projectId: envVars.GCP_PROJECT_ID });
     logger.warn("[firebase] No FIREBASE_SERVICE_ACCOUNT_KEY — using Application Default Credentials");
+  }
+
+  // Log emulator status if enabled
+  if (process.env.FIRESTORE_EMULATOR_HOST) {
+    logger.info("[firebase] Firestore Emulator: " + process.env.FIRESTORE_EMULATOR_HOST);
+    logger.info("[firebase] View data at: http://localhost:4000/firestore");
   }
 }
 

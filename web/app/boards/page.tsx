@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { listBoards, createBoard, deleteBoard } from "@/lib/api";
+import { DeleteDialog } from "@/components/ui/DeleteDialog";
 import type { Board } from "@/types/api.types";
 import type { ApiError } from "@/lib/api-client";
 
@@ -15,6 +16,7 @@ export default function BoardsPage() {
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [deleteDialog, setDeleteDialog] = useState<{isOpen: boolean; boardId: string; boardName: string}>({isOpen: false, boardId: '', boardName: ''});
 
   useEffect(() => {
     if (authLoading) return;
@@ -57,10 +59,12 @@ export default function BoardsPage() {
     event.stopPropagation(); // Prevent card click navigation
     
     const boardName = `Board ${boardId.slice(0, 8)}`;
-    if (!window.confirm(`Are you sure you want to delete ${boardName}? This action cannot be undone.`)) {
-      return;
-    }
+    setDeleteDialog({isOpen: true, boardId, boardName});
+  }
 
+  async function confirmDeleteBoard() {
+    const { boardId } = deleteDialog;
+    
     try {
       setDeleting(boardId);
       setError(null);
@@ -68,12 +72,18 @@ export default function BoardsPage() {
       
       // Remove from local state
       setBoards(boards.filter(board => board.id !== boardId));
+      setDeleteDialog({isOpen: false, boardId: '', boardName: ''});
     } catch (err) {
       const apiError = err as ApiError;
       setError(apiError.message || "Failed to delete board");
     } finally {
       setDeleting(null);
     }
+  }
+
+  function cancelDeleteBoard() {
+    if (deleting) return; // Prevent closing if deletion is in progress
+    setDeleteDialog({isOpen: false, boardId: '', boardName: ''});
   }
 
   if (authLoading || loading) {
@@ -570,6 +580,17 @@ export default function BoardsPage() {
           to { transform: rotate(360deg); }
         }
       `}</style>
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteDialog
+        isOpen={deleteDialog.isOpen}
+        onClose={cancelDeleteBoard}
+        onConfirm={confirmDeleteBoard}
+        title="Delete Board"
+        message={`Are you sure you want to delete "${deleteDialog.boardName}"? All content will be permanently lost and cannot be recovered.`}
+        confirmText="Delete Board"
+        isLoading={deleting !== null}
+      />
     </div>
   );
 }

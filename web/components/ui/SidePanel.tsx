@@ -2,6 +2,8 @@
 
 import { useEffect, useRef } from "react";
 import { useUIStore } from "@/store/ui.store";
+import { usePlanAndExecute } from "@/hooks/usePlanAndExecute";
+import { useBoardStore } from "@/store/board.store";
 import { SidePanelSection } from "./SidePanelSection";
 import { SidePanelItem } from "./SidePanelItem";
 
@@ -98,9 +100,29 @@ const DiagramIcon = () => (
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function SidePanel() {
+type Props = {
+  boardId: string;
+};
+
+export function SidePanel({ boardId }: Props) {
   const { isCommandPanelOpen, closeCommandPanel } = useUIStore();
+  const { execute, isPlanning } = usePlanAndExecute(boardId);
+  const appendNode = useBoardStore((s) => s.appendNode);
+  const getBoard = useBoardStore((s) => s.getBoard);
   const panelRef = useRef<HTMLDivElement>(null);
+
+  const handleAddNode = () => {
+    if (!boardId) return;
+    const board = getBoard(boardId);
+    const n = board?.reactflow.nodes.length ?? 0;
+    appendNode(boardId, {
+      id: `node-${Date.now()}`,
+      type: "text",
+      position: { x: 80 + (n % 5) * 200, y: 80 + Math.floor(n / 5) * 120 },
+      data: { label: "New node" },
+    });
+    closeCommandPanel();
+  };
 
   // Close on Escape key
   useEffect(() => {
@@ -235,30 +257,39 @@ export function SidePanel() {
               label="Explain Canvas"
               icon={<BrainIcon />}
               badge="AI"
+              onClick={() => execute("Explain what is on this canvas — summarize the key ideas and their relationships")}
             />
             <SidePanelItem
               label="Organize Ideas"
               icon={<SparkleIcon />}
               badge="AI"
+              onClick={() => execute("Organize all nodes into a clear logical layout, grouping related ideas together")}
             />
             <SidePanelItem
               label="Generate Diagram"
               icon={<DiagramIcon />}
               badge="AI"
+              onClick={() => execute("Connect all related nodes with edges to form a comprehensive knowledge diagram")}
             />
             <SidePanelItem
               label="Summarize Nodes"
               icon={<CircleIcon />}
               badge="AI"
+              onClick={() => execute("Create a new summary node that captures the main themes across all existing nodes")}
             />
           </SidePanelSection>
 
           {/* Canvas */}
           <SidePanelSection title="Canvas">
-            <SidePanelItem label="Nodes" icon={<NodeIcon />} />
+            <SidePanelItem label="Add Node" icon={<NodeIcon />} onClick={handleAddNode} />
+            <SidePanelItem
+              label="Cluster by Topic"
+              icon={<GridIcon />}
+              badge="AI"
+              onClick={() => execute("Cluster nodes by topic — group similar ideas into distinct circular clusters")}
+            />
             <SidePanelItem label="Connections" icon={<LinkIcon />} />
             <SidePanelItem label="Layers" icon={<LayoutIcon />} />
-            <SidePanelItem label="Layout Tools" icon={<GridIcon />} />
           </SidePanelSection>
 
           {/* Assets */}

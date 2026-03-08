@@ -17,7 +17,7 @@ export function CommandInterface({ boardId }: Props) {
   return (
     <>
       <FloatingCommandBar boardId={boardId} />
-      <SidePanel />
+      <SidePanel boardId={boardId} />
     </>
   );
 }

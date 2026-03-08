@@ -3,6 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useUIStore } from "@/store/ui.store";
 import { useVoice } from "@/hooks/useVoice";
+import { usePlanAndExecute } from "@/hooks/usePlanAndExecute";
+import { useBoardStore } from "@/store/board.store";
+import { useBoard } from "@/hooks/useBoard";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -37,16 +40,43 @@ const SendIcon = () => (
 // ─── Component ────────────────────────────────────────────────────────────────
 
 type Props = {
-  boardId?: string;
+  boardId: string;
 };
 
 export function FloatingCommandBar({ boardId }: Props) {
   const { isCommandPanelOpen, openCommandPanel, toggleCommandPanel } = useUIStore();
   const { listening, toggleListening, transcript } = useVoice();
+  const { execute, isPlanning } = usePlanAndExecute(boardId);
+  const appendNode = useBoardStore((s) => s.appendNode);
+  const getBoard = useBoardStore((s) => s.getBoard);
+  // useBoard requires a defined boardId; it should always be provided by the parent
+  const { setNodes } = useBoard(boardId);
 
   const [inputValue, setInputValue] = useState("");
   const [hovered, setHovered] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleAddNode = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (!boardId) return;
+      const board = getBoard(boardId);
+      const existingCount = board?.reactflow.nodes.length ?? 0;
+      const col = existingCount % 5;
+      const row = Math.floor(existingCount / 5);
+      const newNode = {
+        id: `node-${Date.now()}`,
+        type: "text",
+        position: { x: 80 + col * 200, y: 80 + row * 120 },
+        data: { label: "New node" },
+      };
+      // update React Flow local state so it appears immediately
+      setNodes((nodes) => [...nodes, newNode]);
+      // also persist to store/autosave
+      appendNode(boardId, newNode);
+    },
+    [boardId, appendNode, getBoard, setNodes]
+  );
 
   // Sync voice transcript into the input field
   useEffect(() => {
@@ -90,26 +120,27 @@ export function FloatingCommandBar({ boardId }: Props) {
   const handleSend = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      if (!inputValue.trim()) return;
-      // Command send — wired to AI planner in next stage
-      console.log("[STUN] Command:", inputValue, "BoardId:", boardId);
+      if (!inputValue.trim() || isPlanning) return;
+      const cmd = inputValue;
       setInputValue("");
+      execute(cmd);
     },
-    [inputValue, boardId]
+    [inputValue, isPlanning, execute]
   );
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === "Enter" && inputValue.trim()) {
-        console.log("[STUN] Command:", inputValue, "BoardId:", boardId);
+      if (e.key === "Enter" && inputValue.trim() && !isPlanning) {
+        const cmd = inputValue;
         setInputValue("");
+        execute(cmd);
       }
       // Stop Esc from bubbling to SidePanel close when typing
       if (e.key === "Escape") {
         e.currentTarget.blur();
       }
     },
-    [inputValue, boardId]
+    [inputValue, isPlanning, execute]
   );
 
   return (
@@ -152,7 +183,7 @@ export function FloatingCommandBar({ boardId }: Props) {
       <button
         type="button"
         aria-label="Add node"
-        onClick={(e) => e.stopPropagation()}
+        onClick={handleAddNode}
         style={{
           width: 32,
           height: 32,
@@ -233,16 +264,17 @@ export function FloatingCommandBar({ boardId }: Props) {
         {inputValue.trim() && (
           <button
             type="button"
-            aria-label="Send command"
+            aria-label={isPlanning ? "Planning…" : "Send command"}
+            disabled={isPlanning}
             onClick={handleSend}
             style={{
               width: 28,
               height: 28,
               borderRadius: 100,
               border: "none",
-              background: "#0f172a",
+              background: isPlanning ? "#94a3b8" : "#0f172a",
               color: "#fff",
-              cursor: "pointer",
+              cursor: isPlanning ? "not-allowed" : "pointer",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",

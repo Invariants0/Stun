@@ -9,6 +9,8 @@
 
 import type { Node, Edge, Viewport } from "reactflow";
 import type { AIAction, AIActionPlan } from "@/types/canvas.types";
+import { useBoardStore } from "@/store/board.store";
+import { canvasMappingService } from "@/lib/canvas-mapping";
 
 export interface ActionExecutorContext {
   nodes: Node[];
@@ -21,9 +23,15 @@ export interface ActionExecutorContext {
 
 export class ActionExecutor {
   private context: ActionExecutorContext;
+  private boardId: string;
 
-  constructor(context: ActionExecutorContext) {
+  constructor(context: ActionExecutorContext, boardId: string) {
     this.context = context;
+    this.boardId = boardId;
+  }
+  
+  private getBoardId(): string {
+    return this.boardId;
   }
 
   /**
@@ -51,7 +59,9 @@ export class ActionExecutor {
    */
   async executeAction(action: AIAction): Promise<void> {
     try {
-      console.log("Executing action:", action);
+      console.log("[ActionExecutor] Executing action:", action);
+      console.log("[ActionExecutor] Current context nodes:", this.context.nodes.length);
+      console.log("[ActionExecutor] Available node IDs:", this.context.nodes.map(n => n.id));
 
       switch (action.type) {
         case "move":
@@ -76,7 +86,7 @@ export class ActionExecutor {
           throw new Error(`Unsupported action type: ${(action as AIAction).type}`);
       }
     } catch (error: any) {
-      console.error(`Failed to execute ${action.type} action:`, error);
+      console.error(`[ActionExecutor] Failed to execute ${action.type} action:`, error);
       throw error; // Re-throw to be caught by executePlan
     }
   }
@@ -257,32 +267,90 @@ export class ActionExecutor {
   }
 
   /**
-   * Create a new node
+   * Create a new node by adding an Excalidraw element
+   * The mapping service will automatically convert it to a React Flow node
    */
   private executeCreate(action: AIAction): Promise<void> {
-    const newNode: Node = {
-      id: `node-${Date.now()}`,
-      type: action.data?.type as string || "text",
-      position: action.to || { x: 100, y: 100 },
-      data: action.data || { label: "New Node" },
+    // Get text and position from action
+    const text = (action as any).text || action.data?.label || "New Node";
+    let position = (action as any).position || action.to || { x: 400, y: 300 };
+    
+    console.log("[ActionExecutor] Creating Excalidraw element at position:", position, "with text:", text);
+    
+    // Create directly via useBoardStore instead of through React Flow
+    const boardState = useBoardStore.getState();
+    const currentBoard = boardState.boards[this.getBoardId()];
+    const currentElements = currentBoard?.excalidraw?.elements || [];
+    
+    // Create a new Excalidraw text element
+    const newElement: any = {
+      id: `ai-element-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      type: "text",
+      x: position.x,
+      y: position.y,
+      width: 200,
+      height: 50,
+      angle: 0,
+      strokeColor: "#10b981", // Green to indicate AI-created
+      backgroundColor: "#1e293b",
+      fillStyle: "solid",
+      strokeWidth: 2,
+      strokeStyle: "solid",
+      roughness: 1,
+      opacity: 100,
+      text: text,
+      fontSize: 16,
+      fontFamily: 1,
+      textAlign: "center" as const,
+      verticalAlign: "middle" as const,
+      containerId: null,
+      originalText: text,
+      autoResize: true,
+      lineHeight: 1.25,
     };
-
-    this.context.setNodes((nodes) => [...nodes, newNode]);
+    
+    // Update Excalidraw elements in store
+    const { setExcalidrawElements } = useBoardStore.getState();
+    setExcalidrawElements(this.getBoardId(), [...currentElements, newElement]);
+    
+    console.log("[ActionExecutor] Created Excalidraw element - mapping service will handle conversion");
+    
     return Promise.resolve();
   }
 
   /**
-   * Delete a node
+   * Delete a node by removing the corresponding Excalidraw element
    */
   private executeDelete(action: AIAction): Promise<void> {
     if (!action.nodeId) {
       throw new Error("Delete action requires nodeId");
     }
 
-    this.context.setNodes((nodes) => nodes.filter((n) => n.id !== action.nodeId));
-    this.context.setEdges((edges) =>
-      edges.filter((e) => e.source !== action.nodeId && e.target !== action.nodeId)
-    );
+    console.log(`[ActionExecutor] Attempting to delete node: ${action.nodeId}`);
+    
+    // Get current board state
+    const boardState = useBoardStore.getState();
+    const currentBoard = boardState.boards[this.getBoardId()];
+    const currentElements = currentBoard?.excalidraw?.elements || [];
+    
+    // Find corresponding Excalidraw element using the mapping service
+    const mapping = canvasMappingService.getMappingByNode(action.nodeId);
+    
+    if (!mapping) {
+      const availableIds = this.context.nodes.map(n => n.id).join(', ');
+      console.error(`[ActionExecutor] Cannot delete - no mapping found for node: ${action.nodeId}`);
+      console.error(`[ActionExecutor] Available node IDs: ${availableIds}`);
+      throw new Error(`Cannot delete node '${action.nodeId}' - no Excalidraw mapping found. Available nodes: ${availableIds}`);
+    }
+    
+    // Remove the Excalidraw element
+    const filteredElements = currentElements.filter(el => el.id !== mapping.excalidrawElementId);
+    
+    // Update store
+    const { setExcalidrawElements } = useBoardStore.getState();
+    setExcalidrawElements(this.getBoardId(), filteredElements);
+    
+    console.log(`[ActionExecutor] Deleted Excalidraw element: ${mapping.excalidrawElementId}`);
 
     return Promise.resolve();
   }

@@ -39,10 +39,9 @@ export async function updateBoard(boardId: string, payload: BoardPayload): Promi
   return api.put<Board>(`/boards/${boardId}`, payload);
 }
 
-// Note: Board deletion not implemented in backend yet
-// export async function deleteBoard(boardId: string): Promise<SuccessResponse> {
-//   return api.delete<SuccessResponse>(`/boards/${boardId}`);
-// }
+export async function deleteBoard(boardId: string): Promise<SuccessResponse> {
+  return api.delete<SuccessResponse>(`/boards/${boardId}`);
+}
 
 export async function updateBoardVisibility(
   boardId: string,

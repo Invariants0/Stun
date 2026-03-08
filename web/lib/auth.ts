@@ -117,56 +117,98 @@ export function getStoredToken(): string | null {
 // ─── Auto-refresh: keep httpOnly cookie in sync with Firebase token rotation ─
 // Call once on app mount via useAuth. Returns unsubscribe fn.
 
+let _refreshInProgress = false; // Prevent recursive refresh loops
+let _debounceTimer: NodeJS.Timeout | null = null;
+
 export function initTokenRefresh(): () => void {
   return onIdTokenChanged(auth, async (firebaseUser: FirebaseUser | null) => {
-    if (firebaseUser) {
-      const idToken = await firebaseUser.getIdToken();
-      _tokenMemory = idToken;
-      await fetch("/api/auth/set-token", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: idToken }),
-      }).catch(() => {});
+    // Prevent infinite loops
+    if (_refreshInProgress) return;
+    
+    // Clear any existing debounce timer
+    if (_debounceTimer) {
+      clearTimeout(_debounceTimer);
+      _debounceTimer = null;
     }
+    
+    // Debounce rapid token changes (Firebase can fire this multiple times quickly)
+    _debounceTimer = setTimeout(async () => {
+      if (_refreshInProgress) return;
+      
+      try {
+        _refreshInProgress = true;
+        
+        if (firebaseUser) {
+          const idToken = await firebaseUser.getIdToken(false); // Don't force refresh
+          _tokenMemory = idToken;
+          
+          await fetch("/api/auth/set-token", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token: idToken }),
+          }).catch((err) => {
+            console.warn("Failed to set auth cookie:", err);
+          });
+        }
+      } finally {
+        _refreshInProgress = false;
+      }
+    }, 500); // 500ms debounce
   });
 }
 
 export async function rehydrateSession(): Promise<AuthUser | null> {
   if (typeof window === "undefined") return null;
+  
+  // Prevent recursive calls during initialization
+  if (_refreshInProgress) {
+    // Return cached user if available
+    return getStoredUser();
+  }
 
-  // Firebase SDK persists auth in localStorage — restore from it first
-  const firebaseUser = await new Promise<FirebaseUser | null>((resolve) => {
-    const unsub = auth.onAuthStateChanged((u) => { unsub(); resolve(u); });
-  });
+  try {
+    _refreshInProgress = true;
+    
+    // Firebase SDK persists auth in localStorage — restore from it first
+    const firebaseUser = await new Promise<FirebaseUser | null>((resolve) => {
+      const unsub = auth.onAuthStateChanged((u) => { unsub(); resolve(u); });
+    });
 
-  if (firebaseUser) {
-    const idToken = await firebaseUser.getIdToken();
-    _tokenMemory = idToken;
-    await fetch("/api/auth/set-token", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token: idToken }),
-    }).catch(() => {});
-    const user: AuthUser = {
-      uid: firebaseUser.uid,
-      email: firebaseUser.email ?? "",
-      displayName: firebaseUser.displayName ?? undefined,
-      photoURL: firebaseUser.photoURL ?? undefined,
-    };
+    if (firebaseUser) {
+      const idToken = await firebaseUser.getIdToken(false); // Don't force refresh
+      _tokenMemory = idToken;
+      
+      await fetch("/api/auth/set-token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: idToken }),
+      }).catch((err) => {
+        console.warn("Failed to set auth cookie:", err);
+      });
+      
+      const user: AuthUser = {
+        uid: firebaseUser.uid,
+        email: firebaseUser.email ?? "",
+        displayName: firebaseUser.displayName ?? undefined,
+        photoURL: firebaseUser.photoURL ?? undefined,
+      };
+      storeUser(user);
+      return user;
+    }
+
+    // Fallback: BFF reads httpOnly cookie
+    const res = await fetch("/api/auth/rehydrate");
+    if (!res.ok) {
+      clearStoredUser();
+      return null;
+    }
+    const data = await res.json();
+    const user = data.user as AuthUser;
     storeUser(user);
     return user;
+  } finally {
+    _refreshInProgress = false;
   }
-
-  // Fallback: BFF reads httpOnly cookie
-  const res = await fetch("/api/auth/rehydrate");
-  if (!res.ok) {
-    clearStoredUser();
-    return null;
-  }
-  const data = await res.json();
-  const user = data.user as AuthUser;
-  storeUser(user);
-  return user;
 }
 
 // ─── Sign out ────────────────────────────────────────────────────────────────

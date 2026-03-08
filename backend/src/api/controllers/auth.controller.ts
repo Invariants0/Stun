@@ -55,6 +55,7 @@ async function exchangeCodeForUser(code: string, redirectUri: string) {
 }
 
 export const authController = {
+  // ==== ACTIVE METHODS - Used by frontend ====
   /** Returns the Google OAuth authorization URL for the frontend to redirect to */
   getAuthUrl(req: Request, res: Response): void {
     if (!envVars.GOOGLE_CLIENT_ID) {
@@ -75,6 +76,7 @@ export const authController = {
     res.json({ authUrl: `https://accounts.google.com/o/oauth2/v2/auth?${params}` });
   },
 
+  /** Main signin method - exchanges OAuth code for Firebase custom token */
   async signin(req: Request, res: Response, next: NextFunction): Promise<void> {
     console.log("[auth] signin called with body", req.body);
     try {
@@ -91,6 +93,8 @@ export const authController = {
     }
   },
 
+  // ==== UNUSED METHODS - Implemented but not connected to frontend ====
+  /** Alternative OAuth callback method - UNUSED (same as signin) */
   async callback(req: Request, res: Response, next: NextFunction): Promise<void> {
     console.log("[auth] callback called with body", req.body);
     try {
@@ -107,6 +111,7 @@ export const authController = {
     }
   },
 
+  /** Token verification endpoint - UNUSED (frontend uses Firebase directly) */
   async verifyToken(req: Request, res: Response): Promise<void> {
     const token = (req.body?.token as string) ?? req.headers.authorization?.replace("Bearer ", "");
     if (!token) {
@@ -126,11 +131,13 @@ export const authController = {
     }
   },
 
+  /** Server-side signout - UNUSED (frontend handles signout via Firebase client SDK) */
   signout(_req: Request, res: Response): void {
     // Token revocation is client-side; this endpoint is for any server-side cleanup
     res.json({ success: true, message: "Sign out successful" });
   },
 
+  /** User profile endpoint - UNUSED (frontend gets user data from Firebase token) */
   me(req: Request, res: Response): void {
     res.json({ user: req.user ?? null });
   },

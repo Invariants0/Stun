@@ -23,6 +23,7 @@ import ExcalidrawLayer from "./ExcalidrawLayer";
 import ReactFlowGraphLayer from "./ReactFlowGraphLayer";
 import { useBoard } from "@/hooks/useBoard";
 import { usePresence } from "@/hooks/usePresence";
+import { useScreenshot } from "@/hooks/useScreenshot";
 import { cameraSyncService } from "@/lib/camera-sync";
 import { canvasMappingService } from "@/lib/canvas-mapping";
 
@@ -38,6 +39,8 @@ export default function CanvasRoot({ boardId }: Props) {
     onNodesChange,
     onEdgesChange,
     onConnect,
+    setNodes,
+    setEdges,
     // Excalidraw state
     excalidrawElements,
     onExcalidrawElementsChange,
@@ -126,10 +129,19 @@ export default function CanvasRoot({ boardId }: Props) {
     (elements: readonly ExcalidrawElement[]) => {
       onExcalidrawElementsChange(elements);
 
-      // TODO: Sync with React Flow nodes via mapping service
-      // For now, we'll implement basic mapping later
+      // 🎯 CRITICAL FEATURE: Sync Excalidraw drawings to AI-manipulatable React Flow nodes
+      // Use requestAnimationFrame to prevent infinite loops
+      requestAnimationFrame(() => {
+        canvasMappingService.syncElementsToNodes(elements, nodes, setNodes);
+        
+        // Debug: Log mapping stats
+        const stats = canvasMappingService.getStats();
+        if (stats.totalMappings > 0) {
+          console.log("[CanvasRoot] Element-Node mappings:", stats.totalMappings, "active");
+        }
+      });
     },
-    [onExcalidrawElementsChange]
+    [onExcalidrawElementsChange, setNodes] // Removed 'nodes' to prevent dependency loop
   );
 
   // ============================================================================
@@ -138,13 +150,16 @@ export default function CanvasRoot({ boardId }: Props) {
 
   useEffect(() => {
     // Initialize canvas mapping service
+    console.log("[CanvasRoot] Canvas mapping service initialized");
+    
+    // Clear any existing mappings when component mounts
     canvasMappingService.clear();
-
+    
     return () => {
-      // Cleanup
+      // Cleanup mappings when component unmounts
       canvasMappingService.clear();
     };
-  }, [boardId]);
+  }, []);
 
   return (
     <section

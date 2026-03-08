@@ -60,6 +60,8 @@ export default function ReactFlowGraphLayer({
   showBackground = true,
   onInit,
 }: ReactFlowGraphLayerProps) {
+  console.log("[ReactFlowGraphLayer] Rendering with", nodes.length, "nodes:", nodes);
+  
   // Memoize nodeTypes/edgeTypes to prevent React Flow re-creation warnings
   const nodeTypes = useMemo(() => NodeRenderer, []);
   const edgeTypes = useMemo(() => EdgeRenderer, []);
@@ -73,7 +75,7 @@ export default function ReactFlowGraphLayer({
         width: "100%",
         height: "100%",
         zIndex: 3, // Layer 3: Knowledge Graph (Top - nodes and relationships)
-        pointerEvents: "none", // allow pointer events to fall through to Excalidraw
+        pointerEvents: "none", // Let all events pass through to Excalidraw
       }}
     >
       <ReactFlow
@@ -85,12 +87,14 @@ export default function ReactFlowGraphLayer({
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           proOptions={{ hideAttribution: true }}
-          nodesDraggable={true}
-          nodesConnectable={true}
-          elementsSelectable={true}
-          nodeTypes={nodeTypes}
-          edgeTypes={edgeTypes}
+          nodesDraggable={false} // Disable dragging since we can't interact
+          nodesConnectable={false}
+          elementsSelectable={false}
           onInit={onInit}
+          style={{
+            background: "transparent", // Make background transparent
+            pointerEvents: "none", // No interaction with React Flow layer
+          }}
         >
           {showBackground && <Background />}
           {showControls && <Controls />}

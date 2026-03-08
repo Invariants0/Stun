@@ -157,6 +157,27 @@ export const boardService = {
     return docToBoard(id, { ...data, ...updateData }, activeUsers);
   },
 
+  async deleteBoard(id: string, userId: string): Promise<void> {
+    const db     = getFirestore();
+    const docRef = db.collection(firestoreCollections.boards).doc(id);
+    const doc    = await docRef.get();
+
+    if (!doc.exists) throw new NotFoundError("Board not found");
+
+    const data = doc.data() as FirestoreBoard;
+    
+    // Only owner can delete board
+    if (data.ownerId !== userId) {
+      throw new ForbiddenError("Only the board owner can delete this board");
+    }
+
+    // Clean up presence data and delete board
+    await Promise.all([
+      docRef.delete(),
+      presenceService.clearBoard(id),
+    ]);
+  },
+
   async updateVisibility(id: string, userId: string, visibility: BoardVisibility): Promise<void> {
     const db     = getFirestore();
     const docRef = db.collection(firestoreCollections.boards).doc(id);

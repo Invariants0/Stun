@@ -95,6 +95,33 @@ export const presenceService = {
       throw error;
     }
   },
+
+  /**
+   * Clear all presence data for a board (used when board is deleted)
+   */
+  async clearBoard(boardId: string): Promise<void> {
+    try {
+      const db = getFirestore();
+      const presenceRef = db.collection(firestoreCollections.presence);
+      
+      const snapshot = await presenceRef
+        .where("boardId", "==", boardId)
+        .get();
+
+      const batch = db.batch();
+      snapshot.docs.forEach((doc: QueryDocumentSnapshot) => {
+        batch.delete(doc.ref);
+      });
+
+      await batch.commit();
+    } catch (error: any) {
+      // Ignore collection not found errors — presence collection may not exist yet
+      if (error.code === 5 || error.code === "NOT_FOUND") {
+        return;
+      }
+      throw error;
+    }
+  },
 };
 
 /**

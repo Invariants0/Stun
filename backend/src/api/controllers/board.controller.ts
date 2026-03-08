@@ -97,4 +97,13 @@ export const boardController = {
       next(err);
     }
   },
+
+  async delete(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      await boardService.deleteBoard(req.params['id'] as string, req.user!.uid);
+      res.json({ success: true, message: "Board deleted successfully" });
+    } catch (err) {
+      next(err);
+    }
+  },
 };

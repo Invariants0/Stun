@@ -39,6 +39,10 @@ const createApiClient = (): AxiosInstance => {
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    // dev log
+    if (process.env.NODE_ENV !== "production") {
+      console.log("[api] request", config.method, config.url, config.data || "");
+    }
     return config;
   });
 

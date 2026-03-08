@@ -22,27 +22,43 @@ export function useAuth(): UseAuthReturn {
   const router = useRouter();
 
   useEffect(() => {
+    let mounted = true; // Prevent state updates if component unmounts
+    
     // Start token auto-refresh (keeps httpOnly cookie in sync with Firebase)
     const unsubRefresh = initTokenRefresh();
 
     async function initAuth() {
-      // Fast path: return cached profile from localStorage immediately
-      const cached = getStoredUser();
-      if (cached) {
-        setUser(cached);
-        setLoading(false);
-        return;
-      }
+      try {
+        // Fast path: return cached profile from localStorage immediately
+        const cached = getStoredUser();
+        if (cached && mounted) {
+          setUser(cached);
+          setLoading(false);
+          return;
+        }
 
-      // Slow path: page was refreshed — restore from Firebase SDK / BFF
-      const rehydrated = await rehydrateSession();
-      setUser(rehydrated);
-      setLoading(false);
+        // Slow path: page was refreshed — restore from Firebase SDK / BFF
+        const rehydrated = await rehydrateSession();
+        if (mounted) {
+          setUser(rehydrated);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error("Auth initialization failed:", error);
+        if (mounted) {
+          setUser(null);
+          setLoading(false);
+        }
+      }
     }
 
     initAuth();
-    return () => unsubRefresh();
-  }, []);
+    
+    return () => {
+      mounted = false;
+      unsubRefresh();
+    };
+  }, []); // Empty dependency array - this should only run once
 
   const logout = async () => {
     await signOut();

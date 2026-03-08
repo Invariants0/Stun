@@ -73,17 +73,10 @@ export default function ReactFlowGraphLayer({
         width: "100%",
         height: "100%",
         zIndex: 3, // Layer 3: Knowledge Graph (Top - nodes and relationships)
-        pointerEvents: "none", // Background pass-through to Excalidraw
+        pointerEvents: "none", // allow pointer events to fall through to Excalidraw
       }}
     >
-      <div
-        style={{
-          width: "100%",
-          height: "100%",
-          pointerEvents: "none", // Keep pass-through
-        }}
-      >
-        <ReactFlow
+      <ReactFlow
           nodes={nodes}
           edges={edges}
           nodeTypes={nodeTypes}
@@ -92,9 +85,11 @@ export default function ReactFlowGraphLayer({
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           proOptions={{ hideAttribution: true }}
-          nodesDraggable={false}
-          nodesConnectable={false}
-          elementsSelectable={false}
+          nodesDraggable={true}
+          nodesConnectable={true}
+          elementsSelectable={true}
+          nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
           onInit={onInit}
         >
           {showBackground && <Background />}
@@ -102,6 +97,5 @@ export default function ReactFlowGraphLayer({
           {showMiniMap && <MiniMap />}
         </ReactFlow>
       </div>
-    </div>
   );
 }

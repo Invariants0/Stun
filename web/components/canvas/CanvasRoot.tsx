@@ -22,12 +22,15 @@ import TLDrawWorkspace from "./TLDrawWorkspace";
 import ExcalidrawLayer from "./ExcalidrawLayer";
 import ReactFlowGraphLayer from "./ReactFlowGraphLayer";
 import { useBoard } from "@/hooks/useBoard";
+import { usePresence } from "@/hooks/usePresence";
 import { cameraSyncService } from "@/lib/camera-sync";
 import { canvasMappingService } from "@/lib/canvas-mapping";
 
 type Props = { boardId: string };
 
 export default function CanvasRoot({ boardId }: Props) {
+  const { activeUsers } = usePresence(boardId);
+
   const {
     // React Flow state
     nodes,
@@ -188,6 +191,62 @@ export default function CanvasRoot({ boardId }: Props) {
       />
 
       <div className="canvas-topbar">
+        {/* Active collaborator avatars */}
+        {activeUsers.length > 0 && (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+              marginRight: 8,
+            }}
+          >
+            {activeUsers.slice(0, 5).map((u) => (
+              <span
+                key={u.userId}
+                title={u.displayName ?? u.userId}
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: "50%",
+                  background: "#6366f1",
+                  border: "2px solid #fff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: "#fff",
+                  flexShrink: 0,
+                  overflow: "hidden",
+                }}
+              >
+                {u.photoURL ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={u.photoURL}
+                    alt={u.displayName ?? ""}
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  />
+                ) : (
+                  (u.displayName ?? u.userId).charAt(0).toUpperCase()
+                )}
+              </span>
+            ))}
+            {activeUsers.length > 5 && (
+              <span
+                style={{
+                  fontSize: 11,
+                  color: "#475569",
+                  fontWeight: 500,
+                }}
+              >
+                +{activeUsers.length - 5}
+              </span>
+            )}
+          </div>
+        )}
+
         <button type="button" className="canvas-topbar__btn">
           <span className="canvas-topbar__icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" role="presentation">

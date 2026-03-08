@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
-import { listBoards, createBoard } from "@/lib/api";
+import { listBoards, createBoard, deleteBoard } from "@/lib/api";
 import type { Board } from "@/types/api.types";
 import type { ApiError } from "@/lib/api-client";
 
@@ -14,6 +14,7 @@ export default function BoardsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   useEffect(() => {
     if (authLoading) return;
@@ -49,6 +50,29 @@ export default function BoardsPage() {
       const apiError = err as ApiError;
       setError(apiError.message || "Failed to create board");
       setCreating(false);
+    }
+  }
+
+  async function handleDeleteBoard(boardId: string, event: React.MouseEvent) {
+    event.stopPropagation(); // Prevent card click navigation
+    
+    const boardName = `Board ${boardId.slice(0, 8)}`;
+    if (!window.confirm(`Are you sure you want to delete ${boardName}? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      setDeleting(boardId);
+      setError(null);
+      await deleteBoard(boardId);
+      
+      // Remove from local state
+      setBoards(boards.filter(board => board.id !== boardId));
+    } catch (err) {
+      const apiError = err as ApiError;
+      setError(apiError.message || "Failed to delete board");
+    } finally {
+      setDeleting(null);
     }
   }
 
@@ -369,12 +393,68 @@ export default function BoardsPage() {
                 </div>
 
                 {/* Board Info */}
-                <div style={{ padding: '18px' }}>
+                <div style={{ padding: '18px', position: 'relative' }}>
+                  {/* Delete Button */}
+                  <button
+                    onClick={(e) => handleDeleteBoard(board.id, e)}
+                    disabled={deleting === board.id}
+                    style={{
+                      position: 'absolute',
+                      top: '12px',
+                      right: '12px',
+                      width: '28px',
+                      height: '28px',
+                      background: deleting === board.id ? '#fecaca' : 'transparent',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: deleting === board.id ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: deleting === board.id ? '#dc2626' : '#94a3b8',
+                      transition: 'all 0.2s ease',
+                      zIndex: 10,
+                    }}
+                    onMouseEnter={(e) => {
+                      if (deleting !== board.id) {
+                        e.currentTarget.style.background = '#fef2f2';
+                        e.currentTarget.style.color = '#dc2626';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (deleting !== board.id) {
+                        e.currentTarget.style.background = 'transparent';
+                        e.currentTarget.style.color = '#94a3b8';
+                      }
+                    }}
+                    title={deleting === board.id ? 'Deleting...' : 'Delete board'}
+                  >
+                    {deleting === board.id ? (
+                      <div style={{
+                        width: '14px',
+                        height: '14px',
+                        border: '1.5px solid #fca5a5',
+                        borderTopColor: '#dc2626',
+                        borderRadius: '50%',
+                        animation: 'spin 0.8s linear infinite',
+                      }} />
+                    ) : (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 6h18" />
+                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                        <line x1="10" y1="11" x2="10" y2="17" />
+                        <line x1="14" y1="11" x2="14" y2="17" />
+                      </svg>
+                    )}
+                  </button>
+
                   <div style={{
                     display: 'flex',
                     alignItems: 'flex-start',
                     justifyContent: 'space-between',
                     marginBottom: '12px',
+                    paddingRight: '36px', // Make room for delete button
                   }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <h3 style={{

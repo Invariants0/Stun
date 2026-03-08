@@ -1,0 +1,20 @@
+# Development Environment Configuration
+# Copy this file to terraform.tfvars and fill in your values
+
+# Google Cloud Project ID
+project_id = "your-project-id"
+
+# Google Cloud region for Cloud Run services
+region = "us-central1"
+
+# Firestore database location (must match region)
+firestore_location = "us-central1"
+
+# Container images (update after building)
+# Use placeholder images for initial deployment
+backend_image  = "us-docker.pkg.dev/cloudrun/container/hello"
+frontend_image = "us-docker.pkg.dev/cloudrun/container/hello"
+
+# After building your images, update to:
+# backend_image  = "us-central1-docker.pkg.dev/YOUR_PROJECT_ID/stun-dev/stun-backend:latest"
+# frontend_image = "us-central1-docker.pkg.dev/YOUR_PROJECT_ID/stun-dev/stun-frontend:latest"

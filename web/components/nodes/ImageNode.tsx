@@ -13,6 +13,7 @@ export default function ImageNode({ data }: NodeProps<ImageNodeData>) {
         border: "1px solid #334155",
         borderRadius: 8,
         background: "#0f172a",
+        pointerEvents: "auto",
       }}
     >
       <strong style={{ display: "block", marginBottom: 8 }}>Image</strong>

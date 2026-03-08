@@ -13,9 +13,10 @@ export default function TextNode({ data }: NodeProps<TextNodeData>) {
         borderRadius: 8,
         background: "#1e293b",
         minWidth: 180,
+        color: "#f1f5f9", // light text on dark bg
       }}
     >
-      <strong>Text</strong>
+      <strong style={{ color: "#fff" }}>Text</strong>
       <p style={{ margin: "8px 0 0" }}>{data?.label ?? "New note"}</p>
     </div>
   );

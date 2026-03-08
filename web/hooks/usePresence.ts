@@ -58,7 +58,7 @@ export function usePresence(boardId: string | null): UsePresenceReturn {
       try {
         const response = await getActiveUsers(currentBoardId);
         if (mounted) {
-          setActiveUsers(response.users);
+          setActiveUsers(response.users ?? []);
           setError(null);
         }
       } catch (err: any) {

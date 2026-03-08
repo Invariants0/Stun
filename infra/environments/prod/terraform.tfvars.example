@@ -1,0 +1,23 @@
+# Production Environment Configuration
+# Copy this file to terraform.tfvars and fill in your values
+
+# Google Cloud Project ID
+project_id = "your-production-project-id"
+
+# Google Cloud region for Cloud Run services
+region = "us-central1"
+
+# Firestore database location (must match region)
+firestore_location = "us-central1"
+
+# Container images (REQUIRED for production)
+backend_image  = "us-central1-docker.pkg.dev/YOUR_PROJECT_ID/stun-prod/stun-backend:v1.0.0"
+frontend_image = "us-central1-docker.pkg.dev/YOUR_PROJECT_ID/stun-prod/stun-frontend:v1.0.0"
+
+# Production Notes:
+# - Use semantic versioning for images (v1.0.0, v1.0.1, etc.)
+# - Enable remote state backend in main.tf
+# - Configure custom domain if needed
+# - Set up monitoring and alerting
+# - Review and adjust resource limits
+# - Enable VPC connector for enhanced security

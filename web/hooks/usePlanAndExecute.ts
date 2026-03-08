@@ -39,34 +39,48 @@ export function usePlanAndExecute(boardId: string | undefined) {
           }
         }
 
-        // 2. Read current board state
-        const board = getBoard(boardId);
-        const nodes: Node[] = board?.reactflow.nodes ?? [];
-        const edges: Edge[] = board?.reactflow.edges ?? [];
+        // 2. Get current live board state from store (not potentially stale API cache)
+        const boardState = useBoardStore.getState();
+        const currentBoard = boardState.boards[boardId];
+        const nodes: Node[] = currentBoard?.reactflow?.nodes ?? [];
+        const edges: Edge[] = currentBoard?.reactflow?.edges ?? [];
+        
+        console.log("[usePlanAndExecute] Using current nodes for AI:", nodes.map(n => ({ id: n.id, type: n.type })));
 
-        // 3. Call AI planner
+        // 3. Call AI planner with current state
         const plan = await planActions({ boardId, command, screenshot, nodes });
+        
+        console.log("[usePlanAndExecute] AI plan received:", plan);
 
-        // 4. Mutable working copies so each executor step sees the latest state
-        let liveNodes = [...nodes];
-        let liveEdges = [...edges];
+        // 4. Refresh live state before execution (in case it changed during AI call)
+        const freshBoardState = useBoardStore.getState();
+        const freshBoard = freshBoardState.boards[boardId];
+        let liveNodes = [...(freshBoard?.reactflow?.nodes ?? [])];
+        let liveEdges = [...(freshBoard?.reactflow?.edges ?? [])];
+        
+        console.log("[usePlanAndExecute] Starting execution with", liveNodes.length, "nodes:", liveNodes.map(n => n.id));
 
         // 5. Build executor with Zustand-backed adapters
         const executor = new ActionExecutor({
           nodes: liveNodes,
           edges: liveEdges,
-          viewport: { x: 0, y: 0, zoom: 1 },
+          viewport: { x: 0, y: 0, zoom: 1 }, // TODO: Get actual viewport from React Flow
           setNodes: (updater) => {
+            const prevCount = liveNodes.length;
             liveNodes =
               typeof updater === "function" ? updater(liveNodes) : updater;
+            console.log("[usePlanAndExecute] Nodes updated:", prevCount, "→", liveNodes.length);
+            console.log("[usePlanAndExecute] New nodes:", liveNodes.map(n => ({ id: n.id, pos: n.position })));
             setReactFlowData(boardId, {
               nodes: liveNodes,
               edges: liveEdges,
             });
           },
           setEdges: (updater) => {
+            const prevCount = liveEdges.length;
             liveEdges =
               typeof updater === "function" ? updater(liveEdges) : updater;
+            console.log("[usePlanAndExecute] Edges updated:", prevCount, "→", liveEdges.length);
             setReactFlowData(boardId, {
               nodes: liveNodes,
               edges: liveEdges,
@@ -74,7 +88,7 @@ export function usePlanAndExecute(boardId: string | undefined) {
           },
           // Viewport changes are handled by the camera-sync service; no-op here
           setViewport: () => {},
-        });
+        }, boardId); // Pass boardId to ActionExecutor
 
         // 6. Execute
         await executor.executePlan(plan);

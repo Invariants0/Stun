@@ -7,7 +7,7 @@
 
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   addEdge,
   type Connection,
@@ -91,6 +91,11 @@ export function useBoard(boardId: string) {
   // React Flow state
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  
+  // Debug: Log when nodes change
+  useEffect(() => {
+    console.log("[useBoard] Nodes updated:", nodes.length, "nodes", nodes.map(n => ({ id: n.id, type: n.type, pos: n.position })));
+  }, [nodes]);
 
   // Excalidraw state
   const [excalidrawElements, setExcalidrawElements] = useState<
@@ -196,6 +201,34 @@ export function useBoard(boardId: string) {
       mounted = false;
     };
   }, [boardId, createBoard, setActiveBoard, hydrateBoard, enableAutosave, disableAutosave]);
+
+  // Subscribe to store changes (for AI actions and other external updates)
+  useEffect(() => {
+    console.log("[useBoard] Setting up store subscription for", boardId);
+    
+    const unsubscribe = useBoardStore.subscribe((state, prevState) => {
+      const currentBoard = state.boards[boardId];
+      const prevBoard = prevState?.boards?.[boardId];
+      
+      if (!currentBoard) return;
+      
+      // Check if React Flow data changed in the store
+      const nodesChanged = JSON.stringify(currentBoard.reactflow.nodes) !== JSON.stringify(prevBoard?.reactflow?.nodes || []);
+      const edgesChanged = JSON.stringify(currentBoard.reactflow.edges) !== JSON.stringify(prevBoard?.reactflow?.edges || []);
+      
+      if (nodesChanged) {
+        console.log("[useBoard] Store nodes changed, updating React Flow:", currentBoard.reactflow.nodes.length, "nodes");
+        setNodes(currentBoard.reactflow.nodes);
+      }
+      
+      if (edgesChanged) {
+        console.log("[useBoard] Store edges changed, updating React Flow:", currentBoard.reactflow.edges.length, "edges");
+        setEdges(currentBoard.reactflow.edges);
+      }
+    });
+    
+    return unsubscribe;
+  }, [boardId, setNodes, setEdges]);
 
   // Auto-save to localStorage as backup (separate from backend autosave)
   useEffect(() => {

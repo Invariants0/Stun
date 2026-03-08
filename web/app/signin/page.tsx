@@ -19,7 +19,8 @@ export default function SigninPage() {
     try {
       const authUrl = await getGoogleAuthUrl();
       window.location.href = authUrl;
-    } catch {
+    } catch (e) {
+      console.error("signin error", e);
       setError("Failed to connect to auth server. Please try again.");
       setLoading(false);
     }

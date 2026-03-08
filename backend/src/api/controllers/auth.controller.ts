@@ -76,6 +76,7 @@ export const authController = {
   },
 
   async signin(req: Request, res: Response, next: NextFunction): Promise<void> {
+    console.log("[auth] signin called with body", req.body);
     try {
       const { code, redirectUri } = req.body as { code?: string; redirectUri?: string };
       if (!code) {
@@ -91,6 +92,7 @@ export const authController = {
   },
 
   async callback(req: Request, res: Response, next: NextFunction): Promise<void> {
+    console.log("[auth] callback called with body", req.body);
     try {
       const { code, redirectUri } = req.body as { code?: string; redirectUri?: string };
       if (!code) {

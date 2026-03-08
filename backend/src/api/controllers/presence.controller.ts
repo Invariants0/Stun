@@ -40,8 +40,10 @@ export const presenceController = {
         return;
       }
 
-      const activeUsers = await presenceService.getActiveUsers(boardId as string);
-      res.json({ activeUsers });
+      const activeUserIds = await presenceService.getActiveUsers(boardId as string);
+      // construct minimal PresenceUser objects (frontend only needs uid)
+      const users = activeUserIds.map((uid) => ({ userId: uid }));
+      res.json({ users });
     } catch (err) {
       next(err);
     }

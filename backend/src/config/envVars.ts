@@ -37,7 +37,7 @@ const EnvConfigSchema = z.object({
 
   // GenAI
   GEMINI_API_KEY: z.string().min(1, { message: "GEMINI_API_KEY is required" }),
-  VERTEX_MODEL: z.string().default("gemini-2.0-flash-exp"),
+  VERTEX_MODEL: z.string().default("gemini-2.5-flash"),
 });
 
 export type EnvConfig = z.infer<typeof EnvConfigSchema>;

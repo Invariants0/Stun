@@ -1,0 +1,19 @@
+output "database_name" {
+  description = "Name of the Firestore database"
+  value       = google_firestore_database.database.name
+}
+
+output "database_location" {
+  description = "Location of the Firestore database"
+  value       = google_firestore_database.database.location_id
+}
+
+output "database_type" {
+  description = "Type of the Firestore database"
+  value       = google_firestore_database.database.type
+}
+
+output "database_id" {
+  description = "ID of the Firestore database"
+  value       = google_firestore_database.database.id
+}

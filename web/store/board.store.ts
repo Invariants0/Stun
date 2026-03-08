@@ -38,6 +38,8 @@ interface BoardState {
     data: { nodes: Node[]; edges: Edge[] }
   ) => void;
 
+  appendNode: (boardId: string, node: Node) => void;
+
   // Excalidraw actions
   setExcalidrawElements: (
     boardId: string,
@@ -148,6 +150,22 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       setTimeout(() => get().triggerAutosave(boardId), 0);
       
       return newState;
+    }),
+
+  appendNode: (boardId, node) =>
+    set((state) => {
+      const board = state.boards[boardId] || createEmptyBoard(boardId);
+      const newNodes = [...board.reactflow.nodes, node];
+      setTimeout(() => get().triggerAutosave(boardId), 0);
+      return {
+        boards: {
+          ...state.boards,
+          [boardId]: {
+            ...board,
+            reactflow: { ...board.reactflow, nodes: newNodes },
+          },
+        },
+      };
     }),
 
   // Excalidraw elements

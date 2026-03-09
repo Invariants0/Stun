@@ -1,5 +1,6 @@
 import { initializeApp, getApps } from "firebase/app";
 import { getAuth, connectAuthEmulator } from "firebase/auth";
+import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -13,6 +14,7 @@ const firebaseConfig = {
 const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
+export const db = getFirestore(app);
 
 // Connect to Firebase emulator if enabled
 if (
@@ -21,9 +23,11 @@ if (
 ) {
   try {
     connectAuthEmulator(auth, "http://localhost:9099", { disableWarnings: true });
+    connectFirestoreEmulator(db, "localhost", 8081);
     console.log("🔧 Firebase Auth connected to emulator at localhost:9099");
+    console.log("🔧 Firebase Firestore connected to emulator at localhost:8081");
   } catch (error) {
     // Emulator already connected
-    console.log("Firebase Auth emulator already connected");
+    console.log("Firebase emulators already connected");
   }
 }

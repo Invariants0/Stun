@@ -24,11 +24,13 @@ import ReactFlowGraphLayer from "./ReactFlowGraphLayer";
 import { ShareDialog } from "@/components/ui/ShareDialog";
 import { MediaUploader } from "@/components/ui/MediaUploader";
 import { PresenceIndicators } from "@/components/ui/PresenceIndicators";
+import { SearchBar } from "@/components/ui/SearchBar";
 import { useBoard } from "@/hooks/useBoard";
 import { usePresence } from "@/hooks/usePresence";
 import { useScreenshot } from "@/hooks/useScreenshot";
 import { useMediaUpload } from "@/hooks/useMediaUpload";
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
+import { useSearch } from "@/hooks/useSearch";
 import { cameraSyncService } from "@/lib/camera-sync";
 import { canvasMappingService } from "@/lib/canvas-mapping";
 import type { BoardVisibility, PresenceUser, MediaUploadResult } from "@/types/api.types";
@@ -69,8 +71,40 @@ export default function CanvasRoot({ boardId }: Props) {
   const excalidrawRef = useRef<any>(null);
 
   // ============================================================================
-  // Camera synchronization
+  // Search & highlight
   // ============================================================================
+
+  const handleNavigateToNode = useCallback(
+    (_nodeId: string, position: { x: number; y: number }) => {
+      if (reactFlowRef.current) {
+        reactFlowRef.current.setCenter(position.x, position.y, { zoom: 1.2, duration: 500 });
+      }
+    },
+    [],
+  );
+
+  const handleHighlightNode = useCallback(
+    (nodeId: string) => {
+      setNodes((prev) =>
+        prev.map((n) =>
+          n.id === nodeId
+            ? { ...n, data: { ...n.data, _highlighted: true } }
+            : { ...n, data: { ...n.data, _highlighted: false } },
+        ),
+      );
+      setTimeout(() => {
+        setNodes((prev) =>
+          prev.map((n) => ({ ...n, data: { ...n.data, _highlighted: false } })),
+        );
+      }, 2000);
+    },
+    [setNodes],
+  );
+
+  const search = useSearch({
+    onNavigate: handleNavigateToNode,
+    onHighlight: handleHighlightNode,
+  });
 
   // When TLDraw camera changes we push into the sync service
   const handleTLDrawCameraChange = useCallback((camera: TLCamera) => {
@@ -278,6 +312,9 @@ export default function CanvasRoot({ boardId }: Props) {
         />
 
         <div style={{ flex: 1 }} />
+
+        {/* Semantic Search */}
+        <SearchBar nodes={nodes} search={search} />
 
         {/* Media Upload Button */}
         <button 

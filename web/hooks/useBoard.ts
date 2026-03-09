@@ -149,16 +149,18 @@ export function useBoard(boardId: string) {
       // Always sync from store to local state
       const storeNodes = currentBoard.reactflow.nodes;
       const storeEdges = currentBoard.reactflow.edges;
+      const storeElements = currentBoard.excalidraw.elements;
       
-      console.log("[useBoard] Store update detected:", storeNodes.length, "nodes");
+      console.log("[useBoard] Store update detected:", storeNodes.length, "nodes,", storeElements.length, "elements");
       
       // Update local state if different
       setNodes(storeNodes);
       setEdges(storeEdges);
+      setExcalidrawElements(storeElements);
     });
     
     return unsubscribe;
-  }, [boardId, setNodes, setEdges]);
+  }, [boardId, setNodes, setEdges, setExcalidrawElements]);
 
   // REMOVED: localStorage autosave - all persistence now goes through backend API
 

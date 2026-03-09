@@ -289,7 +289,7 @@ export class ActionExecutor {
     const currentBoard = boardState.boards[this.getBoardId()];
     const currentElements = currentBoard?.excalidraw?.elements || [];
     
-    // Create a new Excalidraw text element
+    // Create a new Excalidraw text element with all required properties
     const newElement: any = {
       id: `ai-element-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       type: "text",
@@ -299,14 +299,14 @@ export class ActionExecutor {
       height: 50,
       angle: 0,
       strokeColor: "#10b981", // Green to indicate AI-created
-      backgroundColor: "#1e293b",
+      backgroundColor: "transparent",
       fillStyle: "solid",
       strokeWidth: 2,
       strokeStyle: "solid",
       roughness: 1,
       opacity: 100,
       text: text,
-      fontSize: 16,
+      fontSize: 20,
       fontFamily: 1,
       textAlign: "center" as const,
       verticalAlign: "middle" as const,
@@ -314,11 +314,23 @@ export class ActionExecutor {
       originalText: text,
       autoResize: true,
       lineHeight: 1.25,
+      // Required Excalidraw properties
+      isDeleted: false,
+      groupIds: [],
+      boundElements: null,
+      updated: Date.now(),
+      link: null,
+      locked: false,
     };
     
-    // Update Excalidraw elements in store
+    console.log("[ActionExecutor] New Excalidraw element:", newElement);
+    
+    // Update Excalidraw elements in store - this will trigger the useBoard hook
     const { setExcalidrawElements } = useBoardStore.getState();
-    setExcalidrawElements(this.getBoardId(), [...currentElements, newElement]);
+    const newElements = [...currentElements, newElement];
+    
+    console.log("[ActionExecutor] Updating store with", newElements.length, "elements");
+    setExcalidrawElements(this.getBoardId(), newElements);
     
     console.log("[ActionExecutor] Created Excalidraw element - mapping service will handle conversion");
     

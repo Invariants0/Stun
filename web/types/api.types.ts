@@ -70,11 +70,61 @@ export interface AIActionPlan {
 }
 
 // ============================================================================
+// Media Types
+// ============================================================================
+
+export type MediaType = 'image' | 'pdf' | 'csv' | 'excel' | 'doc' | 'youtube' | 'vimeo' | 'website';
+
+export interface MediaUploadResult {
+  id: string;
+  fileName?: string;
+  originalName?: string;
+  mimeType: string;
+  size: number;
+  url: string;
+  thumbnailUrl?: string;
+  type: MediaType;
+  metadata?: {
+    width?: number;
+    height?: number;
+    duration?: number;
+    title?: string;
+    description?: string;
+    videoId?: string;
+    platform?: string;
+  };
+  uploadedAt: string;
+  userId: string;
+}
+
+export interface LinkPreviewData {
+  url: string;
+  title: string;
+  description?: string;
+  image?: string;
+  siteName?: string;
+  type: MediaType;
+  metadata?: {
+    videoId?: string;
+    platform?: string;
+    duration?: string;
+    author?: string;
+  };
+}
+
+export interface MediaParseRequest {
+  url: string;
+}
+
+// ============================================================================
 // Presence Types
 // ============================================================================
 
 export interface PresenceUser {
   userId: string;
+  userName?: string;
+  userEmail?: string;
+  userAvatar?: string;
   displayName?: string;
   photoURL?: string;
   lastSeen: string;
@@ -102,6 +152,8 @@ export interface AuthUser {
 
 export interface Collaborator {
   userId: string;
+  userName?: string;
+  userEmail?: string;
   email: string;
   displayName?: string;
   photoURL?: string;

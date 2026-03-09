@@ -176,6 +176,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   setExcalidrawElements: (boardId, elements) =>
     set((state) => {
       const board = state.boards[boardId] || createEmptyBoard(boardId);
+      console.log("[BoardStore] setExcalidrawElements called with", elements.length, "elements");
       const newState = {
         boards: {
           ...state.boards,
@@ -188,6 +189,8 @@ export const useBoardStore = create<BoardState>((set, get) => ({
           },
         },
       };
+      
+      console.log("[BoardStore] New excalidraw state:", newState.boards[boardId].excalidraw.elements.length, "elements");
       
       // Trigger autosave after state update
       setTimeout(() => get().triggerAutosave(boardId), 0);

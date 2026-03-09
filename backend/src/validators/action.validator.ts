@@ -115,26 +115,42 @@ export function validateActionPlan(data: unknown): ActionPlan {
 export function validateNodeReferences(actions: Action[], nodeIds: string[]): void {
   const nodeIdSet = new Set(nodeIds);
   
+  // Build set of node IDs that will be created by this action plan
+  const createdNodeIds = new Set<string>();
+  for (const action of actions) {
+    if (action.type === "create") {
+      // Extract potential node ID from create action
+      // AI might reference this in subsequent actions
+      const potentialId = (action as any).nodeId || (action as any).id;
+      if (potentialId) {
+        createdNodeIds.add(potentialId);
+      }
+    }
+  }
+  
+  // Combine existing nodes with nodes that will be created
+  const allValidNodeIds = new Set([...nodeIdSet, ...createdNodeIds]);
+  
   for (const action of actions) {
     if (action.type === "move" || action.type === "highlight") {
-      if (!nodeIdSet.has(action.nodeId)) {
+      if (!allValidNodeIds.has(action.nodeId)) {
         throw new Error(`Invalid nodeId reference: ${action.nodeId}`);
       }
     } else if (action.type === "connect") {
-      if (!nodeIdSet.has(action.from)) {
+      if (!allValidNodeIds.has(action.from)) {
         throw new Error(`Invalid nodeId reference: ${action.from}`);
       }
-      if (!nodeIdSet.has(action.to)) {
+      if (!allValidNodeIds.has(action.to)) {
         throw new Error(`Invalid nodeId reference: ${action.to}`);
       }
     } else if (action.type === "group") {
       for (const nodeId of action.nodeIds) {
-        if (!nodeIdSet.has(nodeId)) {
+        if (!allValidNodeIds.has(nodeId)) {
           throw new Error(`Invalid nodeId reference in group: ${nodeId}`);
         }
       }
     } else if (action.type === "delete" || action.type === "transform") {
-      if (!nodeIdSet.has(action.nodeId)) {
+      if (!allValidNodeIds.has(action.nodeId)) {
         throw new Error(`Invalid nodeId reference: ${action.nodeId}`);
       }
     }

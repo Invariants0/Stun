@@ -1,6 +1,7 @@
 import cors from "cors";
 import express from "express";
 import helmet from "helmet";
+import path from "node:path";
 import { envVars } from "./config";
 import { registerRoutes } from "./api/routes/index";
 import { errorMiddleware } from "./api/middleware/error.middleware";
@@ -15,6 +16,7 @@ export function createApp() {
   }));
   app.use(cors({ origin: envVars.FRONTEND_URL }));
   app.use(express.json({ limit: "10mb" }));
+  app.use("/uploads", express.static(path.resolve(process.cwd(), "uploads")));
 
   // ─── Routes ───────────────────────────────────────────────────────────────
   registerRoutes(app);

@@ -26,3 +26,6 @@ export async function requireAuth(
     });
   }
 }
+
+/** Alias kept for route files that use the older name */
+export const authenticateToken = requireAuth;

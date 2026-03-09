@@ -21,6 +21,7 @@ import type { Editor } from "tldraw";
 import { useBoardStore } from "@/store/board.store";
 import { getBoard } from "@/lib/api";
 import type { ApiError } from "@/lib/api-client";
+import type { Board } from "@/types/api.types";
 
 // Default initial state - empty canvas
 const defaultInitialNodes: Node[] = [];
@@ -81,6 +82,7 @@ function saveBoardState(
 export function useBoard(boardId: string) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [boardData, setBoardData] = useState<Board | null>(null);
 
   // Load saved state or use defaults
   const savedState = loadBoardState(boardId);
@@ -139,6 +141,9 @@ export function useBoard(boardId: string) {
         const boardData = await getBoard(boardId);
         
         if (!mounted) return;
+
+        // Store board metadata
+        setBoardData(boardData);
 
         // Hydrate state from backend
         const backendNodes = (boardData.nodes || []) as Node[];
@@ -309,6 +314,10 @@ export function useBoard(boardId: string) {
     // TLDraw
     tldrawEditor,
     setTldrawEditor: handleSetTldrawEditor,
+
+    // Board metadata
+    boardData,
+    setBoardData,
 
     // Loading state
     isLoaded,

@@ -21,12 +21,24 @@ function docToBoard(
   data: FirestoreBoard,
   activeUsers: string[]
 ): Board {
+  // Parse JSON strings back to objects if they're strings
+  const parseIfString = (val: any) => {
+    if (typeof val === 'string') {
+      try {
+        return JSON.parse(val);
+      } catch {
+        return [];
+      }
+    }
+    return val ?? [];
+  };
+
   return {
     id,
     ownerId:       data.ownerId,
-    nodes:         data.nodes        ?? [],
-    edges:         data.edges        ?? [],
-    elements:      data.elements     ?? [],
+    nodes:         parseIfString(data.nodes),
+    edges:         parseIfString(data.edges),
+    elements:      parseIfString(data.elements),
     visibility:    data.visibility   ?? "private",
     collaborators: data.collaborators ?? [],
     activeUsers:   activeUsers.length,
@@ -42,11 +54,12 @@ export const boardService = {
     const col = db.collection(firestoreCollections.boards);
     const now = new Date().toISOString();
 
+    // Serialize complex nested objects to JSON strings for Firestore
     const data: FirestoreBoard = {
       ownerId,
-      nodes:         payload.nodes    ?? [],
-      edges:         payload.edges    ?? [],
-      elements:      payload.elements ?? [],
+      nodes:         JSON.stringify(payload.nodes    ?? []) as any,
+      edges:         JSON.stringify(payload.edges    ?? []) as any,
+      elements:      JSON.stringify(payload.elements ?? []) as any,
       visibility:    "private",
       collaborators: [],
       activeUsers:   0,
@@ -57,7 +70,14 @@ export const boardService = {
 
     try {
       const docRef = await col.add(data);
-      return docToBoard(docRef.id, data, []);
+      // Parse back to objects for response
+      const responseData = {
+        ...data,
+        nodes: JSON.parse(data.nodes as any),
+        edges: JSON.parse(data.edges as any),
+        elements: JSON.parse(data.elements as any),
+      };
+      return docToBoard(docRef.id, responseData, []);
     } catch (error: any) {
       if (error.code === 5 || error.message?.includes('NOT_FOUND')) {
         throw new Error(
@@ -139,10 +159,11 @@ export const boardService = {
     }
 
     const now        = new Date().toISOString();
+    // Serialize complex nested objects to JSON strings for Firestore
     const updateData = {
-      nodes:        payload.nodes    ?? [],
-      edges:        payload.edges    ?? [],
-      elements:     payload.elements ?? [],
+      nodes:        JSON.stringify(payload.nodes    ?? []),
+      edges:        JSON.stringify(payload.edges    ?? []),
+      elements:     JSON.stringify(payload.elements ?? []),
       lastActivity: now,
       updatedAt:    now,
     };
@@ -154,7 +175,17 @@ export const boardService = {
       presenceService.getActiveUsers(id),
     ]).then(([,, users]) => [undefined, users] as const);
 
-    return docToBoard(id, { ...data, ...updateData }, activeUsers);
+    // Parse back for response
+    const responseData = {
+      ...data,
+      nodes: JSON.parse(updateData.nodes),
+      edges: JSON.parse(updateData.edges),
+      elements: JSON.parse(updateData.elements),
+      lastActivity: now,
+      updatedAt: now,
+    };
+
+    return docToBoard(id, responseData, activeUsers);
   },
 
   async deleteBoard(id: string, userId: string): Promise<void> {

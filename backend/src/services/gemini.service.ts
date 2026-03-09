@@ -80,8 +80,14 @@ export const geminiService = {
     });
 
     const text = result.text ?? "";
+    console.log("[Gemini] Raw AI response:", text.substring(0, 500)); // Log first 500 chars
+    
     const parsed = extractJson(text);
+    console.log("[Gemini] Parsed JSON:", JSON.stringify(parsed, null, 2));
+    
     const actionPlan = validateActionPlan(parsed);
+    console.log("[Gemini] Validated action plan:", JSON.stringify(actionPlan, null, 2));
+    
     const nodeIds = input.nodes.map((n) => n.id);
     validateNodeReferences(actionPlan.actions, nodeIds);
 
@@ -97,6 +103,8 @@ export const geminiService = {
       actionPlan.actions,
       boundingBox
     );
+
+    console.log("[Gemini] Final sanitized actions:", JSON.stringify(sanitizedActions, null, 2));
 
     return { actions: sanitizedActions };
   },

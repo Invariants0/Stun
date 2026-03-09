@@ -27,68 +27,18 @@ import type { Board } from "@/types/api.types";
 const defaultInitialNodes: Node[] = [];
 const defaultInitialEdges: Edge[] = [];
 
-// Load board state from localStorage
-function loadBoardState(boardId: string): {
-  nodes: Node[];
-  edges: Edge[];
-  excalidrawElements: readonly ExcalidrawElement[];
-  tldrawCamera?: { x: number; y: number; zoom: number };
-} | null {
-  if (typeof window === "undefined") return null;
-
-  try {
-    const saved = localStorage.getItem(`stun-board-${boardId}`);
-    if (!saved) return null;
-
-    const parsed = JSON.parse(saved);
-    return {
-      nodes: parsed.nodes || [],
-      edges: parsed.edges || [],
-      excalidrawElements: parsed.excalidrawElements || [],
-      tldrawCamera: parsed.tldrawCamera,
-    };
-  } catch (error) {
-    console.error("Failed to load board state:", error);
-    return null;
-  }
-}
-
-// Save board state to localStorage
-function saveBoardState(
-  boardId: string,
-  nodes: Node[],
-  edges: Edge[],
-  excalidrawElements: readonly ExcalidrawElement[],
-  tldrawCamera?: { x: number; y: number; zoom: number }
-) {
-  if (typeof window === "undefined") return;
-
-  try {
-    const state: any = {
-      nodes,
-      edges,
-      excalidrawElements,
-      lastSaved: Date.now(),
-    };
-    if (tldrawCamera) {
-      state.tldrawCamera = tldrawCamera;
-    }
-    localStorage.setItem(`stun-board-${boardId}`, JSON.stringify(state));
-  } catch (error) {
-    console.error("Failed to save board state:", error);
-  }
-}
+// REMOVED: localStorage persistence - Firestore is the single source of truth
+// All board state now flows through: Firestore → Backend API → Frontend State → Canvas Render
 
 export function useBoard(boardId: string) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [boardData, setBoardData] = useState<Board | null>(null);
 
-  // Load saved state or use defaults
-  const savedState = loadBoardState(boardId);
-  let initialNodes = savedState?.nodes || defaultInitialNodes;
-  const initialEdges = savedState?.edges || defaultInitialEdges;
-  const initialExcalidrawElements = savedState?.excalidrawElements || [];
+  // Use empty defaults - state will be loaded from backend
+  let initialNodes = defaultInitialNodes;
+  const initialEdges = defaultInitialEdges;
+  const initialExcalidrawElements: readonly ExcalidrawElement[] = [];
 
   // React Flow state
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
@@ -162,33 +112,13 @@ export function useBoard(boardId: string) {
           elements: backendElements,
         });
 
-        // Save to localStorage as backup
-        saveBoardState(boardId, backendNodes, backendEdges, backendElements);
-
         setLoadError(null);
       } catch (error) {
         console.error("Failed to load board from backend:", error);
         
         if (!mounted) return;
 
-        // Fallback to localStorage if backend fails
-        const localData = loadBoardState(boardId);
-        if (localData) {
-          setNodes(localData.nodes);
-          setEdges(localData.edges);
-          setExcalidrawElements(localData.excalidrawElements);
-          
-          hydrateBoard(boardId, {
-            nodes: localData.nodes,
-            edges: localData.edges,
-            elements: localData.excalidrawElements as ExcalidrawElement[],
-          });
-
-          if (localData.tldrawCamera) {
-            setInitialTldrawCamera(localData.tldrawCamera);
-          }
-        }
-
+        // No localStorage fallback - Firestore is the single source of truth
         const apiError = error as ApiError;
         setLoadError(apiError.message || "Failed to load board");
       } finally {
@@ -211,49 +141,26 @@ export function useBoard(boardId: string) {
   useEffect(() => {
     console.log("[useBoard] Setting up store subscription for", boardId);
     
-    const unsubscribe = useBoardStore.subscribe((state, prevState) => {
+    const unsubscribe = useBoardStore.subscribe((state) => {
       const currentBoard = state.boards[boardId];
-      const prevBoard = prevState?.boards?.[boardId];
       
       if (!currentBoard) return;
       
-      // Check if React Flow data changed in the store
-      const nodesChanged = JSON.stringify(currentBoard.reactflow.nodes) !== JSON.stringify(prevBoard?.reactflow?.nodes || []);
-      const edgesChanged = JSON.stringify(currentBoard.reactflow.edges) !== JSON.stringify(prevBoard?.reactflow?.edges || []);
+      // Always sync from store to local state
+      const storeNodes = currentBoard.reactflow.nodes;
+      const storeEdges = currentBoard.reactflow.edges;
       
-      if (nodesChanged) {
-        console.log("[useBoard] Store nodes changed, updating React Flow:", currentBoard.reactflow.nodes.length, "nodes");
-        setNodes(currentBoard.reactflow.nodes);
-      }
+      console.log("[useBoard] Store update detected:", storeNodes.length, "nodes");
       
-      if (edgesChanged) {
-        console.log("[useBoard] Store edges changed, updating React Flow:", currentBoard.reactflow.edges.length, "edges");
-        setEdges(currentBoard.reactflow.edges);
-      }
+      // Update local state if different
+      setNodes(storeNodes);
+      setEdges(storeEdges);
     });
     
     return unsubscribe;
   }, [boardId, setNodes, setEdges]);
 
-  // Auto-save to localStorage as backup (separate from backend autosave)
-  useEffect(() => {
-    if (!isLoaded) return; // Don't save during initial load
-
-    const timeoutId = setTimeout(() => {
-      const cam = tldrawEditor?.getCamera();
-      saveBoardState(
-        boardId,
-        nodes,
-        edges,
-        excalidrawElements,
-        cam
-          ? { x: cam.x, y: cam.y, zoom: cam.z }
-          : undefined
-      );
-    }, 500); // Debounce saves by 500ms
-
-    return () => clearTimeout(timeoutId);
-  }, [boardId, nodes, edges, excalidrawElements, isLoaded, tldrawEditor]);
+  // REMOVED: localStorage autosave - all persistence now goes through backend API
 
   // Sync React Flow state to store (triggers backend autosave)
   useEffect(() => {

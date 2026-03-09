@@ -51,6 +51,14 @@ export function usePlanAndExecute(boardId: string | undefined) {
         const plan = await planActions({ boardId, command, screenshot, nodes });
         
         console.log("[usePlanAndExecute] AI plan received:", plan);
+        console.log("[usePlanAndExecute] Number of actions:", plan.actions?.length ?? 0);
+        console.log("[usePlanAndExecute] Actions:", JSON.stringify(plan.actions, null, 2));
+
+        if (!plan.actions || plan.actions.length === 0) {
+          console.warn("[usePlanAndExecute] No actions to execute");
+          addToast("AI returned no actions to execute", "info");
+          return;
+        }
 
         // 4. Refresh live state before execution (in case it changed during AI call)
         const freshBoardState = useBoardStore.getState();
@@ -91,13 +99,18 @@ export function usePlanAndExecute(boardId: string | undefined) {
         }, boardId); // Pass boardId to ActionExecutor
 
         // 6. Execute
+        console.log("[usePlanAndExecute] Executing plan with", plan.actions.length, "actions");
         await executor.executePlan(plan);
+        console.log("[usePlanAndExecute] Plan execution completed successfully");
 
+        addToast("AI actions executed successfully", "success");
+        
         if (plan.reasoning) {
           addToast(plan.reasoning, "success");
         }
       } catch (err: any) {
         console.error("[STUN] Plan execution failed:", err);
+        console.error("[STUN] Error stack:", err.stack);
         addToast(err?.message ?? "AI command failed", "error");
       } finally {
         setIsPlanning(false);

@@ -169,6 +169,49 @@ export default function CanvasRoot({ boardId }: Props) {
   );
 
   // ============================================================================
+  // Sync Excalidraw elements from store (for AI-created elements)
+  // ============================================================================
+
+  const prevElementsLengthRef = useRef(excalidrawElements.length);
+  
+  useEffect(() => {
+    // Only sync when elements are ADDED (not on every change to prevent loops)
+    const currentLength = excalidrawElements.length;
+    const prevLength = prevElementsLengthRef.current;
+    
+    if (currentLength <= prevLength) {
+      // No new elements added, skip sync
+      prevElementsLengthRef.current = currentLength;
+      return;
+    }
+    
+    console.log("[CanvasRoot] New elements detected:", currentLength, "vs", prevLength);
+    console.log("[CanvasRoot] excalidrawRef.current:", !!excalidrawRef.current);
+    
+    if (!excalidrawRef.current) {
+      console.warn("[CanvasRoot] Excalidraw ref not available yet");
+      prevElementsLengthRef.current = currentLength;
+      return;
+    }
+    
+    // Update Excalidraw scene when NEW elements are added (AI actions)
+    try {
+      console.log("[CanvasRoot] Calling updateScene with", excalidrawElements.length, "elements");
+      console.log("[CanvasRoot] New elements:", excalidrawElements.slice(prevLength));
+      
+      excalidrawRef.current.updateScene({
+        elements: excalidrawElements,
+      });
+      
+      console.log("[CanvasRoot] Successfully synced elements to Excalidraw");
+      prevElementsLengthRef.current = currentLength;
+    } catch (error) {
+      console.error("[CanvasRoot] Failed to update Excalidraw scene:", error);
+      prevElementsLengthRef.current = currentLength;
+    }
+  }, [excalidrawElements]);
+
+  // ============================================================================
   // Excalidraw Element Synchronization
   // ============================================================================
 

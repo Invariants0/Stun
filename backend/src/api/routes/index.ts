@@ -3,6 +3,7 @@ import { aiRouter } from "./ai.routes";
 import { authRouter } from "./auth.routes";
 import { boardRouter } from "./board.routes";
 import { healthRouter } from "./health.routes";
+import { mediaRouter } from "./media.routes";
 import { presenceRouter } from "./presence.routes";
 
 export function registerRoutes(app: Express): void {
@@ -10,5 +11,6 @@ export function registerRoutes(app: Express): void {
   app.use("/auth",     authRouter);
   app.use("/boards",   boardRouter);
   app.use("/ai",       aiRouter);
+  app.use("/media",    mediaRouter);
   app.use("/presence", presenceRouter);
 }

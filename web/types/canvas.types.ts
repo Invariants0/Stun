@@ -134,7 +134,8 @@ export type AIActionType =
   | "cluster"
   | "create"
   | "delete"
-  | "transform";
+  | "transform"
+  | "layout";
 
 export interface AIAction {
   type: AIActionType;
@@ -148,6 +149,15 @@ export interface AIAction {
   color?: string;
   duration?: number;
   data?: Record<string, unknown>;
+  
+  // Layout transformation properties
+  layoutType?: "mindmap" | "roadmap" | "timeline" | "flowchart" | "presentation";
+  options?: {
+    spacing?: { x: number; y: number };
+    centerPosition?: { x: number; y: number };
+    direction?: "horizontal" | "vertical" | "radial";
+    groupBy?: "type" | "topic" | "priority" | "date";
+  };
 }
 
 export interface AIActionPlan {

@@ -165,6 +165,41 @@ export interface CollaboratorsResponse {
 }
 
 // ============================================================================
+// Search Types
+// ============================================================================
+
+export interface SearchResult {
+  nodeId: string;
+  score: number;
+  preview: string;
+  type: string;
+  position?: { x: number; y: number };
+}
+
+export interface SearchResponse {
+  results: SearchResult[];
+  total: number;
+  query: string;
+}
+
+export interface SearchFilters {
+  type?: string;
+  minScore?: number;
+  topK?: number;
+}
+
+export interface SearchRequest {
+  query: string;
+  nodes: Array<{
+    id: string;
+    type?: string;
+    position?: { x: number; y: number };
+    data?: Record<string, unknown>;
+  }>;
+  filters?: SearchFilters;
+}
+
+// ============================================================================
 // Generic API Response Types
 // ============================================================================
 

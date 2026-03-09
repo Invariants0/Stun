@@ -8,9 +8,10 @@
  */
 
 import type { Node, Edge, Viewport } from "reactflow";
-import type { AIAction, AIActionPlan } from "@/types/canvas.types";
+import type { AIAction, AIActionPlan } from "../types/canvas.types";
 import { useBoardStore } from "@/store/board.store";
 import { canvasMappingService } from "@/lib/canvas-mapping";
+import { api } from "@/lib/api-client";
 
 export interface ActionExecutorContext {
   nodes: Node[];
@@ -82,6 +83,8 @@ export class ActionExecutor {
           return await this.executeDelete(action);
         case "transform":
           return await this.executeTransform(action);
+        case "layout":
+          return await this.executeLayout(action);
         default:
           throw new Error(`Unsupported action type: ${(action as AIAction).type}`);
       }
@@ -376,6 +379,63 @@ export class ActionExecutor {
     );
 
     return Promise.resolve();
+  }
+
+  /**
+   * Transform the entire canvas into a structured layout
+   */
+  private async executeLayout(action: AIAction): Promise<void> {
+    const layoutType = (action as any).layoutType;
+    const options = (action as any).options || {};
+
+    if (!layoutType) {
+      throw new Error("Layout action requires layoutType");
+    }
+
+    if (!["mindmap", "roadmap", "timeline", "flowchart", "presentation"].includes(layoutType)) {
+      throw new Error(`Unsupported layout type: ${layoutType}`);
+    }
+
+    try {
+      console.log(`[ActionExecutor] Transforming canvas to ${layoutType} layout`);
+
+      // Prepare layout transformation request
+      const transformRequest = {
+        nodes: this.context.nodes,
+        edges: this.context.edges,
+        layoutType,
+        options
+      };
+
+      // Call the layout transformation API
+      const response = await api.post<{
+        success: boolean;
+        result: {
+          nodes: Node[];
+          edges: Edge[];
+          metadata: any;
+        };
+      }>("/layout/transform", transformRequest);
+
+      if (!response.success) {
+        throw new Error("Layout transformation failed");
+      }
+
+      // Apply the transformed nodes and edges to the canvas
+      this.context.setNodes(response.result.nodes);
+      this.context.setEdges(response.result.edges);
+
+      // Optionally adjust viewport to fit the new layout
+      if (response.result.metadata?.suggestedViewport) {
+        this.context.setViewport(response.result.metadata.suggestedViewport);
+      }
+
+      console.log(`[ActionExecutor] ${layoutType} layout applied successfully`);
+
+    } catch (error: any) {
+      console.error(`[ActionExecutor] Layout transformation failed:`, error);
+      throw new Error(`Failed to transform to ${layoutType} layout: ${error.message}`);
+    }
   }
 }
 

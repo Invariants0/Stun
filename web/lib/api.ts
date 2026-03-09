@@ -16,6 +16,8 @@ import type {
   CollaboratorsResponse,
   SuccessResponse,
   BoardVisibility,
+  SearchRequest,
+  SearchResponse,
 } from "@/types/api.types";
 
 // ============================================================================
@@ -83,4 +85,12 @@ export async function updatePresence(boardId: string): Promise<SuccessResponse> 
 
 export async function getActiveUsers(boardId: string): Promise<PresenceResponse> {
   return api.get<PresenceResponse>(`/presence/${boardId}`);
+}
+
+// ============================================================================
+// Search APIs
+// ============================================================================
+
+export async function searchCanvas(request: SearchRequest): Promise<SearchResponse> {
+  return api.post<SearchResponse>("/search", request);
 }

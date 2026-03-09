@@ -13,7 +13,7 @@
 
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Editor, TLCamera } from "tldraw";
 import type { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
 import type { AppState } from "@excalidraw/excalidraw/types/types";
@@ -21,16 +21,26 @@ import type { AppState } from "@excalidraw/excalidraw/types/types";
 import TLDrawWorkspace from "./TLDrawWorkspace";
 import ExcalidrawLayer from "./ExcalidrawLayer";
 import ReactFlowGraphLayer from "./ReactFlowGraphLayer";
+import { ShareDialog } from "@/components/ui/ShareDialog";
+import { MediaUploader } from "@/components/ui/MediaUploader";
+import { PresenceIndicators } from "@/components/ui/PresenceIndicators";
 import { useBoard } from "@/hooks/useBoard";
 import { usePresence } from "@/hooks/usePresence";
 import { useScreenshot } from "@/hooks/useScreenshot";
+import { useMediaUpload } from "@/hooks/useMediaUpload";
+import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 import { cameraSyncService } from "@/lib/camera-sync";
 import { canvasMappingService } from "@/lib/canvas-mapping";
+import type { BoardVisibility, PresenceUser, MediaUploadResult } from "@/types/api.types";
 
 type Props = { boardId: string };
 
 export default function CanvasRoot({ boardId }: Props) {
-  const { activeUsers } = usePresence(boardId);
+  const { activeUsers, isOnline } = usePresence(boardId);
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [showMediaUploader, setShowMediaUploader] = useState(false);
+
+  const { uploadFiles } = useMediaUpload();
 
   const {
     // React Flow state
@@ -47,6 +57,9 @@ export default function CanvasRoot({ boardId }: Props) {
     // TLDraw state
     tldrawEditor,
     setTldrawEditor,
+    // Board data
+    boardData,
+    setBoardData,
   } = useBoard(boardId);
 
   const canvasRootRef = useRef<HTMLDivElement>(null);
@@ -145,6 +158,52 @@ export default function CanvasRoot({ boardId }: Props) {
   );
 
   // ============================================================================
+  // Media Upload Integration
+  // ============================================================================
+
+  const handleMediaUploaded = useCallback((mediaResults: MediaUploadResult[]) => {
+    const currentViewport = reactFlowRef.current?.getViewport() || { x: 0, y: 0, zoom: 1 };
+    const spacing = 20;
+    let yOffset = 0;
+
+    // Create React Flow nodes for each uploaded media
+    const newMediaNodes = mediaResults.map((media, index) => {
+      const position = {
+        x: (window.innerWidth / 2 - currentViewport.x) / currentViewport.zoom,
+        y: (window.innerHeight / 2 - currentViewport.y) / currentViewport.zoom + yOffset,
+      };
+      
+      // Adjust spacing for next media item
+      yOffset += 200 + spacing;
+
+      return {
+        id: `media-${media.id}`,
+        type: 'media',
+        position,
+        data: {
+          ...media,
+          isSelected: false,
+        },
+        dragHandle: '.media-drag-handle',
+      };
+    });
+
+    // Add new media nodes to the canvas
+    setNodes((prevNodes) => [...prevNodes, ...newMediaNodes]);
+
+    console.log(`[CanvasRoot] Added ${newMediaNodes.length} media nodes to canvas`);
+  }, [setNodes]);
+
+  // ============================================================================
+  // Drag & Drop for Media Files
+  // ============================================================================
+
+  const { isDragOver } = useDragAndDrop({
+    onFilesUploaded: handleMediaUploaded,
+    uploadFiles,
+  });
+
+  // ============================================================================
   // Canvas Initialization
   // ============================================================================
 
@@ -206,67 +265,31 @@ export default function CanvasRoot({ boardId }: Props) {
       />
 
       <div className="canvas-topbar">
-        {/* Active collaborator avatars */}
-        {activeUsers.length > 0 && (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 4,
-              marginRight: 8,
-            }}
-          >
-            {activeUsers.slice(0, 5).map((u) => (
-              <span
-                key={u.userId}
-                title={u.displayName ?? u.userId}
-                style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: "50%",
-                  background: "#6366f1",
-                  border: "2px solid #fff",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 11,
-                  fontWeight: 600,
-                  color: "#fff",
-                  flexShrink: 0,
-                  overflow: "hidden",
-                }}
-              >
-                {u.photoURL ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={u.photoURL}
-                    alt={u.displayName ?? ""}
-                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                  />
-                ) : (
-                  (u.displayName ?? u.userId).charAt(0).toUpperCase()
-                )}
-              </span>
-            ))}
-            {activeUsers.length > 5 && (
-              <span
-                style={{
-                  fontSize: 11,
-                  color: "#475569",
-                  fontWeight: 500,
-                }}
-              >
-                +{activeUsers.length - 5}
-              </span>
-            )}
-          </div>
-        )}
+        {/* Presence Indicators */}
+        <PresenceIndicators 
+          activeUsers={activeUsers.map((u: any): PresenceUser => ({
+            userId: u.userId,
+            displayName: u.displayName,
+            photoURL: u.photoURL,
+            lastSeen: u.lastSeen,
+            cursor: u.cursor,
+          }))}
+          isOnline={isOnline}
+        />
 
-        <button type="button" className="canvas-topbar__btn">
+        <div style={{ flex: 1 }} />
+
+        {/* Media Upload Button */}
+        <button 
+          type="button" 
+          className="canvas-topbar__btn"
+          onClick={() => setShowMediaUploader(true)}
+          title="Add media files, images, or URLs"
+        >
           <span className="canvas-topbar__icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" role="presentation">
               <path
-                d="M7.5 12a3 3 0 1 0-3-3 3 3 0 0 0 3 3zM16.5 11a2.5 2.5 0 1 0-2.5-2.5A2.5 2.5 0 0 0 16.5 11zM4 19.5a4.5 4.5 0 0 1 9 0M13.5 19.5a3.5 3.5 0 0 1 7 0"
+                d="M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zM8.5 13.5l2.5 3 3.5-4.5 4.5 6H5l3.5-4.5z"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="1.6"
@@ -275,9 +298,14 @@ export default function CanvasRoot({ boardId }: Props) {
               />
             </svg>
           </span>
-          Collab
+          Media
         </button>
-        <button type="button" className="canvas-topbar__btn">
+
+        <button 
+          type="button" 
+          className="canvas-topbar__btn"
+          onClick={() => setShowShareDialog(true)}
+        >
           <span className="canvas-topbar__icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" role="presentation">
               <path
@@ -293,6 +321,58 @@ export default function CanvasRoot({ boardId }: Props) {
           Share
         </button>
       </div>
+
+      {/* Share Dialog */}
+      <ShareDialog
+        isOpen={showShareDialog}
+        onClose={() => setShowShareDialog(false)}
+        boardId={boardId}
+        currentVisibility={boardData?.visibility || "private"}
+        onVisibilityChange={(visibility: BoardVisibility) => {
+          setBoardData(prev => prev ? { ...prev, visibility } : null);
+        }}
+      />
+
+      {/* Media Uploader */}
+      {showMediaUploader && (
+        <MediaUploader
+          onMediaUploaded={handleMediaUploaded}
+          onClose={() => setShowMediaUploader(false)}
+          maxFiles={10}
+        />
+      )}
+
+      {/* Drag & Drop Overlay */}
+      {isDragOver && (
+        <div style={{
+          position: "absolute",
+          inset: 0,
+          zIndex: 1000,
+          background: "rgba(59, 130, 246, 0.1)",
+          backdropFilter: "blur(2px)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          pointerEvents: "none",
+        }}>
+          <div style={{
+            background: "white",
+            padding: "32px 48px",
+            borderRadius: "16px",
+            border: "2px dashed #3b82f6",
+            textAlign: "center",
+            boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)",
+          }}>
+            <div style={{ fontSize: "3rem", marginBottom: "16px" }}>📁</div>
+            <h3 style={{ margin: "0 0 8px 0", color: "#0f172a", fontSize: "1.25rem", fontWeight: 600 }}>
+              Drop files to add to canvas
+            </h3>
+            <p style={{ margin: 0, color: "#64748b", fontSize: "0.875rem" }}>
+              Images, PDFs, CSV files, and more
+            </p>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

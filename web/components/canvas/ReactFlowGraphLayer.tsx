@@ -87,14 +87,16 @@ export default function ReactFlowGraphLayer({
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           proOptions={{ hideAttribution: true }}
-          nodesDraggable={false} // Disable dragging since we can't interact
+          nodesDraggable={false}
           nodesConnectable={false}
           elementsSelectable={false}
           onInit={onInit}
           style={{
-            background: "transparent", // Make background transparent
-            pointerEvents: "none", // No interaction with React Flow layer
+            background: "transparent",
+            pointerEvents: "none",
           }}
+          // Hide all nodes visually - they're infrastructure only
+          nodeExtent={[[-999999, -999999], [999999, 999999]]}
         >
           {showBackground && <Background />}
           {showControls && <Controls />}

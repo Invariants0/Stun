@@ -78,7 +78,6 @@ export class CanvasMappingService {
   ): void {
     // Prevent infinite loops and duplicate processing
     if (this.isProcessing) {
-      console.log("[Mapping] Skipping - already processing");
       return;
     }
 
@@ -104,13 +103,13 @@ export class CanvasMappingService {
     
     console.log("[Mapping] Syncing", elements.length, "Excalidraw elements to React Flow nodes");
     
-    const newNodes: Node[] = [...currentNodes];
-    const processedElementIds = new Set<string>();
+    // Separate mapped nodes from other nodes (like media nodes)
+    const mappedNodeIds = new Set(Array.from(this.reverseMappings.keys()));
+    const unmappedNodes = currentNodes.filter(n => !mappedNodeIds.has(n.id));
+    const newMappedNodes: Node[] = [];
 
     // Process each Excalidraw element
     for (const element of elements) {
-      processedElementIds.add(element.id);
-      
       // Skip if element is deleted
       if (element.isDeleted) {
         this.removeMapping(element.id);
@@ -121,19 +120,16 @@ export class CanvasMappingService {
       
       if (existingMapping) {
         // Update existing mapped node position/data
-        const nodeIndex = newNodes.findIndex(n => n.id === existingMapping.reactFlowNodeId);
-        if (nodeIndex >= 0) {
-          const updatedNode = this.convertElementToNode(element);
-          updatedNode.id = existingMapping.reactFlowNodeId; // Keep existing ID
-          newNodes[nodeIndex] = updatedNode;
-          
-          // Update sync status
-          this.updateSyncStatus(element.id, "synced");
-        }
+        const updatedNode = this.convertElementToNode(element);
+        updatedNode.id = existingMapping.reactFlowNodeId; // Keep existing ID
+        newMappedNodes.push(updatedNode);
+        
+        // Update sync status
+        this.updateSyncStatus(element.id, "synced");
       } else {
         // Create new mapping and node for new elements
         const newNode = this.convertElementToNode(element);
-        newNodes.push(newNode);
+        newMappedNodes.push(newNode);
         
         // Add mapping
         this.addMapping(element.id, newNode.id);
@@ -141,17 +137,15 @@ export class CanvasMappingService {
       }
     }
 
-    // Remove nodes for deleted elements
+    // Combine unmapped nodes (media, etc.) with newly mapped nodes
+    const finalNodes = [...unmappedNodes, ...newMappedNodes];
+
+    // Remove mappings for deleted elements
     const currentElementIds = new Set(elements.map(el => el.id));
     const mappingsToRemove: string[] = [];
     
-    for (const [elementId, mapping] of this.mappings.entries()) {
+    for (const [elementId] of this.mappings.entries()) {
       if (!currentElementIds.has(elementId)) {
-        // Element was deleted, remove the corresponding node
-        const nodeIndex = newNodes.findIndex(n => n.id === mapping.reactFlowNodeId);
-        if (nodeIndex >= 0) {
-          newNodes.splice(nodeIndex, 1);
-        }
         mappingsToRemove.push(elementId);
       }
     }
@@ -159,15 +153,9 @@ export class CanvasMappingService {
     // Clean up mappings for deleted elements
     mappingsToRemove.forEach(elementId => this.removeMapping(elementId));
 
-    // Only update nodes if there were actual changes
-    const hasChanges = mappingsToRemove.length > 0 || 
-                      elements.some(el => !this.getMappingByElement(el.id) && !el.isDeleted);
-    
-    if (hasChanges) {
-      // Update React Flow nodes
-      setNodes(newNodes);
-      console.log("[Mapping] Updated", newNodes.length, "React Flow nodes");
-    }
+    // Update React Flow nodes
+    console.log("[Mapping] Setting", finalNodes.length, "total nodes (", newMappedNodes.length, "mapped +", unmappedNodes.length, "unmapped)");
+    setNodes(finalNodes);
 
     this.isProcessing = false;
   }

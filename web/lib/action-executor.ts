@@ -121,21 +121,25 @@ export class ActionExecutor {
    * Connect two nodes with an edge
    */
   private executeConnect(action: AIAction): Promise<void> {
-    if (!action.source || !action.target) {
-      throw new Error("Connect action requires source and target");
+    // Support both 'from/to' (backend schema) and 'source/target' (ReactFlow)
+    const source = (action as any).source || (action as any).from;
+    const target = (action as any).target || (action as any).to;
+    
+    if (!source || !target) {
+      throw new Error("Connect action requires source and target (or from and to)");
     }
 
     const newEdge: Edge = {
-      id: `edge-${action.source}-${action.target}`,
-      source: action.source,
-      target: action.target,
+      id: `edge-${source}-${target}`,
+      source: source,
+      target: target,
       type: "default",
     };
 
     this.context.setEdges((edges) => {
       // Check if edge already exists
       const exists = edges.some(
-        (e) => e.source === action.source && e.target === action.target
+        (e) => e.source === source && e.target === target
       );
       return exists ? edges : [...edges, newEdge];
     });

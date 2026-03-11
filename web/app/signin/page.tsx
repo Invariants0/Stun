@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { getGoogleAuthUrl, getStoredUser } from "@/lib/auth";
+import { getGoogleAuthUrl, rehydrateSession } from "@/lib/auth";
 
 export default function SigninPage() {
   const router = useRouter();
@@ -10,7 +10,16 @@ export default function SigninPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (getStoredUser()) router.replace("/");
+    let mounted = true;
+    (async () => {
+      const user = await rehydrateSession();
+      if (mounted && user) {
+        router.replace("/");
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
   }, [router]);
 
   const handleGoogleSignIn = async () => {

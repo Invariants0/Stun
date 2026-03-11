@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   getStoredUser,
@@ -21,20 +21,25 @@ export function useAuth(): UseAuthReturn {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+  // Ensure we only register one token refresh listener app-wide.
+  // This avoids multiple /api/auth/set-token calls if multiple pages mount useAuth.
+  const refreshInitRef = useRef(false);
+
   useEffect(() => {
     let mounted = true; // Prevent state updates if component unmounts
-    
-    // Start token auto-refresh (keeps httpOnly cookie in sync with Firebase)
-    const unsubRefresh = initTokenRefresh();
+    let unsubRefresh = () => {};
+    if (!refreshInitRef.current) {
+      refreshInitRef.current = true;
+      // Start token auto-refresh (keeps httpOnly cookie in sync with Firebase)
+      unsubRefresh = initTokenRefresh();
+    }
 
     async function initAuth() {
       try {
-        // Fast path: return cached profile from localStorage immediately
+        // Fast path: seed UI from cached profile, but keep loading
         const cached = getStoredUser();
         if (cached && mounted) {
           setUser(cached);
-          setLoading(false);
-          return;
         }
 
         // Slow path: page was refreshed — restore from Firebase SDK / BFF
@@ -56,7 +61,7 @@ export function useAuth(): UseAuthReturn {
     
     return () => {
       mounted = false;
-      unsubRefresh();
+      // Keep the refresh listener alive app-wide.
     };
   }, []); // Empty dependency array - this should only run once
 

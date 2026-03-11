@@ -41,12 +41,25 @@ export interface AuthUser {
   photoURL?: string;
 }
 
+function inferDisplayName(email: string | null | undefined): string | undefined {
+  if (!email) return undefined;
+  const local = email.split("@")[0]?.trim();
+  if (!local) return undefined;
+  return local
+    .replace(/[._-]+/g, " ")
+    .split(" ")
+    .filter(Boolean)
+    .map((part) => part[0].toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
 // ─── In-memory token store ───────────────────────────────────────────────────
 // Accessible to client-side API calls; NOT readable by XSS scripts (unlike
 // localStorage / non-httpOnly cookies).  Lost on page refresh — the
 // /api/auth/rehydrate route restores the session via the httpOnly cookie.
 
 let _tokenMemory: string | null = null;
+let _lastPostedToken: string | null = null;
 
 // ─── Google OAuth URL ────────────────────────────────────────────────────────
 
@@ -86,7 +99,10 @@ export async function exchangeCodeForToken(
     user: {
       uid: credential.user.uid,
       email: credential.user.email ?? serverUser.email ?? "",
-      displayName: credential.user.displayName ?? serverUser.displayName,
+      displayName:
+        credential.user.displayName ??
+        serverUser.displayName ??
+        inferDisplayName(credential.user.email ?? serverUser.email),
       photoURL: credential.user.photoURL ?? serverUser.photoURL,
     },
   };
@@ -141,14 +157,16 @@ export function initTokenRefresh(): () => void {
         if (firebaseUser) {
           const idToken = await firebaseUser.getIdToken(false); // Don't force refresh
           _tokenMemory = idToken;
-          
-          await fetch("/api/auth/set-token", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ token: idToken }),
-          }).catch((err) => {
-            console.warn("Failed to set auth cookie:", err);
-          });
+          if (_lastPostedToken !== idToken) {
+            _lastPostedToken = idToken;
+            await fetch("/api/auth/set-token", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ token: idToken }),
+            }).catch((err) => {
+              console.warn("Failed to set auth cookie:", err);
+            });
+          }
         }
       } finally {
         _refreshInProgress = false;
@@ -186,11 +204,18 @@ export async function rehydrateSession(): Promise<AuthUser | null> {
         console.warn("Failed to set auth cookie:", err);
       });
       
+      const cached = getStoredUser();
+      const email = firebaseUser.email ?? cached?.email ?? "";
+      const displayName =
+        firebaseUser.displayName ??
+        cached?.displayName ??
+        inferDisplayName(email);
+      const photoURL = firebaseUser.photoURL ?? cached?.photoURL ?? undefined;
       const user: AuthUser = {
         uid: firebaseUser.uid,
-        email: firebaseUser.email ?? "",
-        displayName: firebaseUser.displayName ?? undefined,
-        photoURL: firebaseUser.photoURL ?? undefined,
+        email,
+        displayName,
+        photoURL,
       };
       storeUser(user);
       return user;

@@ -33,6 +33,7 @@ import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 import { useSearch } from "@/hooks/useSearch";
 import { cameraSyncService } from "@/lib/camera-sync";
 import { canvasMappingService } from "@/lib/canvas-mapping";
+import { sanitizeExcalidrawElements } from "@/lib/excalidraw-sanitize";
 import type { BoardVisibility, PresenceUser, MediaUploadResult } from "@/types/api.types";
 
 type Props = { boardId: string };
@@ -56,6 +57,7 @@ export default function CanvasRoot({ boardId }: Props) {
     // Excalidraw state
     excalidrawElements,
     onExcalidrawElementsChange,
+    isLoaded,
     // TLDraw state
     tldrawEditor,
     setTldrawEditor,
@@ -65,10 +67,16 @@ export default function CanvasRoot({ boardId }: Props) {
   } = useBoard(boardId);
 
   const canvasRootRef = useRef<HTMLDivElement>(null);
+  const nodesRef = useRef(nodes);
+  useEffect(() => {
+    nodesRef.current = nodes;
+  }, [nodes]);
 
   // viewport refs & state
   const reactFlowRef = useRef<any>(null);
   const excalidrawRef = useRef<any>(null);
+  const lastExcalidrawAppStateRef = useRef<Partial<AppState> | null>(null);
+  const hasInitializedSceneRef = useRef(false);
 
   // ============================================================================
   // Search & highlight
@@ -114,6 +122,7 @@ export default function CanvasRoot({ boardId }: Props) {
   // When Excalidraw's view changes we notify the service
   const handleExcalidrawAppStateChange = useCallback(
     (appState: Partial<AppState>) => {
+      lastExcalidrawAppStateRef.current = appState;
       // ts doesn't know about viewX/viewY on Partial<AppState>, so cast
       const state: any = appState;
       const x: number = state.viewX ?? 0;
@@ -137,20 +146,7 @@ export default function CanvasRoot({ boardId }: Props) {
         reactFlowRef.current.setViewport(cam.reactFlowViewport);
       }
 
-      // Update Excalidraw view
-      if (excalidrawRef.current) {
-        try {
-          excalidrawRef.current.updateScene({
-            appState: {
-              viewX: cam.excalidrawTransform.x,
-              viewY: cam.excalidrawTransform.y,
-              zoom: cam.excalidrawTransform.zoom,
-            },
-          });
-        } catch (e) {
-          // ignore if API not available yet
-        }
-      }
+      // Excalidraw view sync disabled to avoid corruption during draw
 
       // Keep TLDraw editor in sync (optional)
       if (tldrawEditor) {
@@ -160,6 +156,10 @@ export default function CanvasRoot({ boardId }: Props) {
 
     return unsub;
   }, [tldrawEditor]);
+
+  useEffect(() => {
+    hasInitializedSceneRef.current = false;
+  }, [boardId]);
 
   const handleTLDrawEditorMount = useCallback(
     (editor: Editor) => {
@@ -172,44 +172,26 @@ export default function CanvasRoot({ boardId }: Props) {
   // Sync Excalidraw elements from store (for AI-created elements)
   // ============================================================================
 
-  const prevElementsLengthRef = useRef(excalidrawElements.length);
-  
+  const syncExcalidrawScene = useCallback(
+    (_elements: readonly ExcalidrawElement[]) => {
+      // Disabled: updateScene during draw is corrupting Excalidraw's internal new-element state.
+      return;
+    },
+    []
+  );
+
   useEffect(() => {
-    // Only sync when elements are ADDED (not on every change to prevent loops)
-    const currentLength = excalidrawElements.length;
-    const prevLength = prevElementsLengthRef.current;
-    
-    if (currentLength <= prevLength) {
-      // No new elements added, skip sync
-      prevElementsLengthRef.current = currentLength;
-      return;
-    }
-    
-    console.log("[CanvasRoot] New elements detected:", currentLength, "vs", prevLength);
-    console.log("[CanvasRoot] excalidrawRef.current:", !!excalidrawRef.current);
-    
-    if (!excalidrawRef.current) {
-      console.warn("[CanvasRoot] Excalidraw ref not available yet");
-      prevElementsLengthRef.current = currentLength;
-      return;
-    }
-    
-    // Update Excalidraw scene when NEW elements are added (AI actions)
+    if (!isLoaded || hasInitializedSceneRef.current) return;
+    if (!excalidrawRef.current) return;
+    const sanitized = sanitizeExcalidrawElements(excalidrawElements);
+    if (sanitized.length === 0) return;
     try {
-      console.log("[CanvasRoot] Calling updateScene with", excalidrawElements.length, "elements");
-      console.log("[CanvasRoot] New elements:", excalidrawElements.slice(prevLength));
-      
-      excalidrawRef.current.updateScene({
-        elements: excalidrawElements,
-      });
-      
-      console.log("[CanvasRoot] Successfully synced elements to Excalidraw");
-      prevElementsLengthRef.current = currentLength;
+      excalidrawRef.current.updateScene({ elements: sanitized });
+      hasInitializedSceneRef.current = true;
     } catch (error) {
-      console.error("[CanvasRoot] Failed to update Excalidraw scene:", error);
-      prevElementsLengthRef.current = currentLength;
+      console.error("[CanvasRoot] Failed to initialize Excalidraw scene:", error);
     }
-  }, [excalidrawElements]);
+  }, [isLoaded, excalidrawElements]);
 
   // ============================================================================
   // Excalidraw Element Synchronization
@@ -217,12 +199,13 @@ export default function CanvasRoot({ boardId }: Props) {
 
   const handleExcalidrawElementsChange = useCallback(
     (elements: readonly ExcalidrawElement[]) => {
-      onExcalidrawElementsChange(elements);
+      const sanitized = sanitizeExcalidrawElements(elements);
+      onExcalidrawElementsChange(sanitized);
 
       // 🎯 CRITICAL FEATURE: Sync Excalidraw drawings to AI-manipulatable React Flow nodes
       // Use requestAnimationFrame to prevent infinite loops
       requestAnimationFrame(() => {
-        canvasMappingService.syncElementsToNodes(elements, nodes, setNodes);
+        canvasMappingService.syncElementsToNodes(sanitized, nodesRef.current, setNodes);
         
         // Debug: Log mapping stats
         const stats = canvasMappingService.getStats();
@@ -231,7 +214,7 @@ export default function CanvasRoot({ boardId }: Props) {
         }
       });
     },
-    [onExcalidrawElementsChange, setNodes] // Removed 'nodes' to prevent dependency loop
+    [onExcalidrawElementsChange, setNodes]
   );
 
   // ============================================================================
@@ -334,10 +317,13 @@ export default function CanvasRoot({ boardId }: Props) {
 
       {/* Layer 3: Excalidraw Visual Editing - Primary user interaction */}
       <ExcalidrawLayer
-        ref={excalidrawRef}
         initialElements={excalidrawElements}
         onElementsChange={handleExcalidrawElementsChange}
         onAppStateChange={handleExcalidrawAppStateChange}
+        onApiReady={(api) => {
+          excalidrawRef.current = api;
+          syncExcalidrawScene(excalidrawElements);
+        }}
         className="canvas-layer-excalidraw"
       />
 
@@ -353,8 +339,6 @@ export default function CanvasRoot({ boardId }: Props) {
           }))}
           isOnline={isOnline}
         />
-
-        <div style={{ flex: 1 }} />
 
         {/* Semantic Search */}
         <SearchBar nodes={nodes} search={search} />

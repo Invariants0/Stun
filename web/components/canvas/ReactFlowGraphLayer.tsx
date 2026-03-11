@@ -13,7 +13,7 @@
 
 "use client";
 
-import React, { useMemo } from "react";
+import React from "react";
 import ReactFlow, {
   Background,
   Controls,
@@ -61,10 +61,6 @@ export default function ReactFlowGraphLayer({
   onInit,
 }: ReactFlowGraphLayerProps) {
   console.log("[ReactFlowGraphLayer] Rendering with", nodes.length, "nodes:", nodes);
-  
-  // Memoize nodeTypes/edgeTypes to prevent React Flow re-creation warnings
-  const nodeTypes = useMemo(() => NodeRenderer, []);
-  const edgeTypes = useMemo(() => EdgeRenderer, []);
 
   return (
     <div
@@ -81,8 +77,8 @@ export default function ReactFlowGraphLayer({
       <ReactFlow
           nodes={nodes}
           edges={edges}
-          nodeTypes={nodeTypes}
-          edgeTypes={edgeTypes}
+          nodeTypes={NodeRenderer}
+          edgeTypes={EdgeRenderer}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}

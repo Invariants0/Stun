@@ -4,9 +4,10 @@ import { authController } from "../controllers/auth.controller";
 
 export const authRouter = Router();
 
-// ACTIVE ENDPOINTS - Used by frontend
+o// ACTIVE ENDPOINTS - Used by frontend
 authRouter.get("/url",          authController.getAuthUrl);     // Used by signin page
 authRouter.post("/signin",      authController.signin);         // Used by auth callback
+authRouter.get("/me",           requireAuth, authController.me); // Used by rehydrate
 
 // UNUSED ENDPOINTS - Commented out during hackathon (March 2026)
 // These were implemented but never connected to frontend

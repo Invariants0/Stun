@@ -36,6 +36,6 @@ export async function GET(req: NextRequest) {
   }
 
   const data = await backendRes.json();
-  // Return only the user profile — never the raw token
-  return NextResponse.json({ user: data.user ?? data });
+  // Return user profile and token so the client can restore in-memory auth.
+  return NextResponse.json({ user: data.user ?? data, token });
 }

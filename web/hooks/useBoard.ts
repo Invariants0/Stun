@@ -96,6 +96,9 @@ export function useBoard(boardId: string) {
   const ignoreEmptyChangesRef = useRef(false);
   const lastNonEmptyElementsRef = useRef<number>(0);
   const loadSucceededRef = useRef(false);
+  const nodesRef = useRef<Node[]>([]);
+  const edgesRef = useRef<Edge[]>([]);
+  const elementsRef = useRef<readonly ExcalidrawElement[]>([]);
 
   // Use empty defaults - state will be loaded from backend
   let initialNodes = defaultInitialNodes;
@@ -110,11 +113,20 @@ export function useBoard(boardId: string) {
   useEffect(() => {
     console.log("[useBoard] Nodes updated:", nodes.length, "nodes", nodes.map(n => ({ id: n.id, type: n.type, pos: n.position })));
   }, [nodes]);
+  useEffect(() => {
+    nodesRef.current = nodes;
+  }, [nodes]);
+  useEffect(() => {
+    edgesRef.current = edges;
+  }, [edges]);
 
   // Excalidraw state
   const [excalidrawElements, setExcalidrawElements] = useState<
     readonly ExcalidrawElement[]
   >(initialExcalidrawElements);
+  useEffect(() => {
+    elementsRef.current = excalidrawElements;
+  }, [excalidrawElements]);
 
   // TLDraw state
   const [tldrawEditor, setTldrawEditor] = useState<Editor | null>(null);
@@ -240,10 +252,10 @@ export function useBoard(boardId: string) {
       console.log("[useBoard] Store update detected:", storeNodes.length, "nodes,", storeElements.length, "elements");
       
       // Update local state if different
-      const nodesChanged = !areNodesEquivalent(nodes, storeNodes);
-      const edgesChanged = !areEdgesEquivalent(edges, storeEdges);
+      const nodesChanged = !areNodesEquivalent(nodesRef.current, storeNodes);
+      const edgesChanged = !areEdgesEquivalent(edgesRef.current, storeEdges);
       const elementsChanged = !areElementsEquivalent(
-        excalidrawElements,
+        elementsRef.current,
         storeElements
       );
 
@@ -265,7 +277,7 @@ export function useBoard(boardId: string) {
     });
     
     return unsubscribe;
-  }, [boardId, setNodes, setEdges, setExcalidrawElements, nodes, edges, excalidrawElements]);
+  }, [boardId, setNodes, setEdges, setExcalidrawElements]);
 
   // REMOVED: localStorage autosave - all persistence now goes through backend API
 

@@ -200,11 +200,16 @@ export class ActionExecutor {
    * Zoom to a specific viewport
    */
   private executeZoom(action: AIAction): Promise<void> {
-    if (!action.viewport) {
-      throw new Error("Zoom action requires viewport");
+    const viewport =
+      action.viewport ||
+      ((action as any).data?.viewport as Viewport | undefined) ||
+      this.context.viewport;
+    if (!viewport) {
+      console.warn("[ActionExecutor] Zoom action skipped: no viewport provided");
+      return Promise.resolve();
     }
 
-    this.context.setViewport(action.viewport);
+    this.context.setViewport(viewport);
     return Promise.resolve();
   }
 

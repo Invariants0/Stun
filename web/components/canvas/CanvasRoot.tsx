@@ -76,7 +76,10 @@ export default function CanvasRoot({ boardId }: Props) {
   const reactFlowRef = useRef<any>(null);
   const excalidrawRef = useRef<any>(null);
   const lastExcalidrawAppStateRef = useRef<Partial<AppState> | null>(null);
+  const lastSyncedElementsHashRef = useRef<string>("");
+  const pendingElementsRef = useRef<readonly ExcalidrawElement[] | null>(null);
   const hasInitializedSceneRef = useRef(false);
+  const isSyncingSceneRef = useRef(false);
 
   // ============================================================================
   // Search & highlight
@@ -138,6 +141,49 @@ export default function CanvasRoot({ boardId }: Props) {
     []
   );
 
+  const isExcalidrawIdle = useCallback(() => {
+    const appState = lastExcalidrawAppStateRef.current as any;
+    if (!appState) return true;
+    const tool = appState.activeTool?.type;
+    if (tool && tool !== "selection" && tool !== "hand") {
+      return false;
+    }
+    return !(
+      appState.draggingElement ||
+      appState.editingElement ||
+      appState.isResizing ||
+      appState.isRotating ||
+      appState.multiElement
+    );
+  }, []);
+
+  const areElementsEquivalent = useCallback(
+    (a: readonly ExcalidrawElement[], b: readonly ExcalidrawElement[]) => {
+      if (a.length !== b.length) return false;
+      for (let i = 0; i < a.length; i += 1) {
+        const elA = a[i];
+        const elB = b[i];
+        if (!elA || !elB) return false;
+        if (
+          elA.id !== elB.id ||
+          elA.type !== elB.type ||
+          elA.x !== elB.x ||
+          elA.y !== elB.y ||
+          elA.width !== elB.width ||
+          elA.height !== elB.height ||
+          elA.isDeleted !== elB.isDeleted
+        ) {
+          return false;
+        }
+        if ((elA as any).text !== (elB as any).text) {
+          return false;
+        }
+      }
+      return true;
+    },
+    []
+  );
+
   // Subscribe once to unified camera updates and apply to layers
   useEffect(() => {
     const unsub = cameraSyncService.subscribe((cam) => {
@@ -159,7 +205,11 @@ export default function CanvasRoot({ boardId }: Props) {
 
   useEffect(() => {
     hasInitializedSceneRef.current = false;
+    lastSyncedElementsHashRef.current = "";
+    pendingElementsRef.current = null;
   }, [boardId]);
+
+  // Sync effect moved below syncExcalidrawScene definition to avoid TDZ
 
   const handleTLDrawEditorMount = useCallback(
     (editor: Editor) => {
@@ -173,12 +223,65 @@ export default function CanvasRoot({ boardId }: Props) {
   // ============================================================================
 
   const syncExcalidrawScene = useCallback(
-    (_elements: readonly ExcalidrawElement[]) => {
-      // Disabled: updateScene during draw is corrupting Excalidraw's internal new-element state.
-      return;
+    (elements: readonly ExcalidrawElement[]) => {
+      if (!excalidrawRef.current) return;
+      if (isSyncingSceneRef.current) return;
+      const sanitized = sanitizeExcalidrawElements(elements);
+      const elementsHash = JSON.stringify(
+        sanitized.map((el) => ({
+          id: el.id,
+          type: el.type,
+          x: el.x,
+          y: el.y,
+          width: el.width,
+          height: el.height,
+          isDeleted: el.isDeleted,
+          text: (el as any).text || "",
+        }))
+      );
+
+      if (elementsHash === lastSyncedElementsHashRef.current) {
+        return;
+      }
+
+      if (!isExcalidrawIdle()) {
+        pendingElementsRef.current = sanitized;
+        return;
+      }
+
+      try {
+        const currentScene = excalidrawRef.current.getSceneElements
+          ? excalidrawRef.current.getSceneElements()
+          : null;
+        if (currentScene && areElementsEquivalent(currentScene, sanitized)) {
+          lastSyncedElementsHashRef.current = elementsHash;
+          pendingElementsRef.current = null;
+          return;
+        }
+
+        isSyncingSceneRef.current = true;
+        excalidrawRef.current.updateScene({ elements: sanitized });
+        lastSyncedElementsHashRef.current = elementsHash;
+        pendingElementsRef.current = null;
+      } catch (error) {
+        console.error("[CanvasRoot] Failed to update Excalidraw scene:", error);
+      } finally {
+        isSyncingSceneRef.current = false;
+      }
     },
-    []
+    [areElementsEquivalent, isExcalidrawIdle]
   );
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    syncExcalidrawScene(excalidrawElements);
+  }, [isLoaded, excalidrawElements, syncExcalidrawScene]);
+
+  useEffect(() => {
+    if (!pendingElementsRef.current) return;
+    if (!isExcalidrawIdle()) return;
+    syncExcalidrawScene(pendingElementsRef.current);
+  }, [isExcalidrawIdle, syncExcalidrawScene, excalidrawElements]);
 
   useEffect(() => {
     if (!isLoaded || hasInitializedSceneRef.current) return;
@@ -188,6 +291,18 @@ export default function CanvasRoot({ boardId }: Props) {
     try {
       excalidrawRef.current.updateScene({ elements: sanitized });
       hasInitializedSceneRef.current = true;
+      lastSyncedElementsHashRef.current = JSON.stringify(
+        sanitized.map((el) => ({
+          id: el.id,
+          type: el.type,
+          x: el.x,
+          y: el.y,
+          width: el.width,
+          height: el.height,
+          isDeleted: el.isDeleted,
+          text: (el as any).text || "",
+        }))
+      );
     } catch (error) {
       console.error("[CanvasRoot] Failed to initialize Excalidraw scene:", error);
     }
@@ -213,6 +328,9 @@ export default function CanvasRoot({ boardId }: Props) {
           console.log("[CanvasRoot] Element-Node mappings:", stats.totalMappings, "active");
         }
       });
+
+      // If there are pending store-driven elements, try to apply them once idle.
+      // Flush handled by effect to avoid sync-on-onChange loops.
     },
     [onExcalidrawElementsChange, setNodes]
   );

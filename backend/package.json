@@ -17,7 +17,7 @@
     "test:gemini-connectivity": "bun test tests/gemini/gemini-connectivity.test.ts",
     "test:gemini-actions": "bun test tests/gemini/gemini-actions.test.ts",
     "test:gemini-schema": "bun test tests/gemini/gemini-schema.test.ts",
-    "emulator": "firebase emulators:start --only firestore"
+    "emulator": "firebase emulators:start --only firestore --config firebase.json --project stun-489205"
   },
   "dependencies": {
     "@google-cloud/storage": "^7.11.2",

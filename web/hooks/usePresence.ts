@@ -12,6 +12,7 @@
 import { useEffect, useState } from "react";
 import { updatePresence, getActiveUsers } from "@/lib/api";
 import type { PresenceUser } from "@/types/api.types";
+import { useAuth } from "@/hooks/useAuth";
 
 export interface UsePresenceReturn {
   activeUsers: PresenceUser[];
@@ -20,6 +21,7 @@ export interface UsePresenceReturn {
 }
 
 export function usePresence(boardId: string | null): UsePresenceReturn {
+  const { user, loading: authLoading, tokenReady } = useAuth();
   const [activeUsers, setActiveUsers] = useState<PresenceUser[]>([]);
   const [isOnline, setIsOnline] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,6 +29,10 @@ export function usePresence(boardId: string | null): UsePresenceReturn {
   useEffect(() => {
     if (!boardId) {
       setActiveUsers([]);
+      setIsOnline(false);
+      return;
+    }
+    if (authLoading || !user || !tokenReady) {
       setIsOnline(false);
       return;
     }
@@ -84,7 +90,7 @@ export function usePresence(boardId: string | null): UsePresenceReturn {
       if (heartbeatInterval) clearInterval(heartbeatInterval);
       if (pollInterval) clearInterval(pollInterval);
     };
-  }, [boardId]);
+  }, [boardId, authLoading, user]);
 
   return {
     activeUsers,

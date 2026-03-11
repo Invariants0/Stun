@@ -7,7 +7,7 @@
 
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   addEdge,
   type Connection,
@@ -22,10 +22,67 @@ import { useBoardStore } from "@/store/board.store";
 import { getBoard } from "@/lib/api";
 import type { ApiError } from "@/lib/api-client";
 import type { Board } from "@/types/api.types";
+import { sanitizeExcalidrawElements } from "@/lib/excalidraw-sanitize";
+import { useAuth } from "@/hooks/useAuth";
 
 // Default initial state - empty canvas
 const defaultInitialNodes: Node[] = [];
 const defaultInitialEdges: Edge[] = [];
+
+const areNodesEquivalent = (a: Node[], b: Node[]) => {
+  if (a === b) return true;
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    const an = a[i];
+    const bn = b[i];
+    if (
+      an.id !== bn.id ||
+      an.type !== bn.type ||
+      an.position.x !== bn.position.x ||
+      an.position.y !== bn.position.y
+    ) {
+      return false;
+    }
+  }
+  return true;
+};
+
+const areEdgesEquivalent = (a: Edge[], b: Edge[]) => {
+  if (a === b) return true;
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    const ae = a[i];
+    const be = b[i];
+    if (
+      ae.id !== be.id ||
+      ae.source !== be.source ||
+      ae.target !== be.target
+    ) {
+      return false;
+    }
+  }
+  return true;
+};
+
+const areElementsEquivalent = (
+  a: readonly ExcalidrawElement[],
+  b: readonly ExcalidrawElement[]
+) => {
+  if (a === b) return true;
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    const ae = a[i];
+    const be = b[i];
+    if (
+      ae.id !== be.id ||
+      ae.type !== be.type ||
+      ae.version !== be.version
+    ) {
+      return false;
+    }
+  }
+  return true;
+};
 
 // REMOVED: localStorage persistence - Firestore is the single source of truth
 // All board state now flows through: Firestore → Backend API → Frontend State → Canvas Render
@@ -34,6 +91,11 @@ export function useBoard(boardId: string) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [boardData, setBoardData] = useState<Board | null>(null);
+  const skipNextReactFlowSyncRef = useRef(false);
+  const { user, loading: authLoading, tokenReady } = useAuth();
+  const ignoreEmptyChangesRef = useRef(false);
+  const lastNonEmptyElementsRef = useRef<number>(0);
+  const loadSucceededRef = useRef(false);
 
   // Use empty defaults - state will be loaded from backend
   let initialNodes = defaultInitialNodes;
@@ -79,7 +141,15 @@ export function useBoard(boardId: string) {
     let mounted = true;
 
     async function loadBoard() {
+      let shouldFinalize = false;
       try {
+        if (authLoading) return;
+        if (!user) {
+          setLoadError("Authentication required");
+          return;
+        }
+        shouldFinalize = true;
+
         // Disable autosave during initial load
         disableAutosave();
 
@@ -98,12 +168,19 @@ export function useBoard(boardId: string) {
         // Hydrate state from backend
         const backendNodes = (boardData.nodes || []) as Node[];
         const backendEdges = (boardData.edges || []) as Edge[];
-        const backendElements = (boardData.elements || []) as ExcalidrawElement[];
+        const backendElements = sanitizeExcalidrawElements(
+          (boardData.elements || []) as ExcalidrawElement[]
+        );
 
         // Update local state
         setNodes(backendNodes);
         setEdges(backendEdges);
         setExcalidrawElements(backendElements);
+        lastNonEmptyElementsRef.current = backendElements.length;
+        ignoreEmptyChangesRef.current = true;
+        setTimeout(() => {
+          ignoreEmptyChangesRef.current = false;
+        }, 2000);
 
         // Hydrate store
         hydrateBoard(boardId, {
@@ -112,6 +189,7 @@ export function useBoard(boardId: string) {
           elements: backendElements,
         });
 
+        loadSucceededRef.current = true;
         setLoadError(null);
       } catch (error) {
         console.error("Failed to load board from backend:", error);
@@ -120,12 +198,18 @@ export function useBoard(boardId: string) {
 
         // No localStorage fallback - Firestore is the single source of truth
         const apiError = error as ApiError;
+        loadSucceededRef.current = false;
         setLoadError(apiError.message || "Failed to load board");
       } finally {
         if (mounted) {
+          if (!shouldFinalize) return;
           setIsLoaded(true);
-          // Re-enable autosave after load completes
-          enableAutosave();
+          if (loadSucceededRef.current) {
+            // Re-enable autosave after load completes
+            enableAutosave();
+          } else {
+            disableAutosave();
+          }
         }
       }
     }
@@ -135,7 +219,7 @@ export function useBoard(boardId: string) {
     return () => {
       mounted = false;
     };
-  }, [boardId, createBoard, setActiveBoard, hydrateBoard, enableAutosave, disableAutosave]);
+  }, [boardId, createBoard, setActiveBoard, hydrateBoard, enableAutosave, disableAutosave, authLoading, user]);
 
   // Subscribe to store changes (for AI actions and other external updates)
   useEffect(() => {
@@ -149,26 +233,52 @@ export function useBoard(boardId: string) {
       // Always sync from store to local state
       const storeNodes = currentBoard.reactflow.nodes;
       const storeEdges = currentBoard.reactflow.edges;
-      const storeElements = currentBoard.excalidraw.elements;
+      const storeElements = sanitizeExcalidrawElements(
+        currentBoard.excalidraw.elements as ExcalidrawElement[]
+      );
       
       console.log("[useBoard] Store update detected:", storeNodes.length, "nodes,", storeElements.length, "elements");
       
       // Update local state if different
-      setNodes(storeNodes);
-      setEdges(storeEdges);
-      setExcalidrawElements(storeElements);
+      const nodesChanged = !areNodesEquivalent(nodes, storeNodes);
+      const edgesChanged = !areEdgesEquivalent(edges, storeEdges);
+      const elementsChanged = !areElementsEquivalent(
+        excalidrawElements,
+        storeElements
+      );
+
+      if (nodesChanged || edgesChanged) {
+        skipNextReactFlowSyncRef.current = true;
+      }
+      if (nodesChanged) {
+        setNodes(storeNodes);
+      }
+      if (edgesChanged) {
+        setEdges(storeEdges);
+      }
+      if (elementsChanged) {
+        setExcalidrawElements(storeElements);
+      }
+      if (storeElements.length > 0) {
+        lastNonEmptyElementsRef.current = storeElements.length;
+      }
     });
     
     return unsubscribe;
-  }, [boardId, setNodes, setEdges, setExcalidrawElements]);
+  }, [boardId, setNodes, setEdges, setExcalidrawElements, nodes, edges, excalidrawElements]);
 
   // REMOVED: localStorage autosave - all persistence now goes through backend API
 
   // Sync React Flow state to store (triggers backend autosave)
   useEffect(() => {
     if (!isLoaded) return; // Don't trigger autosave during initial load
+    if (loadError) return;
+    if (skipNextReactFlowSyncRef.current) {
+      skipNextReactFlowSyncRef.current = false;
+      return;
+    }
     setReactFlowData(boardId, { nodes, edges });
-  }, [boardId, nodes, edges, setReactFlowData, isLoaded]);
+  }, [boardId, nodes, edges, setReactFlowData, isLoaded, loadError]);
 
   // Handle connections
   const onConnect = useCallback(
@@ -181,12 +291,26 @@ export function useBoard(boardId: string) {
   // Handle Excalidraw elements change
   const onExcalidrawElementsChange = useCallback(
     (elements: readonly ExcalidrawElement[]) => {
-      setExcalidrawElements(elements);
-      if (isLoaded) {
-        storeSetExcalidrawElements(boardId, elements);
+      if (!isLoaded || loadError) return;
+      const sanitized = sanitizeExcalidrawElements(elements);
+      if (
+        (ignoreEmptyChangesRef.current && sanitized.length === 0) ||
+        (sanitized.length === 0 && lastNonEmptyElementsRef.current > 0)
+      ) {
+        return;
       }
+      const elementsChanged = !areElementsEquivalent(
+        excalidrawElements,
+        sanitized
+      );
+      if (!elementsChanged) return;
+      setExcalidrawElements(sanitized);
+      if (sanitized.length > 0) {
+        lastNonEmptyElementsRef.current = sanitized.length;
+      }
+      storeSetExcalidrawElements(boardId, sanitized);
     },
-    [boardId, storeSetExcalidrawElements, isLoaded]
+    [boardId, storeSetExcalidrawElements, isLoaded, loadError, excalidrawElements]
   );
 
   // Handle TLDraw editor mount

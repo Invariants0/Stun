@@ -8,17 +8,20 @@ import {
   signOut,
   initTokenRefresh,
   type AuthUser,
+  getStoredToken,
 } from "@/lib/auth";
 
 export interface UseAuthReturn {
   user: AuthUser | null;
   loading: boolean;
+  tokenReady: boolean;
   logout: () => Promise<void>;
 }
 
 export function useAuth(): UseAuthReturn {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [tokenReady, setTokenReady] = useState(false);
   const router = useRouter();
 
   // Ensure we only register one token refresh listener app-wide.
@@ -41,11 +44,16 @@ export function useAuth(): UseAuthReturn {
         if (cached && mounted) {
           setUser(cached);
         }
+        const cachedToken = getStoredToken();
+        if (cachedToken && mounted) {
+          setTokenReady(true);
+        }
 
         // Slow path: page was refreshed — restore from Firebase SDK / BFF
         const rehydrated = await rehydrateSession();
         if (mounted) {
           setUser(rehydrated);
+          setTokenReady(Boolean(getStoredToken()));
           setLoading(false);
         }
       } catch (error) {
@@ -71,5 +79,5 @@ export function useAuth(): UseAuthReturn {
     router.push("/signin");
   };
 
-  return { user, loading, logout };
+  return { user, loading, tokenReady, logout };
 }

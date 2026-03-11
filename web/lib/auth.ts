@@ -27,6 +27,8 @@ import {
   signInWithCustomToken,
   signOut as firebaseSignOut,
   onIdTokenChanged,
+  setPersistence,
+  browserLocalPersistence,
   type User as FirebaseUser,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
@@ -61,6 +63,30 @@ function inferDisplayName(email: string | null | undefined): string | undefined 
 let _tokenMemory: string | null = null;
 let _lastPostedToken: string | null = null;
 
+export async function ensureAuthToken(): Promise<string | null> {
+  if (_tokenMemory) return _tokenMemory;
+  const current = auth.currentUser;
+  if (!current) return null;
+  try {
+    const idToken = await current.getIdToken(false);
+    _tokenMemory = idToken;
+    return idToken;
+  } catch {
+    return null;
+  }
+}
+
+export async function ensureAuthTokenWithRehydrate(): Promise<string | null> {
+  const existing = await ensureAuthToken();
+  if (existing) return existing;
+  try {
+    await rehydrateSession();
+  } catch {
+    // ignore
+  }
+  return getStoredToken();
+}
+
 // ─── Google OAuth URL ────────────────────────────────────────────────────────
 
 export async function getGoogleAuthUrl(): Promise<string> {
@@ -91,6 +117,7 @@ export async function exchangeCodeForToken(
 
   // Step 2 — Firebase client SDK exchanges custom token for a Firebase ID token
   // The ID token is auto-refreshed by the SDK and verified by requireAuth.
+  await setPersistence(auth, browserLocalPersistence);
   const credential = await signInWithCustomToken(auth, customToken);
   const firebaseIdToken = await credential.user.getIdToken();
 
@@ -229,6 +256,9 @@ export async function rehydrateSession(): Promise<AuthUser | null> {
     }
     const data = await res.json();
     const user = data.user as AuthUser;
+    if (data.token && typeof data.token === "string") {
+      _tokenMemory = data.token;
+    }
     storeUser(user);
     return user;
   } finally {

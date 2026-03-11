@@ -9,7 +9,7 @@
  */
 
 import axios, { type AxiosError, type AxiosInstance, type AxiosRequestConfig } from "axios";
-import { getStoredToken } from "@/lib/auth";
+import { ensureAuthTokenWithRehydrate, getStoredToken } from "@/lib/auth";
 
 // ============================================================================
 // Error Response Type
@@ -34,8 +34,8 @@ const createApiClient = (): AxiosInstance => {
   });
 
   // Request interceptor: attach Firebase ID token
-  client.interceptors.request.use((config) => {
-    const token = getStoredToken();
+  client.interceptors.request.use(async (config) => {
+    const token = getStoredToken() ?? (await ensureAuthTokenWithRehydrate());
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

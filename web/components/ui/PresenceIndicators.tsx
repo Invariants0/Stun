@@ -4,10 +4,33 @@ import type { PresenceUser } from "@/types/api.types";
 
 interface PresenceIndicatorsProps {
   activeUsers: PresenceUser[];
-  isOnline: boolean;
+  isOnline: boolean | null;
 }
 
 export function PresenceIndicators({ activeUsers, isOnline }: PresenceIndicatorsProps) {
+  if (isOnline === null) {
+    return (
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "8px",
+        padding: "6px 12px",
+        background: "#f8fafc",
+        borderRadius: "8px",
+        fontSize: "0.75rem",
+        color: "#64748b",
+      }}>
+        <div style={{
+          width: "6px",
+          height: "6px",
+          borderRadius: "50%",
+          background: "#94a3b8",
+        }} />
+        Connecting…
+      </div>
+    );
+  }
+
   if (!isOnline && activeUsers.length === 0) {
     return (
       <div style={{

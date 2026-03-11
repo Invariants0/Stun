@@ -16,24 +16,24 @@ import { useAuth } from "@/hooks/useAuth";
 
 export interface UsePresenceReturn {
   activeUsers: PresenceUser[];
-  isOnline: boolean;
+  isOnline: boolean | null;
   error: string | null;
 }
 
 export function usePresence(boardId: string | null): UsePresenceReturn {
   const { user, loading: authLoading, tokenReady } = useAuth();
   const [activeUsers, setActiveUsers] = useState<PresenceUser[]>([]);
-  const [isOnline, setIsOnline] = useState(false);
+  const [isOnline, setIsOnline] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!boardId) {
       setActiveUsers([]);
-      setIsOnline(false);
+      setIsOnline(null);
       return;
     }
-    if (authLoading || !user || !tokenReady) {
-      setIsOnline(false);
+    if (authLoading || !user) {
+      setIsOnline(null);
       return;
     }
 

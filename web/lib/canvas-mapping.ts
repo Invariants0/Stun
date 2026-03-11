@@ -110,6 +110,9 @@ export class CanvasMappingService {
 
     // Process each Excalidraw element
     for (const element of elements) {
+      if (!element || !(element as any).type) {
+        continue;
+      }
       // Skip if element is deleted
       if (element.isDeleted) {
         this.removeMapping(element.id);

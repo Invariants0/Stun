@@ -289,14 +289,22 @@ export class ActionExecutor {
     const currentBoard = boardState.boards[this.getBoardId()];
     const currentElements = currentBoard?.excalidraw?.elements || [];
     
-    // Create a new Excalidraw text element with all required properties
+    // Create a new Excalidraw text element with required properties
+    const now = Date.now();
+    const fontSize = 20;
+    const lineHeight = 1.25;
+    const width = Math.max(200, Math.min(600, Math.round(text.length * fontSize * 0.6)));
+    const height = Math.round(fontSize * lineHeight);
+    const seed = Math.floor(Math.random() * 2 ** 31);
+    const versionNonce = Math.floor(Math.random() * 2 ** 31);
+
     const newElement: any = {
       id: `ai-element-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       type: "text",
       x: position.x,
       y: position.y,
-      width: 200,
-      height: 50,
+      width,
+      height,
       angle: 0,
       strokeColor: "#10b981", // Green to indicate AI-created
       backgroundColor: "transparent",
@@ -306,19 +314,23 @@ export class ActionExecutor {
       roughness: 1,
       opacity: 100,
       text: text,
-      fontSize: 20,
+      fontSize,
       fontFamily: 1,
-      textAlign: "center" as const,
+      textAlign: "left" as const,
       verticalAlign: "middle" as const,
       containerId: null,
       originalText: text,
       autoResize: true,
-      lineHeight: 1.25,
+      lineHeight,
+      baseline: height,
       // Required Excalidraw properties
       isDeleted: false,
       groupIds: [],
       boundElements: null,
-      updated: Date.now(),
+      updated: now,
+      seed,
+      version: 1,
+      versionNonce,
       link: null,
       locked: false,
     };

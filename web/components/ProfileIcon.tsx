@@ -9,12 +9,18 @@ export function ProfileIcon() {
 
   if (!user) return null;
 
+  const labelSource =
+    user.displayName ??
+    (user.email ? user.email.split("@")[0] : "") ??
+    "U";
+  const label = (labelSource.trim()[0] ?? "U").toUpperCase();
+
   return (
     <div style={{ position: "fixed", top: 12, right: 12, zIndex: 9999 }}>
       {/* Avatar button */}
       <button
         onClick={() => setMenuOpen((v) => !v)}
-        title={user.displayName ?? user.email}
+        title={user.displayName ?? user.email ?? "User"}
         style={{ border: "none", background: "none", cursor: "pointer", padding: 0 }}
       >
         {user.photoURL ? (
@@ -46,7 +52,7 @@ export function ProfileIcon() {
               border: "2px solid rgba(255,255,255,0.2)",
             }}
           >
-            {(user.displayName ?? user.email ?? "U")[0].toUpperCase()}
+            {label}
           </div>
         )}
       </button>

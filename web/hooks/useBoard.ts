@@ -289,6 +289,12 @@ export function useBoard(boardId: string) {
       skipNextReactFlowSyncRef.current = false;
       return;
     }
+    const storeBoard = useBoardStore.getState().boards[boardId];
+    const storeNodes = storeBoard?.reactflow?.nodes ?? [];
+    const storeEdges = storeBoard?.reactflow?.edges ?? [];
+    if (areNodesEquivalent(nodes, storeNodes) && areEdgesEquivalent(edges, storeEdges)) {
+      return;
+    }
     setReactFlowData(boardId, { nodes, edges });
   }, [boardId, nodes, edges, setReactFlowData, isLoaded, loadError]);
 
@@ -320,7 +326,11 @@ export function useBoard(boardId: string) {
       if (sanitized.length > 0) {
         lastNonEmptyElementsRef.current = sanitized.length;
       }
-      storeSetExcalidrawElements(boardId, sanitized);
+      const storeBoard = useBoardStore.getState().boards[boardId];
+      const storeElements = storeBoard?.excalidraw?.elements ?? [];
+      if (!areElementsEquivalent(storeElements as ExcalidrawElement[], sanitized)) {
+        storeSetExcalidrawElements(boardId, sanitized);
+      }
     },
     [boardId, storeSetExcalidrawElements, isLoaded, loadError, excalidrawElements]
   );

@@ -52,8 +52,12 @@ export async function updateBoardVisibility(
   return api.patch<SuccessResponse>(`/boards/${boardId}/visibility`, { visibility });
 }
 
-export async function addCollaborator(boardId: string, userId: string): Promise<SuccessResponse> {
-  return api.post<SuccessResponse>(`/boards/${boardId}/share`, { userId });
+export async function addCollaborator(boardId: string, identifier: string): Promise<SuccessResponse> {
+  const trimmed = identifier.trim();
+  const payload = trimmed.includes("@")
+    ? { email: trimmed }
+    : { userId: trimmed };
+  return api.post<SuccessResponse>(`/boards/${boardId}/share`, payload);
 }
 
 export async function removeCollaborator(

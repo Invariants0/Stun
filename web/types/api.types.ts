@@ -12,7 +12,7 @@ import type { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/typ
 // Board Types
 // ============================================================================
 
-export type BoardVisibility = "private" | "view" | "edit";
+export type BoardVisibility = "view" | "edit";
 
 export interface Board {
   id: string;

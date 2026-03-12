@@ -25,6 +25,8 @@ export function ShareDialog({
   const [loading, setLoading] = useState(false);
   const [addingCollaborator, setAddingCollaborator] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const shareUrl =
+    typeof window !== "undefined" ? `${window.location.origin}/boards/${boardId}` : "";
 
   useEffect(() => {
     if (isOpen) {
@@ -150,7 +152,6 @@ export function ShareDialog({
             </h3>
             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
               {[
-                { value: "private" as const, label: "Private", desc: "Only you can access this board" },
                 { value: "view" as const, label: "View Only", desc: "Anyone with link can view" },
                 { value: "edit" as const, label: "Can Edit", desc: "Anyone with link can edit" },
               ].map((option) => (
@@ -186,6 +187,51 @@ export function ShareDialog({
             </div>
           </div>
 
+          {/* Share Link */}
+          <div style={{ marginBottom: "24px" }}>
+            <h3 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "12px", color: "#0f172a" }}>
+              Share Link
+            </h3>
+            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              <input
+                type="text"
+                value={shareUrl}
+                readOnly
+                style={{
+                  flex: 1,
+                  padding: "10px 12px",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "6px",
+                  fontSize: "0.875rem",
+                  background: "#f8fafc",
+                }}
+              />
+              <button
+                onClick={async () => {
+                  if (!shareUrl) return;
+                  try {
+                    await navigator.clipboard.writeText(shareUrl);
+                  } catch {
+                    // no-op: clipboard might be blocked
+                  }
+                }}
+                disabled={!shareUrl}
+                style={{
+                  padding: "10px 16px",
+                  background: !shareUrl ? "#cbd5e1" : "#0f172a",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "6px",
+                  fontSize: "0.875rem",
+                  cursor: !shareUrl ? "not-allowed" : "pointer",
+                }}
+                title="Copy link"
+              >
+                Copy
+              </button>
+            </div>
+          </div>
+
           {/* Add Collaborator */}
           <div style={{ marginBottom: "24px" }}>
             <h3 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "12px", color: "#0f172a" }}>
@@ -193,8 +239,8 @@ export function ShareDialog({
             </h3>
             <div style={{ display: "flex", gap: "8px" }}>
               <input
-                type="email"
-                placeholder="Enter email address"
+                type="text"
+                placeholder="Enter email or user ID"
                 value={newCollaboratorEmail}
                 onChange={(e) => setNewCollaboratorEmail(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleAddCollaborator()}

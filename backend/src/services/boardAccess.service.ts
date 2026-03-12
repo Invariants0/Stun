@@ -18,7 +18,9 @@ export const boardAccessService = {
   checkAccessFromData(data: BoardAccessData, userId: string): AccessLevel {
     if (data.ownerId === userId) return "owner";
     if (data.collaborators?.includes(userId)) return "edit";
-    if (data.visibility === "view" || data.visibility === "edit") return "view";
+    if (data.visibility === "view" || data.visibility === "edit" || data.visibility === "private") {
+      return "view";
+    }
     return "none";
   },
 

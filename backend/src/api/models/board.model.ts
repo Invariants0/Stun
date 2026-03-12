@@ -1,4 +1,4 @@
-export type BoardVisibility = "private" | "view" | "edit";
+export type BoardVisibility = "view" | "edit";
 
 export type CanvasNode = {
   id: string;

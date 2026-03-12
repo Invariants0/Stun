@@ -298,8 +298,16 @@ export class ActionExecutor {
     const now = Date.now();
     const fontSize = 20;
     const lineHeight = 1.25;
-    const width = Math.max(200, Math.min(600, Math.round(text.length * fontSize * 0.6)));
-    const height = Math.round(fontSize * lineHeight);
+    const maxWidthPx = 480;
+    const maxChars = Math.max(10, Math.floor(maxWidthPx / (fontSize * 0.6)));
+    const wrappedText = this.wrapText(text, maxChars);
+    const lines = wrappedText.split("\n");
+    const maxLineLength = Math.max(...lines.map((line) => line.length), 1);
+    const width = Math.max(200, Math.min(maxWidthPx, Math.round(maxLineLength * fontSize * 0.6)));
+    const height = Math.max(
+      Math.round(fontSize * lineHeight),
+      Math.round(lines.length * fontSize * lineHeight)
+    );
     const seed = Math.floor(Math.random() * 2 ** 31);
     const versionNonce = Math.floor(Math.random() * 2 ** 31);
 
@@ -318,16 +326,16 @@ export class ActionExecutor {
       strokeStyle: "solid",
       roughness: 1,
       opacity: 100,
-      text: text,
+      text: wrappedText,
       fontSize,
       fontFamily: 1,
       textAlign: "left" as const,
       verticalAlign: "middle" as const,
       containerId: null,
-      originalText: text,
+      originalText: wrappedText,
       autoResize: true,
       lineHeight,
-      baseline: height,
+      baseline: Math.max(0, height - Math.round(fontSize * 0.2)),
       // Required Excalidraw properties
       isDeleted: false,
       groupIds: [],
@@ -352,6 +360,24 @@ export class ActionExecutor {
     console.log("[ActionExecutor] Created Excalidraw element - mapping service will handle conversion");
     
     return Promise.resolve();
+  }
+
+  // Simple word-wrap to improve text layout in Excalidraw elements
+  private wrapText(text: string, maxChars: number): string {
+    const words = text.trim().split(/\s+/);
+    const lines: string[] = [];
+    let current = "";
+    for (const word of words) {
+      const next = current ? `${current} ${word}` : word;
+      if (next.length > maxChars && current) {
+        lines.push(current);
+        current = word;
+      } else {
+        current = next;
+      }
+    }
+    if (current) lines.push(current);
+    return lines.join("\n");
   }
 
   /**

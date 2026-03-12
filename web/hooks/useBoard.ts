@@ -99,6 +99,7 @@ export function useBoard(boardId: string) {
   const nodesRef = useRef<Node[]>([]);
   const edgesRef = useRef<Edge[]>([]);
   const elementsRef = useRef<readonly ExcalidrawElement[]>([]);
+  const isApplyingStoreElementsRef = useRef(false);
 
   // Use empty defaults - state will be loaded from backend
   let initialNodes = defaultInitialNodes;
@@ -269,7 +270,11 @@ export function useBoard(boardId: string) {
         setEdges(storeEdges);
       }
       if (elementsChanged) {
+        isApplyingStoreElementsRef.current = true;
         setExcalidrawElements(storeElements);
+        setTimeout(() => {
+          isApplyingStoreElementsRef.current = false;
+        }, 0);
       }
       if (storeElements.length > 0) {
         lastNonEmptyElementsRef.current = storeElements.length;
@@ -310,6 +315,7 @@ export function useBoard(boardId: string) {
   const onExcalidrawElementsChange = useCallback(
     (elements: readonly ExcalidrawElement[]) => {
       if (!isLoaded || loadError) return;
+      if (isApplyingStoreElementsRef.current) return;
       const sanitized = sanitizeExcalidrawElements(elements);
       if (
         (ignoreEmptyChangesRef.current && sanitized.length === 0) ||

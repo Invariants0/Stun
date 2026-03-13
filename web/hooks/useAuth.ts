@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   getStoredUser,
@@ -18,28 +18,27 @@ export interface UseAuthReturn {
   logout: () => Promise<void>;
 }
 
+// Module-level flag to ensure token refresh is only initialized once per app
+let tokenRefreshInitialized = false;
+
 export function useAuth(): UseAuthReturn {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [tokenReady, setTokenReady] = useState(false);
   const router = useRouter();
 
-  // Ensure we only register one token refresh listener app-wide.
-  // This avoids multiple /api/auth/set-token calls if multiple pages mount useAuth.
-  const refreshInitRef = useRef(false);
-
   useEffect(() => {
     let mounted = true; // Prevent state updates if component unmounts
-    let unsubRefresh = () => {};
-    if (!refreshInitRef.current) {
-      refreshInitRef.current = true;
-      // Start token auto-refresh (keeps httpOnly cookie in sync with Firebase)
-      unsubRefresh = initTokenRefresh();
+
+    // Initialize token refresh listener once at app startup (not per component)
+    if (!tokenRefreshInitialized) {
+      tokenRefreshInitialized = true;
+      initTokenRefresh();
     }
 
     async function initAuth() {
       try {
-        // Fast path: seed UI from cached profile, but keep loading
+        // Fast path: seed UI from cached profile
         const cached = getStoredUser();
         if (cached && mounted) {
           setUser(cached);
@@ -69,7 +68,6 @@ export function useAuth(): UseAuthReturn {
     
     return () => {
       mounted = false;
-      // Keep the refresh listener alive app-wide.
     };
   }, []); // Empty dependency array - this should only run once
 

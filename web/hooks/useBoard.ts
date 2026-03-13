@@ -317,12 +317,11 @@ export function useBoard(boardId: string) {
       if (!isLoaded || loadError) return;
       if (isApplyingStoreElementsRef.current) return;
       const sanitized = sanitizeExcalidrawElements(elements);
-      if (
-        (ignoreEmptyChangesRef.current && sanitized.length === 0) ||
-        (sanitized.length === 0 && lastNonEmptyElementsRef.current > 0)
-      ) {
+      // ignore empties only during initial load (ignoreEmptyChangesRef)
+      if (ignoreEmptyChangesRef.current && sanitized.length === 0) {
         return;
       }
+      // note: we no longer block legitimate user clears – propagate zero-length updates
       const elementsChanged = !areElementsEquivalent(
         excalidrawElements,
         sanitized

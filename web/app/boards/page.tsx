@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
+import { ProfileIcon } from "@/components/ProfileIcon";
 import { listBoards, createBoard, deleteBoard } from "@/lib/api";
 import { DeleteDialog } from "@/components/ui/DeleteDialog";
 import type { Board } from "@/types/api.types";
@@ -121,6 +123,7 @@ export default function BoardsPage() {
       minHeight: '100vh',
       background: '#f8fafc',
     }}>
+      <ProfileIcon />
       {/* Top Navigation */}
       <div style={{
         position: 'sticky',
@@ -138,7 +141,14 @@ export default function BoardsPage() {
           alignItems: 'center',
           justifyContent: 'space-between',
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <Link href="/" style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            textDecoration: 'none',
+            cursor: 'pointer',
+            transition: 'opacity 0.2s ease',
+          }} onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.7'; }} onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}>
             <h1 style={{
               fontFamily: 'Space Grotesk, Inter, sans-serif',
               fontSize: '1.375rem',
@@ -156,7 +166,7 @@ export default function BoardsPage() {
             }}>
               / The Infinite Canvas
             </span>
-          </div>
+          </Link>
         </div>
       </div>
 
@@ -493,8 +503,8 @@ export default function BoardsPage() {
                       padding: '4px 10px',
                       fontSize: '0.75rem',
                       fontWeight: 600,
-                      background: board.visibility === 'private' ? '#f1f5f9' : '#dbeafe',
-                      color: board.visibility === 'private' ? '#64748b' : '#1e40af',
+                      background: board.visibility === 'view' ? '#f1f5f9' : '#dbeafe',
+                      color: board.visibility === 'view' ? '#64748b' : '#1e40af',
                       borderRadius: '6px',
                       textTransform: 'capitalize',
                       letterSpacing: '0.02em',

@@ -162,9 +162,15 @@ export function getStoredToken(): string | null {
 
 let _refreshInProgress = false; // Prevent recursive refresh loops
 let _debounceTimer: NodeJS.Timeout | null = null;
+let _refreshUnsubscriber: (() => void) | null = null; // Module-level: prevent duplicate listeners
 
 export function initTokenRefresh(): () => void {
-  return onIdTokenChanged(auth, async (firebaseUser: FirebaseUser | null) => {
+  // Only initialize once per app, not per component
+  if (_refreshUnsubscriber) {
+    return _refreshUnsubscriber;
+  }
+
+  const unsub = onIdTokenChanged(auth, async (firebaseUser: FirebaseUser | null) => {
     // Prevent infinite loops
     if (_refreshInProgress) return;
     
@@ -200,6 +206,9 @@ export function initTokenRefresh(): () => void {
       }
     }, 500); // 500ms debounce
   });
+
+  _refreshUnsubscriber = unsub;
+  return unsub;
 }
 
 export async function rehydrateSession(): Promise<AuthUser | null> {
@@ -223,13 +232,17 @@ export async function rehydrateSession(): Promise<AuthUser | null> {
       const idToken = await firebaseUser.getIdToken(false); // Don't force refresh
       _tokenMemory = idToken;
       
-      await fetch("/api/auth/set-token", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: idToken }),
-      }).catch((err) => {
-        console.warn("Failed to set auth cookie:", err);
-      });
+      // Only post if token has changed (prevent duplicate posts)
+      if (_lastPostedToken !== idToken) {
+        _lastPostedToken = idToken;
+        await fetch("/api/auth/set-token", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: idToken }),
+        }).catch((err) => {
+          console.warn("Failed to set auth cookie:", err);
+        });
+      }
       
       const cached = getStoredUser();
       const email = firebaseUser.email ?? cached?.email ?? "";
@@ -258,6 +271,7 @@ export async function rehydrateSession(): Promise<AuthUser | null> {
     const user = data.user as AuthUser;
     if (data.token && typeof data.token === "string") {
       _tokenMemory = data.token;
+      _lastPostedToken = data.token; // Track what we've posted
     }
     storeUser(user);
     return user;

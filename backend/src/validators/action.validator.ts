@@ -90,6 +90,33 @@ const transformActionSchema = z.object({
   nodeType: z.string(),
 });
 
+// new schema for cluster action
+const clusterActionSchema = z.object({
+  type: z.literal("cluster"),
+  nodeIds: z.array(z.string()).min(1),
+  // optional center position for cluster layout
+  center: z.object({ x: z.number(), y: z.number() }).optional(),
+});
+
+// new schema for layout transformation
+const layoutActionSchema = z.object({
+  type: z.literal("layout"),
+  layoutType: z.enum([
+    "mindmap",
+    "roadmap",
+    "timeline",
+    "flowchart",
+    "presentation",
+  ]),
+  options: z
+    .object({
+      spacing: z.object({ x: z.number(), y: z.number() }).optional(),
+      centerPosition: z.object({ x: z.number(), y: z.number() }).optional(),
+      direction: z.enum(["horizontal", "vertical", "radial"]).optional(),
+    })
+    .optional(),
+});
+
 export const actionSchema = z.discriminatedUnion("type", [
   moveActionSchema,
   connectActionSchema,
@@ -99,10 +126,13 @@ export const actionSchema = z.discriminatedUnion("type", [
   createActionSchema,
   deleteActionSchema,
   transformActionSchema,
+  clusterActionSchema,
+  layoutActionSchema,
 ]);
 
 export const actionPlanSchema = z.object({
   actions: z.array(actionSchema),
+  reasoning: z.string().optional(), // optional field for AI explanations
 });
 
 export type Action = z.infer<typeof actionSchema>;

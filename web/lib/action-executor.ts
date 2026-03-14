@@ -17,9 +17,16 @@ export interface ActionExecutorContext {
   nodes: Node[];
   edges: Edge[];
   viewport: Viewport;
+  getViewport: () => Viewport;
   setNodes: (nodes: Node[] | ((nodes: Node[]) => Node[])) => void;
   setEdges: (edges: Edge[] | ((edges: Edge[]) => Edge[])) => void;
-  setViewport: (viewport: Viewport) => void;
+  setViewport: (viewport: Viewport) => void | Promise<boolean>;
+  setCenter?: (
+    x: number,
+    y: number,
+    options?: { zoom?: number; duration?: number }
+  ) => void | Promise<boolean>;
+  getNode?: (nodeId: string) => Node | undefined;
 }
 
 export class ActionExecutor {
@@ -40,6 +47,11 @@ export class ActionExecutor {
    */
   async executePlan(plan: AIActionPlan): Promise<void> {
     try {
+      console.log("[CANVAS EXECUTOR RUNNING]", {
+        boardId: this.boardId,
+        executionOrder: plan.executionOrder ?? "sequential",
+        actionCount: plan.actions.length,
+      });
       if (plan.executionOrder === "parallel") {
         // Execute all actions in parallel
         await Promise.all(plan.actions.map((action) => this.executeAction(action)));
@@ -60,7 +72,7 @@ export class ActionExecutor {
    */
   async executeAction(action: AIAction): Promise<void> {
     try {
-      console.log("[ActionExecutor] Executing action:", action);
+      console.log("[CANVAS EXECUTOR RUNNING]", { actionType: action.type, action });
       console.log("[ActionExecutor] Current context nodes:", this.context.nodes.length);
       console.log("[ActionExecutor] Available node IDs:", this.context.nodes.map(n => n.id));
 
@@ -199,18 +211,58 @@ export class ActionExecutor {
   /**
    * Zoom to a specific viewport
    */
-  private executeZoom(action: AIAction): Promise<void> {
-    const viewport =
-      action.viewport ||
-      ((action as any).data?.viewport as Viewport | undefined) ||
-      this.context.viewport;
-    if (!viewport) {
-      console.warn("[ActionExecutor] Zoom action skipped: no viewport provided");
-      return Promise.resolve();
+  private async executeZoom(action: AIAction): Promise<void> {
+    const currentViewport = this.context.getViewport?.() ?? this.context.viewport;
+    const clampZoom = (z: number) => Math.max(0.1, Math.min(4, z));
+
+    let targetZoom =
+      typeof action.level === "number"
+        ? clampZoom(action.level)
+        : typeof action.viewport?.zoom === "number"
+          ? clampZoom(action.viewport.zoom)
+          : currentViewport.zoom;
+
+    let targetCenter = action.center;
+
+    if (!targetCenter && action.nodeId) {
+      const node = this.context.getNode?.(action.nodeId)
+        ?? this.context.nodes.find((n) => n.id === action.nodeId);
+      if (node) {
+        const width = node.width ?? (node as any).measured?.width ?? 0;
+        const height = node.height ?? (node as any).measured?.height ?? 0;
+        targetCenter = {
+          x: node.position.x + width / 2,
+          y: node.position.y + height / 2,
+        };
+      }
     }
 
-    this.context.setViewport(viewport);
-    return Promise.resolve();
+    if (!targetCenter && action.viewport) {
+      targetCenter = { x: action.viewport.x, y: action.viewport.y };
+    }
+
+    console.log("[VIEWPORT BEFORE]", currentViewport);
+
+    if (targetCenter && this.context.setCenter) {
+      await this.context.setCenter(targetCenter.x, targetCenter.y, {
+        zoom: targetZoom,
+        duration: 400,
+      });
+    } else {
+      const nextViewport: Viewport = {
+        x: targetCenter?.x ?? currentViewport.x,
+        y: targetCenter?.y ?? currentViewport.y,
+        zoom: targetZoom,
+      };
+      await this.context.setViewport(nextViewport);
+    }
+
+    const updatedViewport = this.context.getViewport?.() ?? {
+      x: targetCenter?.x ?? currentViewport.x,
+      y: targetCenter?.y ?? currentViewport.y,
+      zoom: targetZoom,
+    };
+    console.log("[VIEWPORT AFTER]", updatedViewport);
   }
 
   /**

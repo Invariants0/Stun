@@ -21,6 +21,7 @@ export type BoardPayload = {
   nodes: unknown[];
   edges: unknown[];
   elements?: unknown[];
+  files?: unknown;
 };
 
 export type Board = {
@@ -31,6 +32,7 @@ export type Board = {
   nodes: unknown[];
   edges: unknown[];
   elements: unknown[];
+  files?: unknown;
   visibility: BoardVisibility;
   collaborators: string[];
   activeUsers: number;

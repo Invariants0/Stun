@@ -9,6 +9,7 @@ type FirestoreBoard = BoardAccessData & {
   nodes: unknown[];
   edges: unknown[];
   elements: unknown[];
+  files?: unknown;
   activeUsers: number;
   lastActivity: string;
   createdAt: string;
@@ -39,6 +40,7 @@ function docToBoard(
     nodes:         parseIfString(data.nodes),
     edges:         parseIfString(data.edges),
     elements:      parseIfString(data.elements),
+    files:         parseIfString(data.files),
     visibility:    data.visibility === "edit" ? "edit" : "view",
     collaborators: data.collaborators ?? [],
     activeUsers:   activeUsers.length,
@@ -60,6 +62,7 @@ export const boardService = {
       nodes:         JSON.stringify(payload.nodes    ?? []) as any,
       edges:         JSON.stringify(payload.edges    ?? []) as any,
       elements:      JSON.stringify(payload.elements ?? []) as any,
+      files:         JSON.stringify(payload.files    ?? {}) as any,
       visibility:    "edit",
       collaborators: [],
       activeUsers:   0,
@@ -76,6 +79,7 @@ export const boardService = {
         nodes: JSON.parse(data.nodes as any),
         edges: JSON.parse(data.edges as any),
         elements: JSON.parse(data.elements as any),
+        files: JSON.parse(data.files as any),
       };
       return docToBoard(docRef.id, responseData, []);
     } catch (error: any) {
@@ -164,6 +168,7 @@ export const boardService = {
       nodes:        JSON.stringify(payload.nodes    ?? []),
       edges:        JSON.stringify(payload.edges    ?? []),
       elements:     JSON.stringify(payload.elements ?? []),
+      files:        JSON.stringify(payload.files ?? {}),
       lastActivity: now,
       updatedAt:    now,
     };
@@ -181,6 +186,7 @@ export const boardService = {
       nodes: JSON.parse(updateData.nodes),
       edges: JSON.parse(updateData.edges),
       elements: JSON.parse(updateData.elements),
+      files: JSON.parse(updateData.files),
       lastActivity: now,
       updatedAt: now,
     };

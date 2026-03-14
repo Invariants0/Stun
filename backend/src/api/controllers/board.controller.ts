@@ -8,6 +8,7 @@ const boardPayloadSchema = z.object({
   nodes: z.array(z.unknown()).default([]),
   edges: z.array(z.unknown()).default([]),
   elements: z.array(z.unknown()).optional(),
+  files: z.record(z.string(), z.any()).optional(),
 });
 
 const visibilitySchema = z.object({

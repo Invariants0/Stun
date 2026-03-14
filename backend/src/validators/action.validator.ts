@@ -28,6 +28,11 @@ export const plannerRequestSchema = z.object({
       (nodes) => nodes.length <= MAX_NODE_COUNT,
       { message: `Node count exceeds maximum of ${MAX_NODE_COUNT}` }
     ),
+  viewport: z.object({
+    x: z.number(),
+    y: z.number(),
+    zoom: z.number().min(0.1).max(4),
+  }).optional(),
 });
 
 export type PlannerRequest = z.infer<typeof plannerRequestSchema>;
@@ -56,11 +61,13 @@ const highlightActionSchema = z.object({
 
 const zoomActionSchema = z.object({
   type: z.literal("zoom"),
-  level: z.number().min(0.1).max(5),
+  level: z.number().min(0.01).max(10),
   center: z.object({
     x: z.number(),
     y: z.number(),
   }).optional(),
+  nodeId: z.string().optional(),
+  label: z.string().optional(),
 });
 
 const groupActionSchema = z.object({

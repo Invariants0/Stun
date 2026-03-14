@@ -32,7 +32,7 @@ export function usePresence(boardId: string | null): UsePresenceReturn {
       setIsOnline(null);
       return;
     }
-    if (authLoading || !user) {
+    if (authLoading || !user || !tokenReady) {
       setIsOnline(null);
       return;
     }
@@ -90,7 +90,7 @@ export function usePresence(boardId: string | null): UsePresenceReturn {
       if (heartbeatInterval) clearInterval(heartbeatInterval);
       if (pollInterval) clearInterval(pollInterval);
     };
-  }, [boardId, authLoading, user]);
+  }, [boardId, authLoading, user, tokenReady]);
 
   return {
     activeUsers,

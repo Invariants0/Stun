@@ -156,7 +156,7 @@ export function useBoard(boardId: string) {
     async function loadBoard() {
       let shouldFinalize = false;
       try {
-        if (authLoading) return;
+        if (authLoading || !tokenReady) return; // wait for token before contacting API
         if (!user) {
           setLoadError("Authentication required");
           return;
@@ -200,6 +200,7 @@ export function useBoard(boardId: string) {
           nodes: backendNodes,
           edges: backendEdges,
           elements: backendElements,
+          files: (boardData.files as any) ?? {},
         });
 
         loadSucceededRef.current = true;
@@ -232,7 +233,7 @@ export function useBoard(boardId: string) {
     return () => {
       mounted = false;
     };
-  }, [boardId, createBoard, setActiveBoard, hydrateBoard, enableAutosave, disableAutosave, authLoading, user]);
+  }, [boardId, createBoard, setActiveBoard, hydrateBoard, enableAutosave, disableAutosave, authLoading, tokenReady, user]);
 
   // Subscribe to store changes (for AI actions and other external updates)
   useEffect(() => {
@@ -282,7 +283,7 @@ export function useBoard(boardId: string) {
     });
     
     return unsubscribe;
-  }, [boardId, setNodes, setEdges, setExcalidrawElements]);
+  }, [boardId]);
 
   // REMOVED: localStorage autosave - all persistence now goes through backend API
 

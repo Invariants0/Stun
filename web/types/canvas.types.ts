@@ -71,6 +71,14 @@ export interface UnifiedCameraState {
  */
 export interface ExcalidrawLayerData {
   elements: readonly ExcalidrawElement[];
+  files: Record<
+    string,
+    {
+      id: string;
+      mimeType: string;
+      dataURL: string;
+    }
+  >;
   appState: {
     viewBackgroundColor: string;
     currentItemStrokeColor: string;

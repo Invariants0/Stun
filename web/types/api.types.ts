@@ -20,6 +20,7 @@ export interface Board {
   nodes: Node[];
   edges: Edge[];
   elements: ExcalidrawElement[];
+  files?: Record<string, { id: string; mimeType: string; dataURL: string }>;
   visibility: BoardVisibility;
   collaborators: string[];
   activeUsers: number;
@@ -32,6 +33,7 @@ export interface BoardPayload {
   nodes: Node[];
   edges: Edge[];
   elements?: ExcalidrawElement[];
+  files?: Record<string, { id: string; mimeType: string; dataURL: string }>;
 }
 
 export interface BoardListResponse {

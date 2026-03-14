@@ -157,6 +157,9 @@ export interface AIAction {
   color?: string;
   duration?: number;
   data?: Record<string, unknown>;
+  level?: number;
+  center?: { x: number; y: number };
+  label?: string;
   
   // Layout transformation properties
   layoutType?: "mindmap" | "roadmap" | "timeline" | "flowchart" | "presentation";
@@ -171,7 +174,7 @@ export interface AIAction {
 export interface AIActionPlan {
   actions: AIAction[];
   reasoning?: string;
-  executionOrder: "sequential" | "parallel";
+  executionOrder?: "sequential" | "parallel";
 }
 
 // ============================================================================

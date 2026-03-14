@@ -49,6 +49,7 @@ export interface AIActionRequest {
   command: string;
   screenshot: string;
   nodes: Node[];
+  viewport?: { x: number; y: number; zoom: number };
 }
 
 export interface AIAction {
@@ -63,12 +64,15 @@ export interface AIAction {
   color?: string;
   duration?: number;
   data?: Record<string, unknown>;
+  level?: number;
+  center?: { x: number; y: number };
+  label?: string;
 }
 
 export interface AIActionPlan {
   actions: AIAction[];
   reasoning?: string;
-  executionOrder: "sequential" | "parallel";
+  executionOrder?: "sequential" | "parallel";
 }
 
 // ============================================================================

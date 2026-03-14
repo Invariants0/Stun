@@ -35,6 +35,15 @@ import { useSearch } from "@/hooks/useSearch";
 import { cameraSyncService } from "@/lib/camera-sync";
 import { canvasMappingService } from "@/lib/canvas-mapping";
 import { sanitizeExcalidrawElements } from "@/lib/excalidraw-sanitize";
+import {
+  registerReactFlowInstance,
+  unregisterReactFlowInstance,
+} from "@/lib/reactflow-runtime";
+import {
+  clearCanvasEngineState,
+  setCanvasEngineState,
+  type CanvasEngine,
+} from "@/lib/canvas-engine-runtime";
 import type { BoardVisibility, PresenceUser, MediaUploadResult } from "@/types/api.types";
 
 // Stable empty object for Zustand selector caching
@@ -101,6 +110,7 @@ export default function CanvasRoot({ boardId }: Props) {
   const pendingElementsRef = useRef<readonly ExcalidrawElement[] | null>(null);
   const hasInitializedSceneRef = useRef(false);
   const isSyncingSceneRef = useRef(false);
+  const detectedEngineRef = useRef<CanvasEngine | null>(null);
 
   // ============================================================================
   // Search & highlight
@@ -235,8 +245,13 @@ export default function CanvasRoot({ boardId }: Props) {
   const handleTLDrawEditorMount = useCallback(
     (editor: Editor) => {
       setTldrawEditor(editor);
+      const state = setCanvasEngineState(boardId, { tldrawEditor: editor });
+      if (detectedEngineRef.current !== state.engine) {
+        detectedEngineRef.current = state.engine;
+        console.log("[CANVAS ENGINE DETECTED]", state.engine);
+      }
     },
-    [setTldrawEditor]
+    [setTldrawEditor, boardId]
   );
 
   // ============================================================================
@@ -448,6 +463,13 @@ export default function CanvasRoot({ boardId }: Props) {
     };
   }, []);
 
+  useEffect(() => {
+    return () => {
+      unregisterReactFlowInstance(boardId);
+      clearCanvasEngineState(boardId);
+    };
+  }, [boardId]);
+
   return (
     <section
       ref={canvasRootRef}
@@ -480,6 +502,13 @@ export default function CanvasRoot({ boardId }: Props) {
         showBackground={false}
         onInit={(instance) => {
           reactFlowRef.current = instance;
+          registerReactFlowInstance(boardId, instance);
+          const state = setCanvasEngineState(boardId, { reactFlowInstance: instance });
+          if (detectedEngineRef.current !== state.engine) {
+            detectedEngineRef.current = state.engine;
+            console.log("[CANVAS ENGINE DETECTED]", state.engine);
+          }
+          console.log("[REACTFLOW READY]", { boardId, viewport: instance.getViewport() });
         }}
       />
 
@@ -492,6 +521,11 @@ export default function CanvasRoot({ boardId }: Props) {
         onAppStateChange={handleExcalidrawAppStateChange}
         onApiReady={(api) => {
           excalidrawRef.current = api;
+          const state = setCanvasEngineState(boardId, { excalidrawAPI: api });
+          if (detectedEngineRef.current !== state.engine) {
+            detectedEngineRef.current = state.engine;
+            console.log("[CANVAS ENGINE DETECTED]", state.engine);
+          }
           syncExcalidrawScene(excalidrawElements);
         }}
         className="canvas-layer-excalidraw"
@@ -607,6 +641,7 @@ export default function CanvasRoot({ boardId }: Props) {
           </div>
         </div>
       )}
+
     </section>
   );
 }

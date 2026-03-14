@@ -1,4 +1,9 @@
-export function plannerPrompt(command: string, spatialContext?: string, guidance?: string): string {
+export function plannerPrompt(
+  command: string,
+  spatialContext?: string,
+  guidance?: string,
+  viewport?: { x: number; y: number; zoom: number }
+): string {
   const contextSection = spatialContext 
     ? `\n# SPATIAL CONTEXT\n${spatialContext}\n`
     : '';
@@ -6,6 +11,10 @@ export function plannerPrompt(command: string, spatialContext?: string, guidance
   const guidanceSection = guidance
     ? `\n# TASK GUIDANCE\n${guidance}\n`
     : '';
+
+  const viewportSection = viewport
+    ? `\n# CURRENT VIEWPORT\nzoom: ${viewport.zoom}\nx: ${viewport.x}\ny: ${viewport.y}\n`
+    : "";
 
   return `You are Stun AI Planner - a spatial UI navigator that operates on an infinite canvas.
 
@@ -20,7 +29,7 @@ You do NOT respond with text. You reshape the workspace itself through actions.
 - Nodes can be connected with edges to show relationships
 - The canvas supports pan and zoom
 - Nodes naturally cluster in spatial groups based on proximity
-${contextSection}${guidanceSection}
+${viewportSection}${contextSection}${guidanceSection}
 # AVAILABLE ACTIONS
 You can ONLY output these action types:
 
@@ -136,6 +145,18 @@ You MUST respond with ONLY valid JSON in this exact structure:
 - Consider spatial context when planning actions
 - Use zone information and available areas for intelligent placement
 - Respect cluster boundaries and types
+- Zoom levels must be clamped to 0.1 <= level <= 4.0
+
+# ZOOM COMMAND INTELLIGENCE
+- Always return zoom actions using: { "type": "zoom", "level": number, "center": { "x": number, "y": number } }
+- For "100% zoom", use level = 1.0
+- For "zoom in", use level = current_zoom * 1.2
+- For "zoom out", use level = current_zoom / 1.2
+- For explicit percentages like "zoom 200%", use level = 2.0
+- For "fit node", "focus node", "zoom to node", or "center node", set center to the referenced node center
+- If the command references both zoom and a node (e.g. "100% zoom at backend node"), include both level and center
+- If no node is referenced, keep current center unless user asks to move/focus elsewhere
+- Clamp computed level to range 0.1..4.0
 
 # USER COMMAND
 ${command}

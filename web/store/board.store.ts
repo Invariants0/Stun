@@ -19,6 +19,18 @@ import type { Editor } from "tldraw";
 import type { HybridCanvasState, ElementNodeMapping } from "@/types/canvas.types";
 import { updateBoard } from "@/lib/api";
 
+// Helper: Convert blob: URL to base64 dataURL
+async function blobToDataURL(blobUrl: string): Promise<string> {
+  const response = await fetch(blobUrl);
+  const blob = await response.blob();
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
 interface BoardState {
   // All boards
   boards: Record<string, HybridCanvasState>;
@@ -45,6 +57,10 @@ interface BoardState {
     boardId: string,
     elements: readonly ExcalidrawElement[]
   ) => void;
+  setExcalidrawFiles: (
+    boardId: string,
+    files: Record<string, { id: string; mimeType: string; dataURL: string }>
+  ) => void;
 
   // TLDraw actions
   setTldrawEditor: (boardId: string, editor: Editor | null) => void;
@@ -59,11 +75,15 @@ interface BoardState {
   getBoard: (boardId: string) => HybridCanvasState | undefined;
   
   // Hydrate board from backend
-  hydrateBoard: (boardId: string, data: {
-    nodes: Node[];
-    edges: Edge[];
-    elements: ExcalidrawElement[];
-  }) => void;
+  hydrateBoard: (
+    boardId: string,
+    data: {
+      nodes: Node[];
+      edges: Edge[];
+      elements: ExcalidrawElement[];
+      files?: Record<string, { id: string; mimeType: string; dataURL: string }>;
+    }
+  ) => void;
 
   // Autosave control
   enableAutosave: () => void;
@@ -75,6 +95,7 @@ const createEmptyBoard = (boardId: string): HybridCanvasState => ({
   boardId,
   excalidraw: {
     elements: [],
+    files: {},
     appState: {
       viewBackgroundColor: "transparent",
       currentItemStrokeColor: "#1e293b",
@@ -198,6 +219,30 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       return newState;
     }),
 
+  // Excalidraw files (for image persistence)
+  // Triggers autosave to persist files to backend
+  setExcalidrawFiles: (boardId, files) =>
+    set((state) => {
+      const board = state.boards[boardId] || createEmptyBoard(boardId);
+      const newState = {
+        boards: {
+          ...state.boards,
+          [boardId]: {
+            ...board,
+            excalidraw: {
+              ...board.excalidraw,
+              files,
+            },
+          },
+        },
+      };
+
+      // Trigger autosave to persist files to backend
+      setTimeout(() => get().triggerAutosave(boardId), 0);
+
+      return newState;
+    }),
+
   // TLDraw editor
   setTldrawEditor: (boardId, editor) =>
     set((state) => {
@@ -275,6 +320,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
             excalidraw: {
               ...board.excalidraw,
               elements: data.elements,
+              files: data.files ?? {},
             },
           },
         },
@@ -309,10 +355,53 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       try {
         set({ isSaving: true });
 
+        // make a deep copy of elements so we can modify urls
+        const elementsCopy = JSON.parse(JSON.stringify(board.excalidraw.elements)) as ExcalidrawElement[];
+        
+        // DEBUG: Log all image elements before conversion
+        const imageElements = elementsCopy.filter((el: any) => el.type === "image");
+        if (imageElements.length > 0) {
+          console.log("🖼️ Image elements before conversion:", JSON.stringify(imageElements, null, 2));
+        }
+        
+        // convert any blob: urls to data URLs
+        for (let i = 0; i < elementsCopy.length; i++) {
+          const el = elementsCopy[i] as any;
+          if (el.type === "image") {
+            // Check el.url for blob URLs
+            if (typeof el.url === "string" && el.url.startsWith("blob:")) {
+              try {
+                console.log("Converting blob URL at el.url");
+                el.url = await blobToDataURL(el.url);
+              } catch (err) {
+                console.warn("Failed to convert blob at el.url", err);
+              }
+            }
+            // Also check el.file.dataURL for blob URLs
+            if (el.file && typeof el.file.dataURL === "string" && el.file.dataURL.startsWith("blob:")) {
+              try {
+                console.log("Converting blob URL at el.file.dataURL");
+                const dataUrl = await blobToDataURL(el.file.dataURL);
+                el.file.dataURL = dataUrl;
+                el.url = dataUrl; // Also set top-level url for Excalidraw
+              } catch (err) {
+                console.warn("Failed to convert blob at el.file.dataURL", err);
+              }
+            }
+          }
+        }
+        
+        // DEBUG: Log image elements after conversion
+        const imageElementsAfter = elementsCopy.filter((el: any) => el.type === "image");
+        if (imageElementsAfter.length > 0) {
+          console.log("🖼️ Image elements after conversion:", JSON.stringify(imageElementsAfter, null, 2));
+        }
+        
         await updateBoard(boardId, {
           nodes: board.reactflow.nodes,
           edges: board.reactflow.edges,
-          elements: board.excalidraw.elements as ExcalidrawElement[],
+          elements: elementsCopy,
+          files: board.excalidraw.files ?? {},
         });
 
         set({ 

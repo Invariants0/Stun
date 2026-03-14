@@ -8,6 +8,7 @@ import {
   type ActionPlan,
 } from "../validators/action.validator";
 import { orchestratePlanning, sanitizeActionPositions } from "./orchestrator.service";
+import { normalizeZoomActions } from "./zoom-command.service";
 
 /** Extract the first top-level JSON object from a freeform LLM response */
 function extractJson(text: string): unknown {
@@ -54,7 +55,8 @@ export const geminiService = {
     const prompt = plannerPrompt(
       input.command,
       orchestrationContext.spatialSummary,
-      orchestrationContext.guidance
+      orchestrationContext.guidance,
+      input.viewport
     );
 
     const imagePart = {
@@ -86,10 +88,11 @@ export const geminiService = {
     console.log("[Gemini] Parsed JSON:", JSON.stringify(parsed, null, 2));
     
     const actionPlan = validateActionPlan(parsed);
-    console.log("[Gemini] Validated action plan:", JSON.stringify(actionPlan, null, 2));
+    console.log("[AI ACTION PARSED]", JSON.stringify(actionPlan, null, 2));
     
     const nodeIds = input.nodes.map((n) => n.id);
-    validateNodeReferences(actionPlan.actions, nodeIds);
+    const normalizedActions = normalizeZoomActions(actionPlan.actions, input);
+    validateNodeReferences(normalizedActions, nodeIds);
 
     // Sanitize action positions to ensure zone-safe placement
     const bounds = orchestrationContext.rawContext.bounds;
@@ -100,7 +103,7 @@ export const geminiService = {
       y2: bounds.maxY,
     };
     const sanitizedActions = sanitizeActionPositions(
-      actionPlan.actions,
+      normalizedActions,
       boundingBox
     );
 

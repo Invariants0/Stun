@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const COOKIE_NAME = "authToken";
-const COOKIE_MAX_AGE = 60 * 60; // 1 hour
+const COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days (keeps session alive longer)
 
 /**
  * POST /api/auth/set-token

@@ -14,6 +14,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useBoardStore } from "@/store/board.store";
 import type { Editor, TLCamera } from "tldraw";
 import type { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
 import type { AppState } from "@excalidraw/excalidraw/types/types";
@@ -35,6 +36,9 @@ import { cameraSyncService } from "@/lib/camera-sync";
 import { canvasMappingService } from "@/lib/canvas-mapping";
 import { sanitizeExcalidrawElements } from "@/lib/excalidraw-sanitize";
 import type { BoardVisibility, PresenceUser, MediaUploadResult } from "@/types/api.types";
+
+// Stable empty object for Zustand selector caching
+const EMPTY_FILES = {} as Record<string, { id: string; mimeType: string; dataURL: string }>;
 
 type Props = { boardId: string };
 
@@ -65,6 +69,23 @@ export default function CanvasRoot({ boardId }: Props) {
     boardData,
     setBoardData,
   } = useBoard(boardId);
+
+  const setExcalidrawFiles = useBoardStore((state) => state.setExcalidrawFiles);
+  // Fixed: Use stable empty object to prevent selector caching warnings
+  const excalidrawFilesFromStore = useBoardStore(
+    (state) => state.boards[boardId]?.excalidraw.files ?? EMPTY_FILES
+  );
+
+  // Only initialize files on mount, not on every render
+  // This prevents onChange from being triggered repeatedly when props change
+  const [initialExcalidrawFiles, setInitialExcalidrawFiles] = useState(excalidrawFilesFromStore);
+  useEffect(() => {
+    // Update initialFiles whenever store files change (by reference comparison)
+    // This ensures newly added images are passed to ExcalidrawLayer  
+    if (excalidrawFilesFromStore !== initialExcalidrawFiles) {
+      setInitialExcalidrawFiles(excalidrawFilesFromStore);
+    }
+  }, [excalidrawFilesFromStore]);
 
   const canvasRootRef = useRef<HTMLDivElement>(null);
   const nodesRef = useRef(nodes);
@@ -260,6 +281,14 @@ export default function CanvasRoot({ boardId }: Props) {
         }
 
         isSyncingSceneRef.current = true;
+        // Ensure Excalidraw has access to the latest file data (images) for rendering
+        if (
+          excalidrawRef.current?.addFiles &&
+          initialExcalidrawFiles &&
+          Object.keys(initialExcalidrawFiles).length > 0
+        ) {
+          excalidrawRef.current.addFiles(Object.values(initialExcalidrawFiles));
+        }
         excalidrawRef.current.updateScene({ elements: sanitized });
         lastSyncedElementsHashRef.current = elementsHash;
         pendingElementsRef.current = null;
@@ -269,7 +298,7 @@ export default function CanvasRoot({ boardId }: Props) {
         isSyncingSceneRef.current = false;
       }
     },
-    [areElementsEquivalent, isExcalidrawIdle]
+    [areElementsEquivalent, isExcalidrawIdle, initialExcalidrawFiles]
   );
 
   useEffect(() => {
@@ -318,7 +347,7 @@ export default function CanvasRoot({ boardId }: Props) {
       onExcalidrawElementsChange(sanitized);
 
       // 🎯 CRITICAL FEATURE: Sync Excalidraw drawings to AI-manipulatable React Flow nodes
-      // Use requestAnimationFrame to prevent infinite loops
+      // Use requestAnimationFrame to batch updates and prevent infinite loops
       requestAnimationFrame(() => {
         canvasMappingService.syncElementsToNodes(sanitized, nodesRef.current, setNodes);
         
@@ -329,10 +358,31 @@ export default function CanvasRoot({ boardId }: Props) {
         }
       });
 
-      // If there are pending store-driven elements, try to apply them once idle.
-      // Flush handled by effect to avoid sync-on-onChange loops.
+      // Note: File capture happens via ExcalidrawLayer's onChange callback
     },
     [onExcalidrawElementsChange, setNodes]
+  );
+
+  // Capture Excalidraw files from onChange callback and store them
+  // Files are stored silently (no autosave trigger) and included in next autosave
+  // Use ref to deduplicate repeated calls with same files (prevents infinite loop)
+  const previousFilesRef = useRef<Record<string, any> | null>(null);
+
+  const handleExcalidrawFilesChange = useCallback(
+    (files: Record<string, { id: string; mimeType: string; dataURL: string }>) => {
+      if (files && Object.keys(files).length > 0) {
+        // Only store if files actually changed (compare file IDs, not reference)
+        const currentIds = Object.keys(files).sort().join(",");
+        const previousIds = previousFilesRef.current ? Object.keys(previousFilesRef.current).sort().join(",") : "";
+        
+        if (currentIds !== previousIds) {
+          console.log("[CanvasRoot] Files changed:", Object.keys(files).length, "entries");
+          previousFilesRef.current = files;
+          setExcalidrawFiles(boardId, files);
+        }
+      }
+    },
+    [boardId, setExcalidrawFiles]
   );
 
   // ============================================================================
@@ -436,7 +486,9 @@ export default function CanvasRoot({ boardId }: Props) {
       {/* Layer 3: Excalidraw Visual Editing - Primary user interaction */}
       <ExcalidrawLayer
         initialElements={excalidrawElements}
+        initialFiles={initialExcalidrawFiles}
         onElementsChange={handleExcalidrawElementsChange}
+        onFilesChange={handleExcalidrawFilesChange}
         onAppStateChange={handleExcalidrawAppStateChange}
         onApiReady={(api) => {
           excalidrawRef.current = api;
@@ -509,7 +561,7 @@ export default function CanvasRoot({ boardId }: Props) {
         isOpen={showShareDialog}
         onClose={() => setShowShareDialog(false)}
         boardId={boardId}
-        currentVisibility={boardData?.visibility || "private"}
+        currentVisibility={boardData?.visibility || "edit"}
         onVisibilityChange={(visibility: BoardVisibility) => {
           setBoardData(prev => prev ? { ...prev, visibility } : null);
         }}

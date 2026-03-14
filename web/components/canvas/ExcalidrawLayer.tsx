@@ -20,7 +20,9 @@ import { sanitizeExcalidrawElements } from "@/lib/excalidraw-sanitize";
 
 interface ExcalidrawLayerProps {
   initialElements?: readonly ExcalidrawElement[];
+  initialFiles?: Record<string, { id: string; mimeType: string; dataURL: string }>;
   onElementsChange?: (elements: readonly ExcalidrawElement[]) => void;
+  onFilesChange?: (files: Record<string, { id: string; mimeType: string; dataURL: string }>) => void;
   onAppStateChange?: (appState: Partial<AppState>) => void;
   onApiReady?: (api: any) => void;
   className?: string;
@@ -33,7 +35,9 @@ const ExcalidrawAny: any = dynamic(
 
 export default function ExcalidrawLayer({
   initialElements = [],
+  initialFiles = {},
   onElementsChange,
+  onFilesChange,
   onAppStateChange,
   onApiReady,
   className = "",
@@ -41,6 +45,7 @@ export default function ExcalidrawLayer({
   const initialData = useMemo(
     () => ({
       elements: sanitizeExcalidrawElements(initialElements),
+      files: initialFiles,
       appState: {
         viewBackgroundColor: "transparent",
         currentItemStrokeColor: "#1e293b",
@@ -51,20 +56,42 @@ export default function ExcalidrawLayer({
         currentItemOpacity: 100,
       },
     }),
-    []
+    [initialElements, initialFiles]
   );
 
   const handleChange = useCallback(
-    (elements: readonly ExcalidrawElement[], appState: AppState) => {
-      const sanitized = sanitizeExcalidrawElements(elements);
-      if (sanitized.length !== elements.length) {
+    (
+      elements: readonly ExcalidrawElement[],
+      appState: AppState,
+      files?: Record<string, { mimeType: string; id: string; dataURL: string }>
+    ) => {
+      // Capture files if provided
+      if (files) {
+        onFilesChange?.(files);
+      }
+
+      // Attach file data to any elements that reference valid fileIds.
+      const elementsWithFiles = elements.map((el) => {
+        if (el.type === "image" && (el as any).fileId && files?.[(el as any).fileId]) {
+          const file = files[(el as any).fileId];
+          return {
+            ...el,
+            file,
+            url: file.dataURL,
+          } as ExcalidrawElement;
+        }
+        return el;
+      });
+
+      const sanitized = sanitizeExcalidrawElements(elementsWithFiles);
+      if (sanitized.length !== elementsWithFiles.length) {
         // Avoid propagating malformed in-progress elements
         return;
       }
       onElementsChange?.(sanitized);
       onAppStateChange?.(appState);
     },
-    [onElementsChange, onAppStateChange]
+    [onElementsChange, onAppStateChange, onFilesChange]
   );
 
   return (

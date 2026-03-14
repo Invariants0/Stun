@@ -15,7 +15,8 @@ export function sanitizeExcalidrawElements(
     return isFiniteNumber(point[0]) && isFiniteNumber(point[1]);
   };
 
-  return elements.filter((el): el is ExcalidrawElement => {
+  // first filter out clearly malformed elements, then normalize image data
+  const valid = elements.filter((el): el is ExcalidrawElement => {
     if (!el || typeof el !== "object") return false;
     if (!("type" in el) || typeof (el as any).type !== "string") return false;
 
@@ -47,5 +48,41 @@ export function sanitizeExcalidrawElements(
     if (anyEl.type === "text" && typeof anyEl.text !== "string") return false;
 
     return true;
+  });
+
+  // normalize images to remove blob/File objects and ensure serializable dataURL
+  return valid.map((el) => {
+    const anyEl = el as any;
+    if (anyEl.type === "image") {
+      // prioritize existing file info
+      if (anyEl.file) {
+        const f = anyEl.file as any;
+        const dataUrl = f.dataURL || f.url || "";
+        return {
+          ...el,
+          file: {
+            id: f.id,
+            mimeType: f.mimeType,
+            dataURL: dataUrl,
+          },
+          url: dataUrl,
+        } as ExcalidrawElement;
+      }
+      // if there is no file object (older boards) but we have url stored,
+      // rebuild a minimal file so Excalidraw can render it.
+      if (anyEl.url) {
+        const dataUrl = anyEl.url as string;
+        return {
+          ...el,
+          file: {
+            id: "", // unknown
+            mimeType: "",
+            dataURL: dataUrl,
+          },
+          url: dataUrl,
+        } as ExcalidrawElement;
+      }
+    }
+    return el;
   });
 }

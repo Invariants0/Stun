@@ -113,6 +113,10 @@ export class CanvasMappingService {
       if (!element || !(element as any).type) {
         continue;
       }
+      // images should not become React Flow nodes; they are visual-only
+      if (element.type === "image") {
+        continue;
+      }
       // Skip if element is deleted
       if (element.isDeleted) {
         this.removeMapping(element.id);

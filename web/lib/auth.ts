@@ -33,6 +33,25 @@ import {
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 
+// Helpers for JWT expiration checks
+function decodeJwtPayload(token: string): Record<string, any> | null {
+  try {
+    const base64 = token.split(".")[1];
+    const padded = base64.padEnd(base64.length + (4 - (base64.length % 4)) % 4, "=");
+    const json = atob(padded);
+    return JSON.parse(json);
+  } catch {
+    return null;
+  }
+}
+
+function isJwtExpired(token: string, leewaySeconds = 60): boolean {
+  const payload = decodeJwtPayload(token);
+  if (!payload || typeof payload.exp !== "number") return true;
+  const now = Math.floor(Date.now() / 1000);
+  return payload.exp <= now + leewaySeconds;
+}
+
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
 
@@ -64,11 +83,27 @@ let _tokenMemory: string | null = null;
 let _lastPostedToken: string | null = null;
 
 export async function ensureAuthToken(): Promise<string | null> {
-  if (_tokenMemory) return _tokenMemory;
+  // If we already have a token cached, validate its expiry before reusing
+  if (_tokenMemory) {
+    if (!isJwtExpired(_tokenMemory)) {
+      return _tokenMemory;
+    }
+    // Token expired: clear it so we force a refresh
+    _tokenMemory = null;
+  }
+
   const current = auth.currentUser;
   if (!current) return null;
+
   try {
-    const idToken = await current.getIdToken(false);
+    // Try to get a fresh token; Firebase will refresh if needed.
+    let idToken = await current.getIdToken(false);
+
+    if (isJwtExpired(idToken)) {
+      // Force refresh if the token is stale
+      idToken = await current.getIdToken(true);
+    }
+
     _tokenMemory = idToken;
     return idToken;
   } catch {

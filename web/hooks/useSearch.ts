@@ -32,7 +32,7 @@ export interface UseSearchReturn {
   clearSearch: () => void;
 }
 
-const DEBOUNCE_MS = 350;
+const DEBOUNCE_MS = 100; // Reduced from 350ms for better responsiveness
 
 export function useSearch(options: UseSearchOptions = {}): UseSearchReturn {
   const { onNavigate, onHighlight } = options;
@@ -85,10 +85,15 @@ export function useSearch(options: UseSearchOptions = {}): UseSearchReturn {
             filters,
           });
 
+          console.log(`[useSearch] Found ${response.results.length} results for: "${trimmed}"`);
           setResults(response.results);
         } catch (err: unknown) {
-          if (err instanceof Error && err.name === "AbortError") return;
+          if (err instanceof Error && err.name === "AbortError") {
+            console.log("[useSearch] Search cancelled");
+            return;
+          }
           const message = err instanceof Error ? err.message : "Search failed";
+          console.error("[useSearch] Error:", message);
           setError(message);
           setResults([]);
         } finally {

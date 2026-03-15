@@ -1,0 +1,2204 @@
+﻿INFRASTRUCTURE AUDIT REPORT
+Generated At (local): 2026-03-15 13:20:59 +05:30
+Generated At (UTC):   2026-03-15 07:50:59Z
+Root Path: C:\Users\Ayush\Downloads\Hacks\stun\infra
+Total Directories (excluding root): 10
+Total Files: 29
+
+DIRECTORY INDEX
+---------------
+infra/
+  - environments/
+    - dev/
+    - prod/
+  - modules/
+    - artifact-registry/
+    - cloudrun/
+    - firestore/
+    - iam/
+    - secrets/
+  - scripts/
+
+FILE INDEX
+----------
+infra/.gitignore | bytes=356 | lines=30 | modified=2026-03-08 21:46:15 | sha256=C298FB6B02FE2614000E58008F2DBE220B63F34B8F095D6071A27814A2285660
+infra/environments/dev/main.tf | bytes=5816 | lines=207 | modified=2026-03-08 21:46:15 | sha256=94031A73AAEEDC637FE42862B665FB0790BF1D00EAD0EE1589C883738609AC90
+infra/environments/dev/outputs.tf | bytes=3447 | lines=87 | modified=2026-03-08 21:46:15 | sha256=E10EBCD3C9E4D5F8D8304888E64EF496A98B466C5B783756F0DE3E045FD0607D
+infra/environments/dev/terraform.tfvars.example | bytes=779 | lines=20 | modified=2026-03-08 21:46:15 | sha256=4C2B229B7CEBD3E2B6D8B8B6F3860D210FC0FA8BCC1973D28C1F2326472FD6B5
+infra/environments/dev/variables.tf | bytes=712 | lines=28 | modified=2026-03-08 21:46:15 | sha256=92090CD2663F7142E3579278CBCFF1EB35742953F52B0FC872C1BFB3C7E4245E
+infra/environments/prod/main.tf | bytes=6078 | lines=213 | modified=2026-03-08 21:46:15 | sha256=1054FFADDAEFBC01C19B841B9FD03033B96D0DF87EFAB63E4C54FF4C8055FA1D
+infra/environments/prod/outputs.tf | bytes=2434 | lines=73 | modified=2026-03-08 21:46:15 | sha256=A2A9C23E6E9ABD52136B2CB57DC92DE011606668E1E990783599772D649ACCEB
+infra/environments/prod/terraform.tfvars.example | bytes=862 | lines=23 | modified=2026-03-14 21:28:56 | sha256=E01AE5A2AB2384F54643F6ED62E010372D72CB07705882CCDC4D5C9C050B0429
+infra/environments/prod/variables.tf | bytes=588 | lines=26 | modified=2026-03-08 21:46:15 | sha256=11286732402E25CB33C49ECBDA778C953FD15D47115DC4D087DA70A5B9A7A669
+infra/modules/artifact-registry/main.tf | bytes=951 | lines=31 | modified=2026-03-08 21:46:15 | sha256=89424BF0D21B5C77824B52B7BE7E76FCE8C8CC5BE0E3D15F853259418EF49DA7
+infra/modules/artifact-registry/outputs.tf | bytes=599 | lines=14 | modified=2026-03-08 21:46:15 | sha256=AF0E20F3A22217AC5E3EF580D0DAD41A901A466852EF41D64F11C1D39F851D03
+infra/modules/artifact-registry/variables.tf | bytes=777 | lines=33 | modified=2026-03-08 21:46:15 | sha256=946BFD5EB261AFE6BEB0D3E33EC25D812E6CD05601678F320E9409FA9351FBBD
+infra/modules/cloudrun/main.tf | bytes=2740 | lines=118 | modified=2026-03-08 21:46:15 | sha256=2CB50780A639F32C94DD76F588E87E846C4DD62B570D75DDEC1AD7400342BB8F
+infra/modules/cloudrun/outputs.tf | bytes=541 | lines=19 | modified=2026-03-08 21:46:15 | sha256=7467ECC6F59E7129A5B3C8FABD8C7ED18ED561D3C4B6372631ED2B079CCC80CA
+infra/modules/cloudrun/variables.tf | bytes=2327 | lines=106 | modified=2026-03-08 21:46:15 | sha256=C5CE8CEFB957206CC7991DC4BCFC502AADF0DF10FC5CAA6E55BE357639B7336E
+infra/modules/firestore/main.tf | bytes=1698 | lines=62 | modified=2026-03-08 21:46:15 | sha256=D3071991AB3721D6A20B56CABAA99B6C7F49F25BEA98814B3C844E43B6B73477
+infra/modules/firestore/outputs.tf | bytes=559 | lines=19 | modified=2026-03-08 21:46:15 | sha256=36FA8E752062D067F15BC9E40662B522350FAAB32A1207257D4FDACABA8403A2
+infra/modules/firestore/variables.tf | bytes=1176 | lines=40 | modified=2026-03-08 21:46:15 | sha256=6AFFFFE334633BD3C6910C34EC31324CBC6466C2FE232CC39C411F8EC19F08F7
+infra/modules/iam/main.tf | bytes=2200 | lines=60 | modified=2026-03-08 21:46:15 | sha256=001A05EC620E5D09209741A0B028392D96D315F52AADB495329246CC48027339
+infra/modules/iam/outputs.tf | bytes=630 | lines=19 | modified=2026-03-08 21:46:15 | sha256=0B553C213B354B29605B91AE1B9A8446CAB58900F2B2AC4ABA3853801380110F
+infra/modules/iam/variables.tf | bytes=402 | lines=16 | modified=2026-03-08 21:46:15 | sha256=6551F9A0AB84B87CFB4AF8261115DD5EA080770C52AE63484C4AB22852CD45D3
+infra/modules/secrets/main.tf | bytes=1694 | lines=81 | modified=2026-03-08 21:46:15 | sha256=42C012C3DEE203415C636E5CD0305C93B72A89AE4C2A8CB52CDF68394A0A6869
+infra/modules/secrets/outputs.tf | bytes=2578 | lines=70 | modified=2026-03-08 21:46:15 | sha256=2096C155F3D9535EB83B021EA6ADA7875924270FF3C06D7E7B7FE78D8DE165D2
+infra/modules/secrets/variables.tf | bytes=231 | lines=10 | modified=2026-03-08 21:46:15 | sha256=841A649F33C15D2250DFA38D5F6020AAA94DC0173862F52244F342C1B8518339
+infra/scripts/add-secrets.sh | bytes=2626 | lines=79 | modified=2026-03-08 21:46:15 | sha256=29F9C0DE7C8D80A56781B164C7637973092FCABF9020E41633909CEDF532F707
+infra/scripts/deploy.sh | bytes=2541 | lines=95 | modified=2026-03-08 21:46:15 | sha256=5D2669E2943F0C6B23200588CB4193B5C15B79A470C9E00BEFCE1F25AFD57F72
+infra/scripts/setup.sh | bytes=4039 | lines=144 | modified=2026-03-08 21:46:15 | sha256=EC72F57965B1B4169B797CCC4F4BC2BA4D64839B193FA54642BBB32A5A39B2CD
+infra/vars.tf | bytes=724 | lines=28 | modified=2026-03-08 21:46:15 | sha256=58AD183B5F2B50291911A0F0C2EBB4992CEE4EFC6CB659AAA8DF2BEF4318E717
+infra/versions.tf | bytes=463 | lines=21 | modified=2026-03-08 21:46:15 | sha256=5F5DB9EAB5949B463F930CFE989B47F2576F4C7ABCCE3C15EBCDE112BE58138D
+
+DETAILED FILE CONTENTS
+----------------------
+FILE: infra/.gitignore
+Full Path: C:\Users\Ayush\Downloads\Hacks\stun\infra\.gitignore
+Size (bytes): 356
+Created: 2026-03-08 21:46:15
+Last Modified: 2026-03-08 21:46:15
+Last Accessed: 2026-03-15 13:01:15
+Read Only: False
+Attributes: Archive
+SHA256: C298FB6B02FE2614000E58008F2DBE220B63F34B8F095D6071A27814A2285660
+Line Count: 31
+--- BEGIN CONTENT ---
+# Terraform files
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+.terraform/
+.terraform.lock.hcl
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# Deployment artifacts
+deployment-info.txt
+*.backup
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+--- END CONTENT ---
+
+FILE: infra/environments/dev/main.tf
+Full Path: C:\Users\Ayush\Downloads\Hacks\stun\infra\environments\dev\main.tf
+Size (bytes): 5816
+Created: 2026-03-08 21:46:15
+Last Modified: 2026-03-08 21:46:15
+Last Accessed: 2026-03-15 13:02:56
+Read Only: False
+Attributes: Archive
+SHA256: 94031A73AAEEDC637FE42862B665FB0790BF1D00EAD0EE1589C883738609AC90
+Line Count: 208
+--- BEGIN CONTENT ---
+# Development Environment Configuration
+
+terraform {
+  required_version = ">= 1.5.0"
+
+  required_providers {
+    google = {
+      source  = "hashicorp/google"
+      version = "~> 5.0"
+    }
+    google-beta = {
+      source  = "hashicorp/google-beta"
+      version = "~> 5.0"
+    }
+  }
+}
+
+provider "google" {
+  project = var.project_id
+  region  = var.region
+}
+
+provider "google-beta" {
+  project = var.project_id
+  region  = var.region
+}
+
+# Local variables
+locals {
+  environment = "dev"
+  labels = {
+    environment = "dev"
+    managed_by  = "terraform"
+    application = "stun"
+  }
+}
+
+# ============================================================================
+# IAM - Service Accounts and Permissions
+# ============================================================================
+
+module "iam" {
+  source = "../../modules/iam"
+
+  project_id                    = var.project_id
+  backend_service_account_id    = "stun-backend-dev"
+  frontend_service_account_id   = "stun-frontend-dev"
+}
+
+# ============================================================================
+# Secret Manager - Sensitive Configuration
+# ============================================================================
+
+module "secrets" {
+  source = "../../modules/secrets"
+
+  environment = local.environment
+  labels      = local.labels
+}
+
+# ============================================================================
+# Artifact Registry - Container Images
+# ============================================================================
+
+module "artifact_registry" {
+  source = "../../modules/artifact-registry"
+
+  region        = var.region
+  repository_id = "stun-dev"
+  description   = "Container images for Stun development environment"
+  labels        = local.labels
+
+  image_retention_days = 7
+
+  service_account_emails = [
+    module.iam.backend_service_account_email,
+    module.iam.frontend_service_account_email,
+  ]
+}
+
+# ============================================================================
+# Firestore - Database
+# ============================================================================
+
+module "firestore" {
+  source = "../../modules/firestore"
+
+  project_id                         = var.project_id
+  location                           = var.firestore_location
+  database_type                      = "FIRESTORE_NATIVE"
+  concurrency_mode                   = "OPTIMISTIC"
+  app_engine_integration_mode        = "DISABLED"
+  point_in_time_recovery_enablement  = "POINT_IN_TIME_RECOVERY_DISABLED"
+  delete_protection_state            = "DELETE_PROTECTION_DISABLED"
+}
+
+# ============================================================================
+# Cloud Run - Backend Service
+# ============================================================================
+
+module "backend" {
+  source = "../../modules/cloudrun"
+
+  service_name          = "stun-backend-dev"
+  location              = var.region
+  image                 = var.backend_image
+  service_account_email = module.iam.backend_service_account_email
+
+  port          = 8080
+  min_instances = 0
+  max_instances = 5
+  cpu           = "1"
+  memory        = "512Mi"
+  timeout_seconds = 300
+  concurrency   = 80
+
+  allow_unauthenticated = true
+  ingress               = "all"
+
+  environment_variables = {
+    PORT                = "8080"
+    NODE_ENV            = "production"
+    GCP_PROJECT_ID      = var.project_id
+    GCP_REGION          = var.region
+    BOARDS_COLLECTION   = "boards"
+    VERTEX_MODEL        = "gemini-2.0-flash-exp"
+    FRONTEND_URL        = module.frontend.service_url
+  }
+
+  secrets = {
+    GEMINI_API_KEY = {
+      secret_name = module.secrets.gemini_api_key_name
+      version     = "latest"
+    }
+    FIREBASE_SERVICE_ACCOUNT_KEY = {
+      secret_name = module.secrets.firebase_service_account_name
+      version     = "latest"
+    }
+    GOOGLE_CLIENT_ID = {
+      secret_name = module.secrets.google_client_id_name
+      version     = "latest"
+    }
+    GOOGLE_CLIENT_SECRET = {
+      secret_name = module.secrets.google_client_secret_name
+      version     = "latest"
+    }
+  }
+
+  labels = local.labels
+
+  depends_on = [
+    module.firestore,
+    module.secrets,
+  ]
+}
+
+# ============================================================================
+# Cloud Run - Frontend Service
+# ============================================================================
+
+module "frontend" {
+  source = "../../modules/cloudrun"
+
+  service_name          = "stun-frontend-dev"
+  location              = var.region
+  image                 = var.frontend_image
+  service_account_email = module.iam.frontend_service_account_email
+
+  port          = 3000
+  min_instances = 0
+  max_instances = 5
+  cpu           = "1"
+  memory        = "1Gi"
+  timeout_seconds = 300
+  concurrency   = 80
+
+  allow_unauthenticated = true
+  ingress               = "all"
+
+  environment_variables = {
+    NEXT_PUBLIC_API_BASE_URL        = module.backend.service_url
+    NEXT_PUBLIC_FIREBASE_PROJECT_ID = var.project_id
+    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN = "${var.project_id}.firebaseapp.com"
+    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET = "${var.project_id}.appspot.com"
+  }
+
+  secrets = {
+    NEXT_PUBLIC_FIREBASE_API_KEY = {
+      secret_name = module.secrets.firebase_api_key_name
+      version     = "latest"
+    }
+    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID = {
+      secret_name = module.secrets.firebase_messaging_sender_id_name
+      version     = "latest"
+    }
+    NEXT_PUBLIC_FIREBASE_APP_ID = {
+      secret_name = module.secrets.firebase_app_id_name
+      version     = "latest"
+    }
+  }
+
+  labels = local.labels
+
+  depends_on = [
+    module.backend,
+  ]
+}
+--- END CONTENT ---
+
+FILE: infra/environments/dev/outputs.tf
+Full Path: C:\Users\Ayush\Downloads\Hacks\stun\infra\environments\dev\outputs.tf
+Size (bytes): 3447
+Created: 2026-03-08 21:46:15
+Last Modified: 2026-03-08 21:46:15
+Last Accessed: 2026-03-15 13:02:56
+Read Only: False
+Attributes: Archive
+SHA256: E10EBCD3C9E4D5F8D8304888E64EF496A98B466C5B783756F0DE3E045FD0607D
+Line Count: 88
+--- BEGIN CONTENT ---
+# Development Environment Outputs
+
+output "backend_url" {
+  description = "URL of the backend Cloud Run service"
+  value       = module.backend.service_url
+}
+
+output "frontend_url" {
+  description = "URL of the frontend Cloud Run service"
+  value       = module.frontend.service_url
+}
+
+output "artifact_registry_url" {
+  description = "URL of the Artifact Registry repository"
+  value       = module.artifact_registry.repository_url
+}
+
+output "firestore_database" {
+  description = "Firestore database name"
+  value       = module.firestore.database_name
+}
+
+output "backend_service_account" {
+  description = "Backend service account email"
+  value       = module.iam.backend_service_account_email
+}
+
+output "frontend_service_account" {
+  description = "Frontend service account email"
+  value       = module.iam.frontend_service_account_email
+}
+
+# Secret IDs for reference
+output "secrets" {
+  description = "Secret Manager secret IDs"
+  value = {
+    gemini_api_key              = module.secrets.gemini_api_key_secret_id
+    firebase_service_account    = module.secrets.firebase_service_account_secret_id
+    google_client_id            = module.secrets.google_client_id_secret_id
+    google_client_secret        = module.secrets.google_client_secret_secret_id
+    firebase_api_key            = module.secrets.firebase_api_key_secret_id
+    firebase_messaging_sender_id = module.secrets.firebase_messaging_sender_id_secret_id
+    firebase_app_id             = module.secrets.firebase_app_id_secret_id
+  }
+}
+
+# Deployment instructions
+output "deployment_instructions" {
+  description = "Next steps for deployment"
+  value = <<-EOT
+    
+    ========================================
+    Stun Development Environment Deployed!
+    ========================================
+    
+    Frontend URL: ${module.frontend.service_url}
+    Backend URL:  ${module.backend.service_url}
+    
+    Next Steps:
+    
+    1. Add secret values to Secret Manager:
+       gcloud secrets versions add ${module.secrets.gemini_api_key_secret_id} --data-file=-
+       gcloud secrets versions add ${module.secrets.firebase_service_account_secret_id} --data-file=-
+       gcloud secrets versions add ${module.secrets.google_client_id_secret_id} --data-file=-
+       gcloud secrets versions add ${module.secrets.google_client_secret_secret_id} --data-file=-
+       gcloud secrets versions add ${module.secrets.firebase_api_key_secret_id} --data-file=-
+       gcloud secrets versions add ${module.secrets.firebase_messaging_sender_id_secret_id} --data-file=-
+       gcloud secrets versions add ${module.secrets.firebase_app_id_secret_id} --data-file=-
+    
+    2. Build and push container images:
+       cd backend
+       gcloud builds submit --tag ${module.artifact_registry.repository_url}/stun-backend:latest
+       
+       cd ../web
+       gcloud builds submit --tag ${module.artifact_registry.repository_url}/stun-frontend:latest
+    
+    3. Update Cloud Run services with new images:
+       terraform apply -var="backend_image=${module.artifact_registry.repository_url}/stun-backend:latest" \
+                       -var="frontend_image=${module.artifact_registry.repository_url}/stun-frontend:latest"
+    
+    4. Test the deployment:
+       curl ${module.backend.service_url}/health
+       open ${module.frontend.service_url}
+    
+    ========================================
+  EOT
+}
+--- END CONTENT ---
+
+FILE: infra/environments/dev/terraform.tfvars.example
+Full Path: C:\Users\Ayush\Downloads\Hacks\stun\infra\environments\dev\terraform.tfvars.example
+Size (bytes): 779
+Created: 2026-03-08 21:46:15
+Last Modified: 2026-03-08 21:46:15
+Last Accessed: 2026-03-15 13:02:56
+Read Only: False
+Attributes: Archive
+SHA256: 4C2B229B7CEBD3E2B6D8B8B6F3860D210FC0FA8BCC1973D28C1F2326472FD6B5
+Line Count: 21
+--- BEGIN CONTENT ---
+# Development Environment Configuration
+# Copy this file to terraform.tfvars and fill in your values
+
+# Google Cloud Project ID
+project_id = "your-project-id"
+
+# Google Cloud region for Cloud Run services
+region = "us-central1"
+
+# Firestore database location (must match region)
+firestore_location = "us-central1"
+
+# Container images (update after building)
+# Use placeholder images for initial deployment
+backend_image  = "us-docker.pkg.dev/cloudrun/container/hello"
+frontend_image = "us-docker.pkg.dev/cloudrun/container/hello"
+
+# After building your images, update to:
+# backend_image  = "us-central1-docker.pkg.dev/YOUR_PROJECT_ID/stun-dev/stun-backend:latest"
+# frontend_image = "us-central1-docker.pkg.dev/YOUR_PROJECT_ID/stun-dev/stun-frontend:latest"
+--- END CONTENT ---
+
+FILE: infra/environments/dev/variables.tf
+Full Path: C:\Users\Ayush\Downloads\Hacks\stun\infra\environments\dev\variables.tf
+Size (bytes): 712
+Created: 2026-03-08 21:46:15
+Last Modified: 2026-03-08 21:46:15
+Last Accessed: 2026-03-15 13:02:56
+Read Only: False
+Attributes: Archive
+SHA256: 92090CD2663F7142E3579278CBCFF1EB35742953F52B0FC872C1BFB3C7E4245E
+Line Count: 29
+--- BEGIN CONTENT ---
+variable "project_id" {
+  description = "Google Cloud Project ID"
+  type        = string
+}
+
+variable "region" {
+  description = "Google Cloud region for Cloud Run services"
+  type        = string
+  default     = "us-central1"
+}
+
+variable "firestore_location" {
+  description = "Firestore database location"
+  type        = string
+  default     = "us-central1"
+}
+
+variable "backend_image" {
+  description = "Backend container image URL"
+  type        = string
+  default     = "us-docker.pkg.dev/cloudrun/container/hello"
+}
+
+variable "frontend_image" {
+  description = "Frontend container image URL"
+  type        = string
+  default     = "us-docker.pkg.dev/cloudrun/container/hello"
+}
+--- END CONTENT ---
+
+FILE: infra/environments/prod/main.tf
+Full Path: C:\Users\Ayush\Downloads\Hacks\stun\infra\environments\prod\main.tf
+Size (bytes): 6078
+Created: 2026-03-08 21:46:15
+Last Modified: 2026-03-08 21:46:15
+Last Accessed: 2026-03-15 13:02:56
+Read Only: False
+Attributes: Archive
+SHA256: 1054FFADDAEFBC01C19B841B9FD03033B96D0DF87EFAB63E4C54FF4C8055FA1D
+Line Count: 214
+--- BEGIN CONTENT ---
+# Production Environment Configuration
+
+terraform {
+  required_version = ">= 1.5.0"
+
+  required_providers {
+    google = {
+      source  = "hashicorp/google"
+      version = "~> 5.0"
+    }
+    google-beta = {
+      source  = "hashicorp/google-beta"
+      version = "~> 5.0"
+    }
+  }
+
+  # Recommended: Use remote state for production
+  # backend "gcs" {
+  #   bucket = "your-terraform-state-bucket"
+  #   prefix = "stun/prod/state"
+  # }
+}
+
+provider "google" {
+  project = var.project_id
+  region  = var.region
+}
+
+provider "google-beta" {
+  project = var.project_id
+  region  = var.region
+}
+
+# Local variables
+locals {
+  environment = "prod"
+  labels = {
+    environment = "prod"
+    managed_by  = "terraform"
+    application = "stun"
+  }
+}
+
+# ============================================================================
+# IAM - Service Accounts and Permissions
+# ============================================================================
+
+module "iam" {
+  source = "../../modules/iam"
+
+  project_id                    = var.project_id
+  backend_service_account_id    = "stun-backend-prod"
+  frontend_service_account_id   = "stun-frontend-prod"
+}
+
+# ============================================================================
+# Secret Manager - Sensitive Configuration
+# ============================================================================
+
+module "secrets" {
+  source = "../../modules/secrets"
+
+  environment = local.environment
+  labels      = local.labels
+}
+
+# ============================================================================
+# Artifact Registry - Container Images
+# ============================================================================
+
+module "artifact_registry" {
+  source = "../../modules/artifact-registry"
+
+  region        = var.region
+  repository_id = "stun-prod"
+  description   = "Container images for Stun production environment"
+  labels        = local.labels
+
+  image_retention_days = 90
+
+  service_account_emails = [
+    module.iam.backend_service_account_email,
+    module.iam.frontend_service_account_email,
+  ]
+}
+
+# ============================================================================
+# Firestore - Database
+# ============================================================================
+
+module "firestore" {
+  source = "../../modules/firestore"
+
+  project_id                         = var.project_id
+  location                           = var.firestore_location
+  database_type                      = "FIRESTORE_NATIVE"
+  concurrency_mode                   = "OPTIMISTIC"
+  app_engine_integration_mode        = "DISABLED"
+  point_in_time_recovery_enablement  = "POINT_IN_TIME_RECOVERY_ENABLED"
+  delete_protection_state            = "DELETE_PROTECTION_ENABLED"
+}
+
+# ============================================================================
+# Cloud Run - Backend Service
+# ============================================================================
+
+module "backend" {
+  source = "../../modules/cloudrun"
+
+  service_name          = "stun-backend-prod"
+  location              = var.region
+  image                 = var.backend_image
+  service_account_email = module.iam.backend_service_account_email
+
+  port          = 8080
+  min_instances = 1  # Keep at least 1 instance warm for production
+  max_instances = 20
+  cpu           = "2"
+  memory        = "1Gi"
+  timeout_seconds = 300
+  concurrency   = 100
+
+  allow_unauthenticated = true
+  ingress               = "all"
+
+  environment_variables = {
+    PORT                = "8080"
+    NODE_ENV            = "production"
+    GCP_PROJECT_ID      = var.project_id
+    GCP_REGION          = var.region
+    BOARDS_COLLECTION   = "boards"
+    VERTEX_MODEL        = "gemini-2.0-flash-exp"
+    FRONTEND_URL        = module.frontend.service_url
+  }
+
+  secrets = {
+    GEMINI_API_KEY = {
+      secret_name = module.secrets.gemini_api_key_name
+      version     = "latest"
+    }
+    FIREBASE_SERVICE_ACCOUNT_KEY = {
+      secret_name = module.secrets.firebase_service_account_name
+      version     = "latest"
+    }
+    GOOGLE_CLIENT_ID = {
+      secret_name = module.secrets.google_client_id_name
+      version     = "latest"
+    }
+    GOOGLE_CLIENT_SECRET = {
+      secret_name = module.secrets.google_client_secret_name
+      version     = "latest"
+    }
+  }
+
+  labels = local.labels
+
+  depends_on = [
+    module.firestore,
+    module.secrets,
+  ]
+}
+
+# ============================================================================
+# Cloud Run - Frontend Service
+# ============================================================================
+
+module "frontend" {
+  source = "../../modules/cloudrun"
+
+  service_name          = "stun-frontend-prod"
+  location              = var.region
+  image                 = var.frontend_image
+  service_account_email = module.iam.frontend_service_account_email
+
+  port          = 3000
+  min_instances = 1  # Keep at least 1 instance warm for production
+  max_instances = 20
+  cpu           = "2"
+  memory        = "2Gi"
+  timeout_seconds = 300
+  concurrency   = 100
+
+  allow_unauthenticated = true
+  ingress               = "all"
+
+  environment_variables = {
+    NEXT_PUBLIC_API_BASE_URL        = module.backend.service_url
+    NEXT_PUBLIC_FIREBASE_PROJECT_ID = var.project_id
+    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN = "${var.project_id}.firebaseapp.com"
+    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET = "${var.project_id}.appspot.com"
+  }
+
+  secrets = {
+    NEXT_PUBLIC_FIREBASE_API_KEY = {
+      secret_name = module.secrets.firebase_api_key_name
+      version     = "latest"
+    }
+    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID = {
+      secret_name = module.secrets.firebase_messaging_sender_id_name
+      version     = "latest"
+    }
+    NEXT_PUBLIC_FIREBASE_APP_ID = {
+      secret_name = module.secrets.firebase_app_id_name
+      version     = "latest"
+    }
+  }
+
+  labels = local.labels
+
+  depends_on = [
+    module.backend,
+  ]
+}
+--- END CONTENT ---
+
+FILE: infra/environments/prod/outputs.tf
+Full Path: C:\Users\Ayush\Downloads\Hacks\stun\infra\environments\prod\outputs.tf
+Size (bytes): 2434
+Created: 2026-03-08 21:46:15
+Last Modified: 2026-03-08 21:46:15
+Last Accessed: 2026-03-15 13:02:56
+Read Only: False
+Attributes: Archive
+SHA256: A2A9C23E6E9ABD52136B2CB57DC92DE011606668E1E990783599772D649ACCEB
+Line Count: 74
+--- BEGIN CONTENT ---
+# Production Environment Outputs
+
+output "backend_url" {
+  description = "URL of the backend Cloud Run service"
+  value       = module.backend.service_url
+}
+
+output "frontend_url" {
+  description = "URL of the frontend Cloud Run service"
+  value       = module.frontend.service_url
+}
+
+output "artifact_registry_url" {
+  description = "URL of the Artifact Registry repository"
+  value       = module.artifact_registry.repository_url
+}
+
+output "firestore_database" {
+  description = "Firestore database name"
+  value       = module.firestore.database_name
+}
+
+output "backend_service_account" {
+  description = "Backend service account email"
+  value       = module.iam.backend_service_account_email
+}
+
+output "frontend_service_account" {
+  description = "Frontend service account email"
+  value       = module.iam.frontend_service_account_email
+}
+
+# Secret IDs for reference
+output "secrets" {
+  description = "Secret Manager secret IDs"
+  value = {
+    gemini_api_key              = module.secrets.gemini_api_key_secret_id
+    firebase_service_account    = module.secrets.firebase_service_account_secret_id
+    google_client_id            = module.secrets.google_client_id_secret_id
+    google_client_secret        = module.secrets.google_client_secret_secret_id
+    firebase_api_key            = module.secrets.firebase_api_key_secret_id
+    firebase_messaging_sender_id = module.secrets.firebase_messaging_sender_id_secret_id
+    firebase_app_id             = module.secrets.firebase_app_id_secret_id
+  }
+}
+
+# Production deployment information
+output "deployment_info" {
+  description = "Production deployment information"
+  value = <<-EOT
+    
+    ========================================
+    Stun Production Environment Deployed!
+    ========================================
+    
+    Frontend URL: ${module.frontend.service_url}
+    Backend URL:  ${module.backend.service_url}
+    
+    Production Features:
+    - Point-in-time recovery: ENABLED
+    - Delete protection: ENABLED
+    - Min instances: 1 (warm start)
+    - Max instances: 20
+    - Enhanced resources: 2 CPU, 1-2Gi RAM
+    
+    Monitoring:
+    - Cloud Run logs: https://console.cloud.google.com/run
+    - Firestore: https://console.cloud.google.com/firestore
+    - Secret Manager: https://console.cloud.google.com/security/secret-manager
+    
+    ========================================
+  EOT
+}
+--- END CONTENT ---
+
+FILE: infra/environments/prod/terraform.tfvars.example
+Full Path: C:\Users\Ayush\Downloads\Hacks\stun\infra\environments\prod\terraform.tfvars.example
+Size (bytes): 862
+Created: 2026-03-08 21:46:15
+Last Modified: 2026-03-14 21:28:56
+Last Accessed: 2026-03-15 13:02:56
+Read Only: False
+Attributes: Archive
+SHA256: E01AE5A2AB2384F54643F6ED62E010372D72CB07705882CCDC4D5C9C050B0429
+Line Count: 24
+--- BEGIN CONTENT ---
+# Production Environment Configuration
+# Copy this file to terraform.tfvars and fill in your values
+
+# Google Cloud Project ID
+project_id = "your-production-project-id"
+
+# Google Cloud region for Cloud Run services
+region = "us-central1"
+
+# Firestore database location (must match region)
+firestore_location = "us-central1"
+
+# Container images (REQUIRED for production)
+backend_image  = "us-central1-docker.pkg.dev/YOUR_PROJECT_ID/stun-prod/stun-backend:v1.0.0"
+frontend_image = "us-central1-docker.pkg.dev/YOUR_PROJECT_ID/stun-prod/stun-frontend:v1.0.0"
+
+# Production Notes:
+# - Use semantic versioning for images (v1.0.0, v1.0.1, etc.)
+# - Enable remote state backend in main.tf
+# - Configure custom domain if needed
+# - Set up monitoring and alerting
+# - Review and adjust resource limits
+# - Enable VPC connector for enhanced security
+--- END CONTENT ---
+
+FILE: infra/environments/prod/variables.tf
+Full Path: C:\Users\Ayush\Downloads\Hacks\stun\infra\environments\prod\variables.tf
+Size (bytes): 588
+Created: 2026-03-08 21:46:15
+Last Modified: 2026-03-08 21:46:15
+Last Accessed: 2026-03-15 13:02:56
+Read Only: False
+Attributes: Archive
+SHA256: 11286732402E25CB33C49ECBDA778C953FD15D47115DC4D087DA70A5B9A7A669
+Line Count: 27
+--- BEGIN CONTENT ---
+variable "project_id" {
+  description = "Google Cloud Project ID"
+  type        = string
+}
+
+variable "region" {
+  description = "Google Cloud region for Cloud Run services"
+  type        = string
+  default     = "us-central1"
+}
+
+variable "firestore_location" {
+  description = "Firestore database location"
+  type        = string
+  default     = "us-central1"
+}
+
+variable "backend_image" {
+  description = "Backend container image URL"
+  type        = string
+}
+
+variable "frontend_image" {
+  description = "Frontend container image URL"
+  type        = string
+}
+--- END CONTENT ---
+
+FILE: infra/modules/artifact-registry/main.tf
+Full Path: C:\Users\Ayush\Downloads\Hacks\stun\infra\modules\artifact-registry\main.tf
+Size (bytes): 951
+Created: 2026-03-08 20:21:44
+Last Modified: 2026-03-08 21:46:15
+Last Accessed: 2026-03-15 13:02:56
+Read Only: False
+Attributes: Archive
+SHA256: 89424BF0D21B5C77824B52B7BE7E76FCE8C8CC5BE0E3D15F853259418EF49DA7
+Line Count: 32
+--- BEGIN CONTENT ---
+# Artifact Registry for container images
+
+resource "google_artifact_registry_repository" "container_repo" {
+  location      = var.region
+  repository_id = var.repository_id
+  description   = var.description
+  format        = "DOCKER"
+
+  labels = var.labels
+
+  # Cleanup policy for old images
+  cleanup_policy_dry_run = false
+  cleanup_policies {
+    id     = "delete-old-images"
+    action = "DELETE"
+    condition {
+      tag_state  = "UNTAGGED"
+      older_than = "${var.image_retention_days}d"
+    }
+  }
+}
+
+# IAM binding for Cloud Run to pull images
+resource "google_artifact_registry_repository_iam_member" "cloudrun_reader" {
+  for_each = toset(var.service_account_emails)
+
+  location   = google_artifact_registry_repository.container_repo.location
+  repository = google_artifact_registry_repository.container_repo.name
+  role       = "roles/artifactregistry.reader"
+  member     = "serviceAccount:${each.value}"
+}
+--- END CONTENT ---
+
+FILE: infra/modules/artifact-registry/outputs.tf
+Full Path: C:\Users\Ayush\Downloads\Hacks\stun\infra\modules\artifact-registry\outputs.tf
+Size (bytes): 599
+Created: 2026-03-08 20:34:49
+Last Modified: 2026-03-08 21:46:15
+Last Accessed: 2026-03-15 13:02:56
+Read Only: False
+Attributes: Archive
+SHA256: AF0E20F3A22217AC5E3EF580D0DAD41A901A466852EF41D64F11C1D39F851D03
+Line Count: 15
+--- BEGIN CONTENT ---
+output "repository_id" {
+  description = "The ID of the Artifact Registry repository"
+  value       = google_artifact_registry_repository.container_repo.repository_id
+}
+
+output "repository_url" {
+  description = "The URL of the Artifact Registry repository"
+  value       = "${var.region}-docker.pkg.dev/${google_artifact_registry_repository.container_repo.project}/${google_artifact_registry_repository.container_repo.repository_id}"
+}
+
+output "location" {
+  description = "The location of the repository"
+  value       = google_artifact_registry_repository.container_repo.location
+}
+--- END CONTENT ---
+
+FILE: infra/modules/artifact-registry/variables.tf
+Full Path: C:\Users\Ayush\Downloads\Hacks\stun\infra\modules\artifact-registry\variables.tf
+Size (bytes): 777
+Created: 2026-03-08 20:31:03
+Last Modified: 2026-03-08 21:46:15
+Last Accessed: 2026-03-15 13:02:56
+Read Only: False
+Attributes: Archive
+SHA256: 946BFD5EB261AFE6BEB0D3E33EC25D812E6CD05601678F320E9409FA9351FBBD
+Line Count: 34
+--- BEGIN CONTENT ---
+variable "region" {
+  description = "Google Cloud region"
+  type        = string
+}
+
+variable "repository_id" {
+  description = "Artifact Registry repository ID"
+  type        = string
+}
+
+variable "description" {
+  description = "Repository description"
+  type        = string
+  default     = "Container images for Stun application"
+}
+
+variable "labels" {
+  description = "Labels to apply to the repository"
+  type        = map(string)
+  default     = {}
+}
+
+variable "image_retention_days" {
+  description = "Number of days to retain untagged images"
+  type        = number
+  default     = 30
+}
+
+variable "service_account_emails" {
+  description = "Service account emails that need pull access"
+  type        = list(string)
+  default     = []
+}
+--- END CONTENT ---
+
+FILE: infra/modules/cloudrun/main.tf
+Full Path: C:\Users\Ayush\Downloads\Hacks\stun\infra\modules\cloudrun\main.tf
+Size (bytes): 2740
+Created: 2026-03-08 20:54:46
+Last Modified: 2026-03-08 21:46:15
+Last Accessed: 2026-03-15 13:02:56
+Read Only: False
+Attributes: Archive
+SHA256: 2CB50780A639F32C94DD76F588E87E846C4DD62B570D75DDEC1AD7400342BB8F
+Line Count: 119
+--- BEGIN CONTENT ---
+# Cloud Run service module
+
+resource "google_cloud_run_v2_service" "service" {
+  name     = var.service_name
+  location = var.location
+  ingress  = var.ingress
+
+  labels = var.labels
+
+  template {
+    service_account = var.service_account_email
+
+    scaling {
+      min_instance_count = var.min_instances
+      max_instance_count = var.max_instances
+    }
+
+    timeout = "${var.timeout_seconds}s"
+
+    containers {
+      image = var.image
+
+      ports {
+        container_port = var.port
+      }
+
+      resources {
+        limits = {
+          cpu    = var.cpu
+          memory = var.memory
+        }
+        cpu_idle = true
+        startup_cpu_boost = true
+      }
+
+      # Environment variables
+      dynamic "env" {
+        for_each = var.environment_variables
+        content {
+          name  = env.key
+          value = env.value
+        }
+      }
+
+      # Secrets as environment variables
+      dynamic "env" {
+        for_each = var.secrets
+        content {
+          name = env.key
+          value_source {
+            secret_key_ref {
+              secret  = env.value.secret_name
+              version = env.value.version
+            }
+          }
+        }
+      }
+
+      # Startup probe
+      startup_probe {
+        http_get {
+          path = "/health"
+          port = var.port
+        }
+        initial_delay_seconds = 0
+        timeout_seconds       = 1
+        period_seconds        = 3
+        failure_threshold     = 3
+      }
+
+      # Liveness probe
+      liveness_probe {
+        http_get {
+          path = "/health"
+          port = var.port
+        }
+        initial_delay_seconds = 0
+        timeout_seconds       = 1
+        period_seconds        = 10
+        failure_threshold     = 3
+      }
+    }
+
+    # VPC configuration (optional)
+    dynamic "vpc_access" {
+      for_each = var.vpc_connector != null ? [1] : []
+      content {
+        connector = var.vpc_connector
+        egress    = var.vpc_egress
+      }
+    }
+
+    # Maximum concurrent requests per instance
+    max_instance_request_concurrency = var.concurrency
+  }
+
+  traffic {
+    type    = "TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST"
+    percent = 100
+  }
+
+  lifecycle {
+    ignore_changes = [
+      # Ignore changes to image tag to allow CI/CD updates
+      template[0].containers[0].image,
+    ]
+  }
+}
+
+# IAM policy for public access (if enabled)
+resource "google_cloud_run_v2_service_iam_member" "public_access" {
+  count = var.allow_unauthenticated ? 1 : 0
+
+  name     = google_cloud_run_v2_service.service.name
+  location = google_cloud_run_v2_service.service.location
+  role     = "roles/run.invoker"
+  member   = "allUsers"
+}
+--- END CONTENT ---
+
+FILE: infra/modules/cloudrun/outputs.tf
+Full Path: C:\Users\Ayush\Downloads\Hacks\stun\infra\modules\cloudrun\outputs.tf
+Size (bytes): 541
+Created: 2026-03-08 20:55:52
+Last Modified: 2026-03-08 21:46:15
+Last Accessed: 2026-03-15 13:02:56
+Read Only: False
+Attributes: Archive
+SHA256: 7467ECC6F59E7129A5B3C8FABD8C7ED18ED561D3C4B6372631ED2B079CCC80CA
+Line Count: 20
+--- BEGIN CONTENT ---
+output "service_name" {
+  description = "Name of the Cloud Run service"
+  value       = google_cloud_run_v2_service.service.name
+}
+
+output "service_url" {
+  description = "URL of the Cloud Run service"
+  value       = google_cloud_run_v2_service.service.uri
+}
+
+output "service_id" {
+  description = "ID of the Cloud Run service"
+  value       = google_cloud_run_v2_service.service.id
+}
+
+output "location" {
+  description = "Location of the Cloud Run service"
+  value       = google_cloud_run_v2_service.service.location
+}
+--- END CONTENT ---
+
+FILE: infra/modules/cloudrun/variables.tf
+Full Path: C:\Users\Ayush\Downloads\Hacks\stun\infra\modules\cloudrun\variables.tf
+Size (bytes): 2327
+Created: 2026-03-08 20:53:41
+Last Modified: 2026-03-08 21:46:15
+Last Accessed: 2026-03-15 13:02:56
+Read Only: False
+Attributes: Archive
+SHA256: C5CE8CEFB957206CC7991DC4BCFC502AADF0DF10FC5CAA6E55BE357639B7336E
+Line Count: 107
+--- BEGIN CONTENT ---
+variable "service_name" {
+  description = "Name of the Cloud Run service"
+  type        = string
+}
+
+variable "location" {
+  description = "Google Cloud region"
+  type        = string
+}
+
+variable "image" {
+  description = "Container image URL"
+  type        = string
+}
+
+variable "service_account_email" {
+  description = "Service account email for the Cloud Run service"
+  type        = string
+}
+
+variable "environment_variables" {
+  description = "Environment variables for the service"
+  type        = map(string)
+  default     = {}
+}
+
+variable "secrets" {
+  description = "Secrets to mount as environment variables"
+  type = map(object({
+    secret_name = string
+    version     = string
+  }))
+  default = {}
+}
+
+variable "port" {
+  description = "Container port"
+  type        = number
+  default     = 8080
+}
+
+variable "min_instances" {
+  description = "Minimum number of instances"
+  type        = number
+  default     = 0
+}
+
+variable "max_instances" {
+  description = "Maximum number of instances"
+  type        = number
+  default     = 10
+}
+
+variable "cpu" {
+  description = "CPU allocation (e.g., '1', '2')"
+  type        = string
+  default     = "1"
+}
+
+variable "memory" {
+  description = "Memory allocation (e.g., '512Mi', '1Gi')"
+  type        = string
+  default     = "512Mi"
+}
+
+variable "timeout_seconds" {
+  description = "Request timeout in seconds"
+  type        = number
+  default     = 300
+}
+
+variable "concurrency" {
+  description = "Maximum concurrent requests per instance"
+  type        = number
+  default     = 80
+}
+
+variable "allow_unauthenticated" {
+  description = "Allow unauthenticated access"
+  type        = bool
+  default     = true
+}
+
+variable "labels" {
+  description = "Labels to apply to the service"
+  type        = map(string)
+  default     = {}
+}
+
+variable "ingress" {
+  description = "Ingress settings (all, internal, internal-and-cloud-load-balancing)"
+  type        = string
+  default     = "all"
+}
+
+variable "vpc_connector" {
+  description = "VPC connector name (optional)"
+  type        = string
+  default     = null
+}
+
+variable "vpc_egress" {
+  description = "VPC egress settings (all-traffic, private-ranges-only)"
+  type        = string
+  default     = "private-ranges-only"
+}
+--- END CONTENT ---
+
+FILE: infra/modules/firestore/main.tf
+Full Path: C:\Users\Ayush\Downloads\Hacks\stun\infra\modules\firestore\main.tf
+Size (bytes): 1698
+Created: 2026-03-08 20:59:09
+Last Modified: 2026-03-08 21:46:15
+Last Accessed: 2026-03-15 13:02:56
+Read Only: False
+Attributes: Archive
+SHA256: D3071991AB3721D6A20B56CABAA99B6C7F49F25BEA98814B3C844E43B6B73477
+Line Count: 63
+--- BEGIN CONTENT ---
+# Firestore database configuration
+# Note: Firestore database must be created manually or via gcloud
+# Terraform can only manage the default database settings
+
+# This resource manages Firestore database configuration
+# The database itself should be created via:
+# gcloud firestore databases create --location=LOCATION --type=firestore-native
+
+resource "google_firestore_database" "database" {
+  project     = var.project_id
+  name        = "(default)"
+  location_id = var.location
+  type        = var.database_type
+
+  concurrency_mode                   = var.concurrency_mode
+  app_engine_integration_mode        = var.app_engine_integration_mode
+  point_in_time_recovery_enablement  = var.point_in_time_recovery_enablement
+  delete_protection_state            = var.delete_protection_state
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
+# Firestore index for boards collection (example)
+resource "google_firestore_index" "boards_index" {
+  project    = var.project_id
+  database   = google_firestore_database.database.name
+  collection = "boards"
+
+  fields {
+    field_path = "createdAt"
+    order      = "DESCENDING"
+  }
+
+  fields {
+    field_path = "__name__"
+    order      = "DESCENDING"
+  }
+}
+
+# Firestore index for presence collection
+resource "google_firestore_index" "presence_index" {
+  project    = var.project_id
+  database   = google_firestore_database.database.name
+  collection = "board_presence"
+
+  fields {
+    field_path = "boardId"
+    order      = "ASCENDING"
+  }
+
+  fields {
+    field_path = "lastSeen"
+    order      = "DESCENDING"
+  }
+
+  fields {
+    field_path = "__name__"
+    order      = "DESCENDING"
+  }
+}
+--- END CONTENT ---
+
+FILE: infra/modules/firestore/outputs.tf
+Full Path: C:\Users\Ayush\Downloads\Hacks\stun\infra\modules\firestore\outputs.tf
+Size (bytes): 559
+Created: 2026-03-08 20:59:09
+Last Modified: 2026-03-08 21:46:15
+Last Accessed: 2026-03-15 13:02:56
+Read Only: False
+Attributes: Archive
+SHA256: 36FA8E752062D067F15BC9E40662B522350FAAB32A1207257D4FDACABA8403A2
+Line Count: 20
+--- BEGIN CONTENT ---
+output "database_name" {
+  description = "Name of the Firestore database"
+  value       = google_firestore_database.database.name
+}
+
+output "database_location" {
+  description = "Location of the Firestore database"
+  value       = google_firestore_database.database.location_id
+}
+
+output "database_type" {
+  description = "Type of the Firestore database"
+  value       = google_firestore_database.database.type
+}
+
+output "database_id" {
+  description = "ID of the Firestore database"
+  value       = google_firestore_database.database.id
+}
+--- END CONTENT ---
+
+FILE: infra/modules/firestore/variables.tf
+Full Path: C:\Users\Ayush\Downloads\Hacks\stun\infra\modules\firestore\variables.tf
+Size (bytes): 1176
+Created: 2026-03-08 20:59:09
+Last Modified: 2026-03-08 21:46:15
+Last Accessed: 2026-03-15 13:02:56
+Read Only: False
+Attributes: Archive
+SHA256: 6AFFFFE334633BD3C6910C34EC31324CBC6466C2FE232CC39C411F8EC19F08F7
+Line Count: 41
+--- BEGIN CONTENT ---
+variable "project_id" {
+  description = "Google Cloud Project ID"
+  type        = string
+}
+
+variable "location" {
+  description = "Firestore location"
+  type        = string
+  default     = "us-central1"
+}
+
+variable "database_type" {
+  description = "Database type (FIRESTORE_NATIVE or DATASTORE_MODE)"
+  type        = string
+  default     = "FIRESTORE_NATIVE"
+}
+
+variable "concurrency_mode" {
+  description = "Concurrency mode (OPTIMISTIC, PESSIMISTIC, OPTIMISTIC_WITH_ENTITY_GROUPS)"
+  type        = string
+  default     = "OPTIMISTIC"
+}
+
+variable "app_engine_integration_mode" {
+  description = "App Engine integration mode (ENABLED or DISABLED)"
+  type        = string
+  default     = "DISABLED"
+}
+
+variable "point_in_time_recovery_enablement" {
+  description = "Point in time recovery (POINT_IN_TIME_RECOVERY_ENABLED or POINT_IN_TIME_RECOVERY_DISABLED)"
+  type        = string
+  default     = "POINT_IN_TIME_RECOVERY_DISABLED"
+}
+
+variable "delete_protection_state" {
+  description = "Delete protection (DELETE_PROTECTION_ENABLED or DELETE_PROTECTION_DISABLED)"
+  type        = string
+  default     = "DELETE_PROTECTION_DISABLED"
+}
+--- END CONTENT ---
+
+FILE: infra/modules/iam/main.tf
+Full Path: C:\Users\Ayush\Downloads\Hacks\stun\infra\modules\iam\main.tf
+Size (bytes): 2200
+Created: 2026-03-08 20:40:25
+Last Modified: 2026-03-08 21:46:15
+Last Accessed: 2026-03-15 13:02:56
+Read Only: False
+Attributes: Archive
+SHA256: 001A05EC620E5D09209741A0B028392D96D315F52AADB495329246CC48027339
+Line Count: 61
+--- BEGIN CONTENT ---
+# Service accounts and IAM roles for Stun application
+
+# Backend service account
+resource "google_service_account" "backend" {
+  account_id   = var.backend_service_account_id
+  display_name = "Stun Backend Service Account"
+  description  = "Service account for Stun backend Cloud Run service"
+}
+
+# Frontend service account
+resource "google_service_account" "frontend" {
+  account_id   = var.frontend_service_account_id
+  display_name = "Stun Frontend Service Account"
+  description  = "Service account for Stun frontend Cloud Run service"
+}
+
+# Backend IAM roles
+resource "google_project_iam_member" "backend_firestore" {
+  project = var.project_id
+  role    = "roles/datastore.user"
+  member  = "serviceAccount:${google_service_account.backend.email}"
+}
+
+resource "google_project_iam_member" "backend_vertex_ai" {
+  project = var.project_id
+  role    = "roles/aiplatform.user"
+  member  = "serviceAccount:${google_service_account.backend.email}"
+}
+
+resource "google_project_iam_member" "backend_secret_accessor" {
+  project = var.project_id
+  role    = "roles/secretmanager.secretAccessor"
+  member  = "serviceAccount:${google_service_account.backend.email}"
+}
+
+resource "google_project_iam_member" "backend_logging" {
+  project = var.project_id
+  role    = "roles/logging.logWriter"
+  member  = "serviceAccount:${google_service_account.backend.email}"
+}
+
+# Frontend IAM roles (minimal permissions)
+resource "google_project_iam_member" "frontend_logging" {
+  project = var.project_id
+  role    = "roles/logging.logWriter"
+  member  = "serviceAccount:${google_service_account.frontend.email}"
+}
+
+resource "google_project_iam_member" "frontend_secret_accessor" {
+  project = var.project_id
+  role    = "roles/secretmanager.secretAccessor"
+  member  = "serviceAccount:${google_service_account.frontend.email}"
+}
+
+# Allow backend to create custom tokens (Firebase Auth)
+resource "google_service_account_iam_member" "backend_token_creator" {
+  service_account_id = google_service_account.backend.name
+  role               = "roles/iam.serviceAccountTokenCreator"
+  member             = "serviceAccount:${google_service_account.backend.email}"
+}
+--- END CONTENT ---
+
+FILE: infra/modules/iam/outputs.tf
+Full Path: C:\Users\Ayush\Downloads\Hacks\stun\infra\modules\iam\outputs.tf
+Size (bytes): 630
+Created: 2026-03-08 20:45:11
+Last Modified: 2026-03-08 21:46:15
+Last Accessed: 2026-03-15 13:02:56
+Read Only: False
+Attributes: Archive
+SHA256: 0B553C213B354B29605B91AE1B9A8446CAB58900F2B2AC4ABA3853801380110F
+Line Count: 20
+--- BEGIN CONTENT ---
+output "backend_service_account_email" {
+  description = "Email of the backend service account"
+  value       = google_service_account.backend.email
+}
+
+output "frontend_service_account_email" {
+  description = "Email of the frontend service account"
+  value       = google_service_account.frontend.email
+}
+
+output "backend_service_account_id" {
+  description = "ID of the backend service account"
+  value       = google_service_account.backend.account_id
+}
+
+output "frontend_service_account_id" {
+  description = "ID of the frontend service account"
+  value       = google_service_account.frontend.account_id
+}
+--- END CONTENT ---
+
+FILE: infra/modules/iam/variables.tf
+Full Path: C:\Users\Ayush\Downloads\Hacks\stun\infra\modules\iam\variables.tf
+Size (bytes): 402
+Created: 2026-03-08 20:41:06
+Last Modified: 2026-03-08 21:46:15
+Last Accessed: 2026-03-15 13:02:56
+Read Only: False
+Attributes: Archive
+SHA256: 6551F9A0AB84B87CFB4AF8261115DD5EA080770C52AE63484C4AB22852CD45D3
+Line Count: 17
+--- BEGIN CONTENT ---
+variable "project_id" {
+  description = "Google Cloud Project ID"
+  type        = string
+}
+
+variable "backend_service_account_id" {
+  description = "Service account ID for backend"
+  type        = string
+  default     = "stun-backend"
+}
+
+variable "frontend_service_account_id" {
+  description = "Service account ID for frontend"
+  type        = string
+  default     = "stun-frontend"
+}
+--- END CONTENT ---
+
+FILE: infra/modules/secrets/main.tf
+Full Path: C:\Users\Ayush\Downloads\Hacks\stun\infra\modules\secrets\main.tf
+Size (bytes): 1694
+Created: 2026-03-08 20:47:48
+Last Modified: 2026-03-08 21:46:15
+Last Accessed: 2026-03-15 13:02:56
+Read Only: False
+Attributes: Archive
+SHA256: 42C012C3DEE203415C636E5CD0305C93B72A89AE4C2A8CB52CDF68394A0A6869
+Line Count: 82
+--- BEGIN CONTENT ---
+# Secret Manager for sensitive configuration
+
+# Gemini API Key
+resource "google_secret_manager_secret" "gemini_api_key" {
+  secret_id = "${var.environment}-gemini-api-key"
+
+  replication {
+    auto {}
+  }
+
+  labels = var.labels
+}
+
+# Firebase Service Account Key
+resource "google_secret_manager_secret" "firebase_service_account" {
+  secret_id = "${var.environment}-firebase-service-account"
+
+  replication {
+    auto {}
+  }
+
+  labels = var.labels
+}
+
+# Google OAuth Client ID
+resource "google_secret_manager_secret" "google_client_id" {
+  secret_id = "${var.environment}-google-client-id"
+
+  replication {
+    auto {}
+  }
+
+  labels = var.labels
+}
+
+# Google OAuth Client Secret
+resource "google_secret_manager_secret" "google_client_secret" {
+  secret_id = "${var.environment}-google-client-secret"
+
+  replication {
+    auto {}
+  }
+
+  labels = var.labels
+}
+
+# Firebase API Key (for frontend)
+resource "google_secret_manager_secret" "firebase_api_key" {
+  secret_id = "${var.environment}-firebase-api-key"
+
+  replication {
+    auto {}
+  }
+
+  labels = var.labels
+}
+
+# Firebase Messaging Sender ID
+resource "google_secret_manager_secret" "firebase_messaging_sender_id" {
+  secret_id = "${var.environment}-firebase-messaging-sender-id"
+
+  replication {
+    auto {}
+  }
+
+  labels = var.labels
+}
+
+# Firebase App ID
+resource "google_secret_manager_secret" "firebase_app_id" {
+  secret_id = "${var.environment}-firebase-app-id"
+
+  replication {
+    auto {}
+  }
+
+  labels = var.labels
+}
+
+# Note: Secret versions must be created manually or via separate process
+# Terraform does not store secret values in state for security
+--- END CONTENT ---
+
+FILE: infra/modules/secrets/outputs.tf
+Full Path: C:\Users\Ayush\Downloads\Hacks\stun\infra\modules\secrets\outputs.tf
+Size (bytes): 2578
+Created: 2026-03-08 20:52:09
+Last Modified: 2026-03-08 21:46:15
+Last Accessed: 2026-03-15 13:02:56
+Read Only: False
+Attributes: Archive
+SHA256: 2096C155F3D9535EB83B021EA6ADA7875924270FF3C06D7E7B7FE78D8DE165D2
+Line Count: 71
+--- BEGIN CONTENT ---
+output "gemini_api_key_secret_id" {
+  description = "Secret Manager ID for Gemini API key"
+  value       = google_secret_manager_secret.gemini_api_key.secret_id
+}
+
+output "firebase_service_account_secret_id" {
+  description = "Secret Manager ID for Firebase service account"
+  value       = google_secret_manager_secret.firebase_service_account.secret_id
+}
+
+output "google_client_id_secret_id" {
+  description = "Secret Manager ID for Google OAuth client ID"
+  value       = google_secret_manager_secret.google_client_id.secret_id
+}
+
+output "google_client_secret_secret_id" {
+  description = "Secret Manager ID for Google OAuth client secret"
+  value       = google_secret_manager_secret.google_client_secret.secret_id
+}
+
+output "firebase_api_key_secret_id" {
+  description = "Secret Manager ID for Firebase API key"
+  value       = google_secret_manager_secret.firebase_api_key.secret_id
+}
+
+output "firebase_messaging_sender_id_secret_id" {
+  description = "Secret Manager ID for Firebase messaging sender ID"
+  value       = google_secret_manager_secret.firebase_messaging_sender_id.secret_id
+}
+
+output "firebase_app_id_secret_id" {
+  description = "Secret Manager ID for Firebase app ID"
+  value       = google_secret_manager_secret.firebase_app_id.secret_id
+}
+
+# Full secret names for Cloud Run environment variables
+output "gemini_api_key_name" {
+  description = "Full secret name for Gemini API key"
+  value       = google_secret_manager_secret.gemini_api_key.name
+}
+
+output "firebase_service_account_name" {
+  description = "Full secret name for Firebase service account"
+  value       = google_secret_manager_secret.firebase_service_account.name
+}
+
+output "google_client_id_name" {
+  description = "Full secret name for Google OAuth client ID"
+  value       = google_secret_manager_secret.google_client_id.name
+}
+
+output "google_client_secret_name" {
+  description = "Full secret name for Google OAuth client secret"
+  value       = google_secret_manager_secret.google_client_secret.name
+}
+
+output "firebase_api_key_name" {
+  description = "Full secret name for Firebase API key"
+  value       = google_secret_manager_secret.firebase_api_key.name
+}
+
+output "firebase_messaging_sender_id_name" {
+  description = "Full secret name for Firebase messaging sender ID"
+  value       = google_secret_manager_secret.firebase_messaging_sender_id.name
+}
+
+output "firebase_app_id_name" {
+  description = "Full secret name for Firebase app ID"
+  value       = google_secret_manager_secret.firebase_app_id.name
+}
+--- END CONTENT ---
+
+FILE: infra/modules/secrets/variables.tf
+Full Path: C:\Users\Ayush\Downloads\Hacks\stun\infra\modules\secrets\variables.tf
+Size (bytes): 231
+Created: 2026-03-08 20:50:12
+Last Modified: 2026-03-08 21:46:15
+Last Accessed: 2026-03-15 13:02:56
+Read Only: False
+Attributes: Archive
+SHA256: 841A649F33C15D2250DFA38D5F6020AAA94DC0173862F52244F342C1B8518339
+Line Count: 11
+--- BEGIN CONTENT ---
+variable "environment" {
+  description = "Environment name (dev, staging, prod)"
+  type        = string
+}
+
+variable "labels" {
+  description = "Labels to apply to secrets"
+  type        = map(string)
+  default     = {}
+}
+--- END CONTENT ---
+
+FILE: infra/scripts/add-secrets.sh
+Full Path: C:\Users\Ayush\Downloads\Hacks\stun\infra\scripts\add-secrets.sh
+Size (bytes): 2626
+Created: 2026-03-08 21:46:15
+Last Modified: 2026-03-08 21:46:15
+Last Accessed: 2026-03-15 13:02:56
+Read Only: False
+Attributes: Archive
+SHA256: 29F9C0DE7C8D80A56781B164C7637973092FCABF9020E41633909CEDF532F707
+Line Count: 80
+--- BEGIN CONTENT ---
+#!/bin/bash
+# Script to add secrets to Google Secret Manager
+# This script prompts for secret values and adds them securely
+
+set -e
+
+# Colors
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+log_info() {
+    echo -e "${GREEN}[INFO]${NC} $1"
+}
+
+log_warn() {
+    echo -e "${YELLOW}[WARN]${NC} $1"
+}
+
+# Get environment
+read -p "Enter environment (dev/prod): " ENV
+
+if [ "$ENV" != "dev" ] && [ "$ENV" != "prod" ]; then
+    echo "Invalid environment. Must be 'dev' or 'prod'"
+    exit 1
+fi
+
+log_info "Adding secrets for $ENV environment..."
+
+# Gemini API Key
+log_info "Adding Gemini API Key..."
+read -sp "Enter Gemini API Key: " GEMINI_KEY
+echo ""
+echo -n "$GEMINI_KEY" | gcloud secrets versions add "$ENV-gemini-api-key" --data-file=-
+log_info "Gemini API Key added!"
+
+# Firebase Service Account
+log_info "Adding Firebase Service Account..."
+read -p "Enter path to Firebase service account JSON file: " FIREBASE_PATH
+if [ -f "$FIREBASE_PATH" ]; then
+    cat "$FIREBASE_PATH" | gcloud secrets versions add "$ENV-firebase-service-account" --data-file=-
+    log_info "Firebase Service Account added!"
+else
+    log_warn "File not found: $FIREBASE_PATH, skipping..."
+fi
+
+# Google OAuth Client ID
+log_info "Adding Google OAuth Client ID..."
+read -p "Enter Google OAuth Client ID: " CLIENT_ID
+echo -n "$CLIENT_ID" | gcloud secrets versions add "$ENV-google-client-id" --data-file=-
+log_info "Google OAuth Client ID added!"
+
+# Google OAuth Client Secret
+log_info "Adding Google OAuth Client Secret..."
+read -sp "Enter Google OAuth Client Secret: " CLIENT_SECRET
+echo ""
+echo -n "$CLIENT_SECRET" | gcloud secrets versions add "$ENV-google-client-secret" --data-file=-
+log_info "Google OAuth Client Secret added!"
+
+# Firebase API Key
+log_info "Adding Firebase API Key..."
+read -p "Enter Firebase API Key: " FIREBASE_API_KEY
+echo -n "$FIREBASE_API_KEY" | gcloud secrets versions add "$ENV-firebase-api-key" --data-file=-
+log_info "Firebase API Key added!"
+
+# Firebase Messaging Sender ID
+log_info "Adding Firebase Messaging Sender ID..."
+read -p "Enter Firebase Messaging Sender ID: " SENDER_ID
+echo -n "$SENDER_ID" | gcloud secrets versions add "$ENV-firebase-messaging-sender-id" --data-file=-
+log_info "Firebase Messaging Sender ID added!"
+
+# Firebase App ID
+log_info "Adding Firebase App ID..."
+read -p "Enter Firebase App ID: " APP_ID
+echo -n "$APP_ID" | gcloud secrets versions add "$ENV-firebase-app-id" --data-file=-
+log_info "Firebase App ID added!"
+
+log_info "All secrets added successfully!"
+log_info "You can now deploy your Cloud Run services."
+--- END CONTENT ---
+
+FILE: infra/scripts/deploy.sh
+Full Path: C:\Users\Ayush\Downloads\Hacks\stun\infra\scripts\deploy.sh
+Size (bytes): 2541
+Created: 2026-03-08 21:46:15
+Last Modified: 2026-03-08 21:46:15
+Last Accessed: 2026-03-15 13:02:56
+Read Only: False
+Attributes: Archive
+SHA256: 5D2669E2943F0C6B23200588CB4193B5C15B79A470C9E00BEFCE1F25AFD57F72
+Line Count: 96
+--- BEGIN CONTENT ---
+#!/bin/bash
+# Deployment script for Stun application
+# Builds and deploys both backend and frontend to Cloud Run
+
+set -e
+
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m'
+
+log_info() {
+    echo -e "${GREEN}[INFO]${NC} $1"
+}
+
+log_warn() {
+    echo -e "${YELLOW}[WARN]${NC} $1"
+}
+
+log_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+# Get environment
+if [ -z "$1" ]; then
+    read -p "Enter environment (dev/prod): " ENV
+else
+    ENV=$1
+fi
+
+if [ "$ENV" != "dev" ] && [ "$ENV" != "prod" ]; then
+    log_error "Invalid environment. Must be 'dev' or 'prod'"
+    exit 1
+fi
+
+log_info "Deploying to $ENV environment..."
+
+# Get project ID
+PROJECT_ID=$(gcloud config get-value project)
+if [ -z "$PROJECT_ID" ]; then
+    log_error "No project set. Run: gcloud config set project PROJECT_ID"
+    exit 1
+fi
+
+log_info "Using project: $PROJECT_ID"
+
+# Get registry URL from Terraform
+cd "environments/$ENV"
+REGISTRY_URL=$(terraform output -raw artifact_registry_url 2>/dev/null)
+
+if [ -z "$REGISTRY_URL" ]; then
+    log_error "Could not get registry URL. Has infrastructure been deployed?"
+    exit 1
+fi
+
+log_info "Registry URL: $REGISTRY_URL"
+
+# Build and push backend
+log_info "Building backend image..."
+cd ../../../backend
+gcloud builds submit --tag "$REGISTRY_URL/stun-backend:latest"
+
+# Build and push frontend
+log_info "Building frontend image..."
+cd ../web
+gcloud builds submit --tag "$REGISTRY_URL/stun-frontend:latest"
+
+# Update Terraform variables
+log_info "Updating Cloud Run services..."
+cd ../infra/environments/$ENV
+
+# Update terraform.tfvars
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    sed -i '' "s|backend_image.*|backend_image  = \"$REGISTRY_URL/stun-backend:latest\"|" terraform.tfvars
+    sed -i '' "s|frontend_image.*|frontend_image = \"$REGISTRY_URL/stun-frontend:latest\"|" terraform.tfvars
+else
+    sed -i "s|backend_image.*|backend_image  = \"$REGISTRY_URL/stun-backend:latest\"|" terraform.tfvars
+    sed -i "s|frontend_image.*|frontend_image = \"$REGISTRY_URL/stun-frontend:latest\"|" terraform.tfvars
+fi
+
+# Apply Terraform changes
+terraform apply -auto-approve
+
+# Get service URLs
+BACKEND_URL=$(terraform output -raw backend_url)
+FRONTEND_URL=$(terraform output -raw frontend_url)
+
+log_info "Deployment complete!"
+echo ""
+log_info "Service URLs:"
+echo "  Backend:  $BACKEND_URL"
+echo "  Frontend: $FRONTEND_URL"
+echo ""
+log_info "Test backend: curl $BACKEND_URL/health"
+log_info "Open frontend: open $FRONTEND_URL"
+--- END CONTENT ---
+
+FILE: infra/scripts/setup.sh
+Full Path: C:\Users\Ayush\Downloads\Hacks\stun\infra\scripts\setup.sh
+Size (bytes): 4039
+Created: 2026-03-08 21:46:15
+Last Modified: 2026-03-08 21:46:15
+Last Accessed: 2026-03-15 13:02:56
+Read Only: False
+Attributes: Archive
+SHA256: EC72F57965B1B4169B797CCC4F4BC2BA4D64839B193FA54642BBB32A5A39B2CD
+Line Count: 145
+--- BEGIN CONTENT ---
+#!/bin/bash
+# Stun Infrastructure Setup Script
+# This script automates the initial setup of Google Cloud infrastructure
+
+set -e
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+# Helper functions
+log_info() {
+    echo -e "${GREEN}[INFO]${NC} $1"
+}
+
+log_warn() {
+    echo -e "${YELLOW}[WARN]${NC} $1"
+}
+
+log_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+# Check if command exists
+command_exists() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+# Main setup
+main() {
+    log_info "Starting Stun infrastructure setup..."
+    
+    # Check prerequisites
+    log_info "Checking prerequisites..."
+    
+    if ! command_exists gcloud; then
+        log_error "gcloud CLI not found. Please install: https://cloud.google.com/sdk/docs/install"
+        exit 1
+    fi
+    
+    if ! command_exists terraform; then
+        log_error "Terraform not found. Please install: https://www.terraform.io/downloads"
+        exit 1
+    fi
+    
+    log_info "Prerequisites check passed!"
+    
+    # Get project ID
+    read -p "Enter your Google Cloud Project ID: " PROJECT_ID
+    
+    if [ -z "$PROJECT_ID" ]; then
+        log_error "Project ID cannot be empty"
+        exit 1
+    fi
+    
+    # Set project
+    log_info "Setting project to $PROJECT_ID..."
+    gcloud config set project "$PROJECT_ID"
+    
+    # Enable APIs
+    log_info "Enabling required APIs (this may take a few minutes)..."
+    gcloud services enable \
+        run.googleapis.com \
+        artifactregistry.googleapis.com \
+        cloudbuild.googleapis.com \
+        firestore.googleapis.com \
+        aiplatform.googleapis.com \
+        secretmanager.googleapis.com \
+        iam.googleapis.com \
+        cloudresourcemanager.googleapis.com
+    
+    log_info "APIs enabled successfully!"
+    
+    # Create Firestore database
+    log_info "Creating Firestore database..."
+    if gcloud firestore databases describe --database="(default)" >/dev/null 2>&1; then
+        log_warn "Firestore database already exists, skipping..."
+    else
+        gcloud firestore databases create \
+            --location=us-central1 \
+            --type=firestore-native
+        log_info "Firestore database created!"
+    fi
+    
+    # Choose environment
+    echo ""
+    log_info "Choose environment to set up:"
+    echo "1) Development"
+    echo "2) Production"
+    read -p "Enter choice (1 or 2): " ENV_CHOICE
+    
+    case $ENV_CHOICE in
+        1)
+            ENV="dev"
+            ;;
+        2)
+            ENV="prod"
+            ;;
+        *)
+            log_error "Invalid choice"
+            exit 1
+            ;;
+    esac
+    
+    # Navigate to environment directory
+    cd "environments/$ENV"
+    
+    # Create terraform.tfvars if it doesn't exist
+    if [ ! -f terraform.tfvars ]; then
+        log_info "Creating terraform.tfvars from example..."
+        cp terraform.tfvars.example terraform.tfvars
+        
+        # Update project_id in terraform.tfvars
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            sed -i '' "s/your-project-id/$PROJECT_ID/g" terraform.tfvars
+        else
+            sed -i "s/your-project-id/$PROJECT_ID/g" terraform.tfvars
+        fi
+        
+        log_info "terraform.tfvars created. Please review and update if needed."
+    else
+        log_warn "terraform.tfvars already exists, skipping..."
+    fi
+    
+    # Initialize Terraform
+    log_info "Initializing Terraform..."
+    terraform init
+    
+    log_info "Setup complete!"
+    echo ""
+    log_info "Next steps:"
+    echo "1. Review and update terraform.tfvars if needed"
+    echo "2. Run 'terraform plan' to review changes"
+    echo "3. Run 'terraform apply' to create infrastructure"
+    echo "4. Add secrets to Secret Manager (see DEPLOYMENT_GUIDE.md)"
+    echo "5. Build and push container images"
+    echo ""
+    log_info "For detailed instructions, see: infra/DEPLOYMENT_GUIDE.md"
+}
+
+# Run main function
+main
+--- END CONTENT ---
+
+FILE: infra/vars.tf
+Full Path: C:\Users\Ayush\Downloads\Hacks\stun\infra\vars.tf
+Size (bytes): 724
+Created: 2026-03-08 20:07:56
+Last Modified: 2026-03-08 21:46:15
+Last Accessed: 2026-03-15 13:02:56
+Read Only: False
+Attributes: Archive
+SHA256: 58AD183B5F2B50291911A0F0C2EBB4992CEE4EFC6CB659AAA8DF2BEF4318E717
+Line Count: 29
+--- BEGIN CONTENT ---
+# Global variable definitions
+# These are used across all modules and environments
+
+variable "project_id" {
+  description = "Google Cloud Project ID"
+  type        = string
+}
+
+variable "region" {
+  description = "Google Cloud region for resources"
+  type        = string
+  default     = "us-central1"
+}
+
+variable "environment" {
+  description = "Environment name (dev, staging, prod)"
+  type        = string
+  validation {
+    condition     = contains(["dev", "staging", "prod"], var.environment)
+    error_message = "Environment must be dev, staging, or prod."
+  }
+}
+
+variable "labels" {
+  description = "Common labels to apply to all resources"
+  type        = map(string)
+  default     = {}
+}
+--- END CONTENT ---
+
+FILE: infra/versions.tf
+Full Path: C:\Users\Ayush\Downloads\Hacks\stun\infra\versions.tf
+Size (bytes): 463
+Created: 2026-03-08 20:18:19
+Last Modified: 2026-03-08 21:46:15
+Last Accessed: 2026-03-15 13:02:56
+Read Only: False
+Attributes: Archive
+SHA256: 5F5DB9EAB5949B463F930CFE989B47F2576F4C7ABCCE3C15EBCDE112BE58138D
+Line Count: 22
+--- BEGIN CONTENT ---
+terraform {
+  required_version = ">= 1.5.0"
+
+  required_providers {
+    google = {
+      source  = "hashicorp/google"
+      version = "~> 5.0"
+    }
+    google-beta = {
+      source  = "hashicorp/google-beta"
+      version = "~> 5.0"
+    }
+  }
+
+  # Optional: Configure remote state backend
+  # Uncomment and configure for team collaboration
+  # backend "gcs" {
+  #   bucket = "your-terraform-state-bucket"
+  #   prefix = "stun/state"
+  # }
+}
+--- END CONTENT ---
+

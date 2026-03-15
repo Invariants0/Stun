@@ -144,41 +144,42 @@ export function FloatingCommandBar({ boardId }: Props) {
   );
 
   return (
-    <div
-      role="search"
-      aria-label="STUN command bar"
-      onClick={handleBarClick}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        position: "fixed",
-        bottom: 24,
-        left: "50%",
-        transform: "translateX(-50%)",
-        zIndex: 1002,
-        // pill container
-        display: "flex",
-        alignItems: "center",
-        gap: 0,
-        height: 44,
-        minWidth: 420,
-        maxWidth: 560,
-        background: hovered
-          ? "rgba(255,255,255,1)"
-          : "rgba(255,255,255,0.92)",
-        border: `1px solid ${isCommandPanelOpen ? "rgba(15,23,42,0.16)" : "rgba(15,23,42,0.09)"}`,
-        borderRadius: 100,
-        boxShadow: hovered
-          ? "0 6px 24px rgba(15,23,42,0.12), 0 1px 4px rgba(15,23,42,0.06)"
-          : "0 2px 12px rgba(15,23,42,0.07), 0 1px 3px rgba(15,23,42,0.04)",
-        backdropFilter: "blur(16px)",
-        cursor: "text",
-        transition:
-          "box-shadow 0.15s ease, border-color 0.15s ease, background 0.12s ease",
-        userSelect: "none",
-        padding: "0 8px 0 4px",
-      }}
-    >
+    <>
+      <div
+        role="search"
+        aria-label="STUN command bar"
+        onClick={handleBarClick}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        style={{
+          position: "fixed",
+          bottom: 24,
+          left: "50%",
+          transform: "translateX(-50%)",
+          zIndex: 1002,
+          // pill container
+          display: "flex",
+          alignItems: "center",
+          gap: 0,
+          height: 44,
+          minWidth: 420,
+          maxWidth: 560,
+          background: hovered
+            ? "rgba(255,255,255,1)"
+            : "rgba(255,255,255,0.92)",
+          border: `1px solid ${isCommandPanelOpen ? "rgba(15,23,42,0.16)" : "rgba(15,23,42,0.09)"}`,
+          borderRadius: 100,
+          boxShadow: hovered
+            ? "0 6px 24px rgba(15,23,42,0.12), 0 1px 4px rgba(15,23,42,0.06)"
+            : "0 2px 12px rgba(15,23,42,0.07), 0 1px 3px rgba(15,23,42,0.04)",
+          backdropFilter: "blur(16px)",
+          cursor: "text",
+          transition:
+            "box-shadow 0.15s ease, border-color 0.15s ease, background 0.12s ease",
+          userSelect: "none",
+          padding: "0 8px 0 4px",
+        }}
+      >
       {/* ── Left: + button ── */}
       <button
         type="button"
@@ -210,33 +211,56 @@ export function FloatingCommandBar({ boardId }: Props) {
         <PlusIcon />
       </button>
 
-      {/* ── Center: text input ── */}
-      <input
-        ref={inputRef}
-        type="text"
-        value={inputValue}
-        onChange={(e) => setInputValue(e.target.value)}
-        onFocus={handleInputFocus}
-        onKeyDown={handleKeyDown}
-        onClick={(e) => e.stopPropagation()}
-        placeholder={listening ? "Listening…" : "Message STUN"}
-        aria-label="Command input"
-        style={{
-          flex: 1,
-          height: "100%",
-          border: "none",
-          outline: "none",
-          background: "transparent",
-          fontSize: "0.8125rem",
-          color: "#0f172a",
-          fontFamily: "'Space Grotesk', Inter, sans-serif",
-          fontWeight: 450,
-          letterSpacing: "-0.01em",
-          caretColor: "#2563eb",
-          cursor: "text",
-          padding: "0 4px",
-        }}
-      />
+      {/* ── Center: text input or processing message ── */}
+      {isPlanning ? (
+        <div
+          style={{
+            flex: 1,
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            fontSize: "0.8125rem",
+            color: "#64748b",
+            fontFamily: "'Space Grotesk', Inter, sans-serif",
+            fontWeight: 450,
+            letterSpacing: "-0.01em",
+            padding: "0 4px",
+            gap: "4px",
+          }}
+        >
+          <span>Generating</span>
+          <span style={{ animation: "dotBlink1 1.4s ease-in-out infinite" }}>.</span>
+          <span style={{ animation: "dotBlink2 1.4s ease-in-out infinite" }}>.</span>
+          <span style={{ animation: "dotBlink3 1.4s ease-in-out infinite" }}>.</span>
+        </div>
+      ) : (
+        <input
+          ref={inputRef}
+          type="text"
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onFocus={handleInputFocus}
+          onKeyDown={handleKeyDown}
+          onClick={(e) => e.stopPropagation()}
+          placeholder={listening ? "Listening…" : "Message STUN"}
+          aria-label="Command input"
+          style={{
+            flex: 1,
+            height: "100%",
+            border: "none",
+            outline: "none",
+            background: "transparent",
+            fontSize: "0.8125rem",
+            color: "#0f172a",
+            fontFamily: "'Space Grotesk', Inter, sans-serif",
+            fontWeight: 450,
+            letterSpacing: "-0.01em",
+            caretColor: "#2563eb",
+            cursor: "text",
+            padding: "0 4px",
+          }}
+        />
+      )}
 
       {/* ── Right section ── */}
       <div
@@ -356,5 +380,26 @@ export function FloatingCommandBar({ boardId }: Props) {
         </button>
       </div>
     </div>
-  );
-}
+      <style>{`
+      @keyframes dotBlink1 {
+        0%, 10%, 100% { opacity: 0.3; }
+        50% { opacity: 1; }
+      }
+      @keyframes dotBlink2 {
+        0%, 10%, 100% { opacity: 0.3; }
+        33% { opacity: 0.3; }
+        60% { opacity: 1; }
+      }
+      @keyframes dotBlink3 {
+        0%, 10%, 100% { opacity: 0.3; }
+        66% { opacity: 0.3; }
+        80% { opacity: 1; }
+      }
+      @keyframes micPulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.6; }
+        100% { opacity: 1; }
+      }
+    `}</style>
+  </>
+);}

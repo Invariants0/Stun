@@ -23,7 +23,6 @@ interface SearchBarProps {
   className?: string;
 }
 
-// Node type filter options shown as chips
 const TYPE_FILTERS: Array<{ label: string; value: string }> = [
   { label: "All", value: "" },
   { label: "Text", value: "text" },
@@ -31,6 +30,28 @@ const TYPE_FILTERS: Array<{ label: string; value: string }> = [
   { label: "Media", value: "media" },
   { label: "Diagram", value: "excalidraw" },
 ];
+
+// Helper: Highlight matching text in preview
+const highlightText = (text: string, query: string) => {
+  if (!query.trim()) return text;
+  
+  const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi");
+  const parts = text.split(regex);
+  
+  return (
+    <>
+      {parts.map((part, i) =>
+        regex.test(part) ? (
+          <mark key={i} style={{ background: "#fef3c7", color: "#92400e", fontWeight: 600, padding: "0 2px", borderRadius: 2 }}>
+            {part}
+          </mark>
+        ) : (
+          <span key={i}>{part}</span>
+        )
+      )}
+    </>
+  );
+};
 
 // ============================================================================
 // SearchBar
@@ -298,11 +319,11 @@ export function SearchBar({ nodes, search, className = "" }: SearchBarProps) {
           {/* Body */}
           {isSearching && !hasResults ? (
             <div style={{ padding: "20px 16px", textAlign: "center", color: "#94a3b8", fontSize: "0.8rem" }}>
-              Searching…
+              🔍 Searching…
             </div>
           ) : error ? (
             <div style={{ padding: "16px", color: "#ef4444", fontSize: "0.8rem" }}>
-              {error}
+              ⚠️ {error}
             </div>
           ) : hasResults ? (
             <ul style={{ listStyle: "none", margin: 0, padding: "6px 0", maxHeight: 320, overflowY: "auto" }}>
@@ -357,7 +378,7 @@ export function SearchBar({ nodes, search, className = "" }: SearchBarProps) {
                     </span>
 
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      {/* Preview text */}
+                      {/* Preview text with highlighted matches */}
                       <p
                         style={{
                           margin: 0,
@@ -371,7 +392,7 @@ export function SearchBar({ nodes, search, className = "" }: SearchBarProps) {
                           WebkitBoxOrient: "vertical",
                         }}
                       >
-                        {result.preview || "(no preview)"}
+                        {highlightText(result.preview || "(no preview)", query)}
                       </p>
                     </div>
 
@@ -393,7 +414,10 @@ export function SearchBar({ nodes, search, className = "" }: SearchBarProps) {
             </ul>
           ) : (
             <div style={{ padding: "20px 16px", textAlign: "center", color: "#94a3b8", fontSize: "0.8rem" }}>
-              No results found
+              <div>No matches found</div>
+              <div style={{ fontSize: "0.7rem", marginTop: "4px", color: "#cbd5e1" }}>
+                Try searching for node labels or content
+              </div>
             </div>
           )}
 

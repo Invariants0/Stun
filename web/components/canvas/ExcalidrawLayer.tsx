@@ -42,6 +42,22 @@ export default function ExcalidrawLayer({
   onApiReady,
   className = "",
 }: ExcalidrawLayerProps) {
+  const supportsCanvasPixelRead = useMemo(() => {
+    // Some browsers/privacy modes block getImageData(), which causes Excalidraw's
+    // image resize pipeline (pica) to throw at runtime.
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = 1;
+      canvas.height = 1;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return false;
+      ctx.getImageData(0, 0, 1, 1);
+      return true;
+    } catch {
+      return false;
+    }
+  }, []);
+
   const initialData = useMemo(
     () => ({
       elements: sanitizeExcalidrawElements(initialElements),
@@ -115,6 +131,9 @@ export default function ExcalidrawLayer({
             clearCanvas: true,
             loadScene: true,
             saveToActiveFile: true,
+          },
+          tools: {
+            image: supportsCanvasPixelRead,
           },
         }}
         // allow extremely small/large zoom levels; cameraSync will handle

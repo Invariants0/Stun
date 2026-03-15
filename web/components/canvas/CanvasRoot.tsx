@@ -23,7 +23,7 @@ import TLDrawWorkspace from "./TLDrawWorkspace";
 import ExcalidrawLayer from "./ExcalidrawLayer";
 import ReactFlowGraphLayer from "./ReactFlowGraphLayer";
 import { ShareDialog } from "@/components/ui/ShareDialog";
-import { MediaUploader } from "@/components/ui/MediaUploader";
+// import { MediaUploader } from "@/components/ui/MediaUploader";
 import { PresenceIndicators } from "@/components/ui/PresenceIndicators";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { useBoard } from "@/hooks/useBoard";
@@ -54,7 +54,7 @@ type Props = { boardId: string };
 export default function CanvasRoot({ boardId }: Props) {
   const { activeUsers, isOnline } = usePresence(boardId);
   const [showShareDialog, setShowShareDialog] = useState(false);
-  const [showMediaUploader, setShowMediaUploader] = useState(false);
+  // const [showMediaUploader, setShowMediaUploader] = useState(false);
 
   const { uploadFiles } = useMediaUpload();
 
@@ -117,30 +117,80 @@ export default function CanvasRoot({ boardId }: Props) {
   // ============================================================================
 
   const handleNavigateToNode = useCallback(
-    (_nodeId: string, position: { x: number; y: number }) => {
+    (nodeId: string, position: { x: number; y: number }) => {
       if (reactFlowRef.current) {
-        reactFlowRef.current.setCenter(position.x, position.y, { zoom: 1.2, duration: 500 });
+        // Zoom to the node location
+        reactFlowRef.current.setCenter(position.x, position.y, { zoom: 1.5, duration: 400 });
+      }
+      
+      // Select and highlight the node in React Flow
+      setNodes((prev) =>
+        prev.map((n) =>
+          n.id === nodeId
+            ? { ...n, selected: true, data: { ...n.data, _highlighted: true } }
+            : { ...n, selected: false, data: { ...n.data, _highlighted: false } },
+        ),
+      );
+      
+      // If this is a mapped Excalidraw element, also highlight it
+      const node = nodes.find((n) => n.id === nodeId);
+      if (node?.data?.originalElementId) {
+        const elementId = node.data.originalElementId as string;
+        onExcalidrawElementsChange(
+          excalidrawElements.map((el) =>
+            el.id === elementId
+              ? { ...el, strokeColor: "#fbbf24", strokeWidth: 3, opacity: 1 }
+              : el
+          )
+        );
       }
     },
-    [],
+    [nodes, setNodes, excalidrawElements, onExcalidrawElementsChange],
   );
 
   const handleHighlightNode = useCallback(
     (nodeId: string) => {
+      // Select and highlight the node in React Flow
       setNodes((prev) =>
         prev.map((n) =>
           n.id === nodeId
-            ? { ...n, data: { ...n.data, _highlighted: true } }
-            : { ...n, data: { ...n.data, _highlighted: false } },
+            ? { ...n, selected: true, data: { ...n.data, _highlighted: true } }
+            : { ...n, selected: false, data: { ...n.data, _highlighted: false } },
         ),
       );
+      
+      // If this is a mapped Excalidraw element, also highlight it
+      const node = nodes.find((n) => n.id === nodeId);
+      if (node?.data?.originalElementId) {
+        const elementId = node.data.originalElementId as string;
+        onExcalidrawElementsChange(
+          excalidrawElements.map((el) =>
+            el.id === elementId
+              ? { ...el, strokeColor: "#fbbf24", strokeWidth: 3, opacity: 1 }
+              : el
+          )
+        );
+      }
+      
+      // Clear highlight after 2.5 seconds
       setTimeout(() => {
         setNodes((prev) =>
-          prev.map((n) => ({ ...n, data: { ...n.data, _highlighted: false } })),
+          prev.map((n) => ({ ...n, selected: false, data: { ...n.data, _highlighted: false } })),
         );
-      }, 2000);
+        // Reset excalidraw element highlight
+        if (node?.data?.originalElementId) {
+          const elementId = node.data.originalElementId as string;
+          onExcalidrawElementsChange(
+            excalidrawElements.map((el) =>
+              el.id === elementId
+                ? { ...el, strokeColor: el.strokeColor, strokeWidth: 1, opacity: 0.6 }
+                : el
+            )
+          );
+        }
+      }, 2500);
     },
-    [setNodes],
+    [nodes, setNodes, excalidrawElements, onExcalidrawElementsChange],
   );
 
   const search = useSearch({
@@ -547,28 +597,6 @@ export default function CanvasRoot({ boardId }: Props) {
         {/* Semantic Search */}
         <SearchBar nodes={nodes} search={search} />
 
-        {/* Media Upload Button */}
-        <button 
-          type="button" 
-          className="canvas-topbar__btn"
-          onClick={() => setShowMediaUploader(true)}
-          title="Add media files, images, or URLs"
-        >
-          <span className="canvas-topbar__icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" role="presentation">
-              <path
-                d="M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zM8.5 13.5l2.5 3 3.5-4.5 4.5 6H5l3.5-4.5z"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.6"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </span>
-          Media
-        </button>
-
         <button 
           type="button" 
           className="canvas-topbar__btn"
@@ -601,14 +629,14 @@ export default function CanvasRoot({ boardId }: Props) {
         }}
       />
 
-      {/* Media Uploader */}
-      {showMediaUploader && (
+      {/* Media Uploader - Temporarily disabled */}
+      {/* {showMediaUploader && (
         <MediaUploader
           onMediaUploaded={handleMediaUploaded}
           onClose={() => setShowMediaUploader(false)}
           maxFiles={10}
         />
-      )}
+      )} */}
 
       {/* Drag & Drop Overlay */}
       {isDragOver && (

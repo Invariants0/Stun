@@ -1,0 +1,92 @@
+# Docker Build Context Exclusions - Frontend (Next.js)
+# This file optimizes Docker builds by excluding unnecessary files
+
+# Version Control
+.git
+.gitignore
+.github
+.gitlab-ci.yml
+.travis.yml
+
+# IDE & Editor
+.vscode
+.idea
+.editorconfig
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+.env.local
+.env.*.local
+
+# Dependencies & Build
+node_modules
+npm-debug.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+pnpm-lock.yaml
+
+# Next.js & Build artifacts
+.next
+out
+build
+dist
+
+# Testing & Coverage
+tests
+test
+__tests__
+*.test.js
+*.test.tsx
+*.spec.js
+*.spec.tsx
+coverage
+.nyc_output
+jest.config.js
+
+# Configuration
+.env
+.env.example
+.env.local
+.env.test
+.babelrc
+.prettierrc
+.eslintrc*
+tsconfig.build.json
+next.config.backup.js
+
+# Development
+docker-compose.yml
+docker-compose*.yml
+Dockerfile
+.dockerignore
+README.md
+CHANGELOG.md
+LICENSE
+.husky
+
+# Firebase
+.firebaserc
+firebase.json
+firebase-debug.log
+
+# Logs
+logs
+*.log
+
+# Temporary files
+tmp
+temp
+.cache
+
+# Documentation
+docs
+.docs
+*.md

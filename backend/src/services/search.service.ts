@@ -1,11 +1,10 @@
 /**
- * Semantic Search Service
+ * Text Search Service
  *
- * Generates embeddings for canvas nodes and performs cosine-similarity
- * search using Google's text-embedding-004 model.
+ * Simple text-based search across canvas nodes.
+ * Searches node fields for matching text and returns results ranked by relevance.
  */
 
-import { getGenAI } from "../config/genai";
 import { logger } from "../config/logger";
 
 // ============================================================================
@@ -40,20 +39,19 @@ export interface SearchFilters {
 // Implementation
 // ============================================================================
 
-const EMBEDDING_MODEL = "text-embedding-004";
-
-/** Fields examined when building a node's text representation, in priority order. */
 const TEXT_FIELDS = [
   "label", "content", "text", "title", "summary",
   "description", "alt", "transcript", "caption", "name",
+  "value", "message", "body", "details", "note",
 ];
 
 class SearchService {
-  /** Build a plain-text description of a node for embedding. */
+  /** Build a plain-text description of a node for searching. */
   private extractText(node: SearchNode): string {
     const data = node.data ?? {};
     const parts: string[] = [];
 
+    // Extract from known text fields
     for (const key of TEXT_FIELDS) {
       const val = data[key];
       if (typeof val === "string" && val.trim()) {
@@ -61,47 +59,48 @@ class SearchService {
       }
     }
 
-    // Include node type as lightweight semantic signal
+    // If no text found, search all string fields
+    if (parts.length === 0) {
+      for (const [key, val] of Object.entries(data)) {
+        if (typeof val === "string" && val.trim() && val.length > 1) {
+          parts.push(val.trim());
+        }
+      }
+    }
+
+    // Include node type as text signal
     if (node.type && node.type !== "default") {
       parts.push(`[${node.type}]`);
     }
 
-    return parts.join(" ").slice(0, 1500);
+    return parts.join(" ").slice(0, 1500) || `node-${node.id}`;
   }
 
   /**
-   * Embed an array of texts in a single batched API call.
-   * Returns a parallel array of embedding vectors.
+   * Calculate relevance score based on text matching.
+   * Returns a score between 0 and 1.
    */
-  private async batchEmbed(texts: string[]): Promise<number[][]> {
-    if (texts.length === 0) return [];
+  private calculateScore(nodeText: string, query: string): number {
+    const queryLower = query.toLowerCase();
+    const textLower = nodeText.toLowerCase();
 
-    const genai = getGenAI();
-    const response = await genai.models.embedContent({
-      model: EMBEDDING_MODEL,
-      contents: texts,
-    });
+    // Exact match (anywhere in text)
+    if (textLower === queryLower) return 1.0;
 
-    return (response.embeddings ?? []).map((e) => e.values ?? []);
-  }
+    // Word boundary match (word starts with query)
+    const words = textLower.split(/\s+/);
+    if (words.some((w) => w.startsWith(queryLower))) return 0.8;
 
-  /** Cosine similarity between two equal-length vectors. */
-  private cosine(a: number[], b: number[]): number {
-    if (a.length === 0 || a.length !== b.length) return 0;
-    let dot = 0, normA = 0, normB = 0;
-    for (let i = 0; i < a.length; i++) {
-      dot   += a[i] * b[i];
-      normA += a[i] * a[i];
-      normB += b[i] * b[i];
-    }
-    const denom = Math.sqrt(normA) * Math.sqrt(normB);
-    return denom === 0 ? 0 : dot / denom;
+    // Substring match
+    if (textLower.includes(queryLower)) return 0.5;
+
+    return 0;
   }
 
   /**
-   * Semantically search canvas nodes for the given query.
+   * Search canvas nodes for the given query using text matching.
    *
-   * @param query   - Natural language search query
+   * @param query   - Search query string
    * @param nodes   - All nodes currently on the canvas
    * @param filters - Optional type/minScore/topK filters
    */
@@ -110,48 +109,36 @@ class SearchService {
     nodes: SearchNode[],
     filters: SearchFilters = {},
   ): Promise<SearchResult[]> {
-    const { type, minScore = 0.25, topK = 10 } = filters;
+    const { type, minScore = 0.3, topK = 10 } = filters;
 
     // Apply type pre-filter
     const candidates = type ? nodes.filter((n) => n.type === type) : nodes;
-    if (candidates.length === 0) return [];
+    if (candidates.length === 0) {
+      logger.debug(`[search] No candidates after type filter: type=${type}`);
+      return [];
+    }
 
-    // Build text representations and discard empty nodes
-    const nodeTexts = candidates.map((n) => this.extractText(n));
-    const validIndices = nodeTexts.reduce<number[]>((acc, t, i) => {
-      if (t.trim()) acc.push(i);
-      return acc;
-    }, []);
+    // Search and score all nodes
+    const results: SearchResult[] = candidates
+      .map((node) => {
+        const text = this.extractText(node);
+        const score = this.calculateScore(text, query);
+        const preview = text.slice(0, 120);
 
-    if (validIndices.length === 0) return [];
-
-    const validTexts = validIndices.map((i) => nodeTexts[i]);
-
-    // Embed query + all valid node texts in one round-trip
-    logger.debug(`[search] Embedding query + ${validTexts.length} nodes`);
-    const allEmbeddings = await this.batchEmbed([query, ...validTexts]);
-
-    const [queryVec, ...nodeVecs] = allEmbeddings;
-
-    // Score nodes
-    const results: SearchResult[] = validIndices.map((nodeIndex, embIndex) => {
-      const node = candidates[nodeIndex];
-      const score = this.cosine(queryVec, nodeVecs[embIndex]);
-      const preview = nodeTexts[nodeIndex].slice(0, 120);
-
-      return {
-        nodeId: node.id,
-        score,
-        preview,
-        type: node.type ?? "default",
-        position: node.position,
-      };
-    });
-
-    return results
+        return {
+          nodeId: node.id,
+          score,
+          preview,
+          type: node.type ?? "default",
+          position: node.position,
+        };
+      })
       .filter((r) => r.score >= minScore)
       .sort((a, b) => b.score - a.score)
       .slice(0, topK);
+
+    logger.debug(`[search] Found ${results.length} results matching "${query}" with score >= ${minScore}`);
+    return results;
   }
 }
 

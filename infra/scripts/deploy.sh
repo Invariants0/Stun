@@ -4,6 +4,10 @@
 
 set -e
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+INFRA_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
@@ -45,7 +49,7 @@ fi
 log_info "Using project: $PROJECT_ID"
 
 # Get registry URL from Terraform
-cd "environments/$ENV"
+cd "$INFRA_DIR/environments/$ENV"
 REGISTRY_URL=$(terraform output -raw artifact_registry_url 2>/dev/null)
 
 if [ -z "$REGISTRY_URL" ]; then
@@ -57,29 +61,22 @@ log_info "Registry URL: $REGISTRY_URL"
 
 # Build and push backend
 log_info "Building backend image..."
-cd ../../../backend
+cd "$ROOT_DIR/backend"
 gcloud builds submit --tag "$REGISTRY_URL/stun-backend:latest"
 
 # Build and push frontend
 log_info "Building frontend image..."
-cd ../web
+cd "$ROOT_DIR/web"
 gcloud builds submit --tag "$REGISTRY_URL/stun-frontend:latest"
 
 # Update Terraform variables
 log_info "Updating Cloud Run services..."
-cd ../infra/environments/$ENV
-
-# Update terraform.tfvars
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    sed -i '' "s|backend_image.*|backend_image  = \"$REGISTRY_URL/stun-backend:latest\"|" terraform.tfvars
-    sed -i '' "s|frontend_image.*|frontend_image = \"$REGISTRY_URL/stun-frontend:latest\"|" terraform.tfvars
-else
-    sed -i "s|backend_image.*|backend_image  = \"$REGISTRY_URL/stun-backend:latest\"|" terraform.tfvars
-    sed -i "s|frontend_image.*|frontend_image = \"$REGISTRY_URL/stun-frontend:latest\"|" terraform.tfvars
-fi
+cd "$INFRA_DIR/environments/$ENV"
 
 # Apply Terraform changes
-terraform apply -auto-approve
+terraform apply -auto-approve \
+    -var="backend_image=$REGISTRY_URL/stun-backend:latest" \
+    -var="frontend_image=$REGISTRY_URL/stun-frontend:latest"
 
 # Get service URLs
 BACKEND_URL=$(terraform output -raw backend_url)
@@ -92,4 +89,4 @@ echo "  Backend:  $BACKEND_URL"
 echo "  Frontend: $FRONTEND_URL"
 echo ""
 log_info "Test backend: curl $BACKEND_URL/health"
-log_info "Open frontend: open $FRONTEND_URL"
+log_info "Open frontend: $FRONTEND_URL"

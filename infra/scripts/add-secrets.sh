@@ -18,7 +18,11 @@ log_warn() {
 }
 
 # Get environment
-read -p "Enter environment (dev/prod): " ENV
+if [ -z "$1" ]; then
+    read -p "Enter environment (dev/prod): " ENV
+else
+    ENV=$1
+fi
 
 if [ "$ENV" != "dev" ] && [ "$ENV" != "prod" ]; then
     echo "Invalid environment. Must be 'dev' or 'prod'"

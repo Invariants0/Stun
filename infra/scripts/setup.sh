@@ -4,6 +4,9 @@
 
 set -e
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+INFRA_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -58,6 +61,13 @@ main() {
     # Set project
     log_info "Setting project to $PROJECT_ID..."
     gcloud config set project "$PROJECT_ID"
+
+    # Ensure Application Default Credentials are available for Terraform
+    log_info "Checking Application Default Credentials (ADC) for Terraform..."
+    if ! gcloud auth application-default print-access-token >/dev/null 2>&1; then
+        log_warn "ADC not found. Running: gcloud auth application-default login"
+        gcloud auth application-default login
+    fi
     
     # Enable APIs
     log_info "Enabling required APIs (this may take a few minutes)..."
@@ -105,7 +115,7 @@ main() {
     esac
     
     # Navigate to environment directory
-    cd "environments/$ENV"
+    cd "$INFRA_DIR/environments/$ENV"
     
     # Create terraform.tfvars if it doesn't exist
     if [ ! -f terraform.tfvars ]; then
@@ -113,11 +123,8 @@ main() {
         cp terraform.tfvars.example terraform.tfvars
         
         # Update project_id in terraform.tfvars
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-            sed -i '' "s/your-project-id/$PROJECT_ID/g" terraform.tfvars
-        else
-            sed -i "s/your-project-id/$PROJECT_ID/g" terraform.tfvars
-        fi
+        sed -i.bak "s/your-project-id/$PROJECT_ID/g" terraform.tfvars
+        rm -f terraform.tfvars.bak
         
         log_info "terraform.tfvars created. Please review and update if needed."
     else
@@ -137,7 +144,7 @@ main() {
     echo "4. Add secrets to Secret Manager (see DEPLOYMENT_GUIDE.md)"
     echo "5. Build and push container images"
     echo ""
-    log_info "For detailed instructions, see: infra/DEPLOYMENT_GUIDE.md"
+    log_info "For detailed instructions, see: DEPLOY.md"
 }
 
 # Run main function

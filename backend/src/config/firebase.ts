@@ -17,7 +17,54 @@ export function initFirebase(): void {
   // (needed for token minting even in emulator mode)
   if (envVars.FIREBASE_SERVICE_ACCOUNT_KEY) {
     try {
-      const serviceAccount = JSON.parse(envVars.FIREBASE_SERVICE_ACCOUNT_KEY);
+      // Strip BOM from entire string (from Secret Manager)
+      let cleanKey = envVars.FIREBASE_SERVICE_ACCOUNT_KEY.replace(/^\uFEFF/, "");
+      
+      // Parse JSON
+      const serviceAccount = JSON.parse(cleanKey);
+      
+      // Clean private_key field: ensure proper PEM formatting
+      if (serviceAccount.private_key) {
+        // Remove any BOM characters
+        let pk = serviceAccount.private_key
+          .replace(/^\uFEFF/, "") // BOM at start
+          .replace(/\uFEFF$/g, "") // BOM at end
+          .trim();
+        
+        // Normalize newlines (handle literal and actual CRLFs)
+        pk = pk.replace(/\\r\\n/g, "\n");
+        pk = pk.replace(/\\n/g, "\n");
+        pk = pk.replace(/\\r/g, "\n");
+        pk = pk.replace(/\r\n/g, "\n");
+        pk = pk.replace(/\r/g, "\n");
+
+        // Remove any accidental surrounding quotes
+        if (pk.startsWith('"') && pk.endsWith('"')) {
+          pk = pk.slice(1, -1);
+        }
+
+        // Normalize whitespace, ensure there is exactly one newline between lines
+        pk = pk
+          .split("\n")
+          .map(line => line.trim())
+          .filter(line => line.length > 0)
+          .join("\n");
+
+        // Ensure PEM header/footer are on their own lines
+        pk = pk.replace(/-----BEGIN PRIVATE KEY-----\s*/, "-----BEGIN PRIVATE KEY-----\n");
+        pk = pk.replace(/\s*-----END PRIVATE KEY-----/, "\n-----END PRIVATE KEY-----");
+
+        // If there is any trailing garbage after the footer, drop it.
+        const begin = pk.indexOf('-----BEGIN PRIVATE KEY-----');
+        const end = pk.indexOf('-----END PRIVATE KEY-----');
+        if (begin !== -1 && end !== -1) {
+          const footerEnd = end + '-----END PRIVATE KEY-----'.length;
+          pk = pk.slice(begin, footerEnd).trim() + "\n";
+        }
+        
+        serviceAccount.private_key = pk;
+      }
+      
       initializeApp({
         credential: cert(serviceAccount),
         projectId: envVars.GCP_PROJECT_ID,

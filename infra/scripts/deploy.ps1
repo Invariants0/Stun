@@ -101,7 +101,10 @@ if ($Build -eq "both" -or $Build -eq "frontend") {
   Set-Location (Join-Path $rootDir "web")
 
   # Get backend service URL from terraform outputs (or use the deployed one)
-  $backendUrl = (Set-Location $envDir; terraform output -raw backend_url 2>$null).Trim()
+  $currentLoc = Get-Location
+  Set-Location $envDir
+  $backendUrl = (terraform output -raw backend_url 2>$null).Trim()
+  Set-Location $currentLoc
   if ([string]::IsNullOrWhiteSpace($backendUrl)) {
     Write-Warn "Could not read backend_url from Terraform, using localhost"
     $backendUrl = "http://localhost:8080"

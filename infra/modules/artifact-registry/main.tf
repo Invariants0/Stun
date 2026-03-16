@@ -15,17 +15,17 @@ resource "google_artifact_registry_repository" "container_repo" {
     action = "DELETE"
     condition {
       tag_state  = "UNTAGGED"
-      older_than = "${var.image_retention_days}d"
+      older_than = format("%ss", var.image_retention_days * 86400)
     }
   }
 }
 
 # IAM binding for Cloud Run to pull images
 resource "google_artifact_registry_repository_iam_member" "cloudrun_reader" {
-  for_each = toset(var.service_account_emails)
+  count = length(var.service_account_emails)
 
   location   = google_artifact_registry_repository.container_repo.location
   repository = google_artifact_registry_repository.container_repo.name
   role       = "roles/artifactregistry.reader"
-  member     = "serviceAccount:${each.value}"
+  member     = "serviceAccount:${var.service_account_emails[count.index]}"
 }

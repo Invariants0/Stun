@@ -15,6 +15,18 @@
 
 </p>
 
+## Built With
+
+- **Language:** TypeScript
+- **Frontend:** Next.js, React, Zustand
+- **Canvas:** TLDraw, Excalidraw, React Flow
+- **AI:** Google Gemini 2.5 Flash (GenAI SDK)
+- **Backend:** Node.js, Express, Firebase Admin
+- **Database:** Firestore
+- **Cloud:** Google Cloud Run, Secret Manager, Artifact Registry
+- **Infrastructure:** Terraform
+- **Voice:** Web Speech API
+
 ---
 
 ## 📑 Table of Contents

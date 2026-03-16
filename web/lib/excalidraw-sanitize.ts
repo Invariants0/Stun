@@ -66,7 +66,7 @@ export function sanitizeExcalidrawElements(
             dataURL: dataUrl,
           },
           url: dataUrl,
-        } as ExcalidrawElement;
+        } as any as ExcalidrawElement;
       }
       // if there is no file object (older boards) but we have url stored,
       // rebuild a minimal file so Excalidraw can render it.
@@ -80,7 +80,7 @@ export function sanitizeExcalidrawElements(
             dataURL: dataUrl,
           },
           url: dataUrl,
-        } as ExcalidrawElement;
+        } as any as ExcalidrawElement;
       }
     }
     return el;

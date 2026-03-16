@@ -33,9 +33,9 @@ export async function executeCanvasActions(
     console.log("[CANVAS ENGINE DETECTED]", state.engine);
 
     if (state.engine === "reactflow" && state.reactFlowInstance) {
-      const result = await state.reactFlowInstance.setCenter(x, y, { zoom, duration });
+      await state.reactFlowInstance.setCenter(x, y, { zoom, duration });
       cameraSyncService.updateFromReactFlow(state.reactFlowInstance.getViewport());
-      return result;
+      return true;
     }
 
     if (state.engine === "excalidraw" && state.excalidrawAPI) {

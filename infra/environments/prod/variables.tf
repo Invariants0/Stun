@@ -16,11 +16,16 @@ variable "firestore_location" {
 }
 
 variable "backend_image" {
-  description = "Backend container image URL"
+  description = "Backend container image URL (required - must be provided by deployment script)"
   type        = string
 }
 
 variable "frontend_image" {
-  description = "Frontend container image URL"
+  description = "Frontend container image URL (required - must be provided by deployment script)"
+  type        = string
+}
+
+variable "frontend_url" {
+  description = "Public frontend URL used by backend for CORS and auth redirects"
   type        = string
 }

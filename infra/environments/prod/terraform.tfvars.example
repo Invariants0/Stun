@@ -10,6 +10,9 @@ region = "us-central1"
 # Firestore database location (must match region)
 firestore_location = "us-central1"
 
+# Public frontend URL used by backend CORS and OAuth callback redirects
+frontend_url = "https://your-frontend-domain.example"
+
 # Container images (REQUIRED for production)
 backend_image  = "us-central1-docker.pkg.dev/YOUR_PROJECT_ID/stun-prod/stun-backend:v1.0.0"
 frontend_image = "us-central1-docker.pkg.dev/YOUR_PROJECT_ID/stun-prod/stun-frontend:v1.0.0"

@@ -22,23 +22,6 @@ resource "google_firestore_database" "database" {
   }
 }
 
-# Firestore index for boards collection (example)
-resource "google_firestore_index" "boards_index" {
-  project    = var.project_id
-  database   = google_firestore_database.database.name
-  collection = "boards"
-
-  fields {
-    field_path = "createdAt"
-    order      = "DESCENDING"
-  }
-
-  fields {
-    field_path = "__name__"
-    order      = "DESCENDING"
-  }
-}
-
 # Firestore index for presence collection
 resource "google_firestore_index" "presence_index" {
   project    = var.project_id

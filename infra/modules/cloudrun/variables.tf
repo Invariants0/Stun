@@ -104,3 +104,41 @@ variable "vpc_egress" {
   type        = string
   default     = "private-ranges-only"
 }
+
+variable "health_check_path" {
+  description = "HTTP path for startup and liveness probes"
+  type        = string
+  default     = "/health"
+}
+
+variable "startup_probe" {
+  description = "Startup probe configuration"
+  type = object({
+    initial_delay_seconds = number
+    timeout_seconds       = number
+    period_seconds        = number
+    failure_threshold     = number
+  })
+  default = {
+    initial_delay_seconds = 60
+    timeout_seconds       = 10
+    period_seconds        = 5
+    failure_threshold     = 10
+  }
+}
+
+variable "liveness_probe" {
+  description = "Liveness probe configuration"
+  type = object({
+    initial_delay_seconds = number
+    timeout_seconds       = number
+    period_seconds        = number
+    failure_threshold     = number
+  })
+  default = {
+    initial_delay_seconds = 15
+    timeout_seconds       = 5
+    period_seconds        = 10
+    failure_threshold     = 3
+  }
+}

@@ -1,9 +1,22 @@
 # Cloud Run service module
 
+locals {
+  ingress_map = {
+    all                                 = "INGRESS_TRAFFIC_ALL"
+    internal                            = "INGRESS_TRAFFIC_INTERNAL_ONLY"
+    internal-and-cloud-load-balancing   = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER"
+  }
+
+  vpc_egress_map = {
+    all-traffic         = "ALL_TRAFFIC"
+    private-ranges-only = "PRIVATE_RANGES_ONLY"
+  }
+}
+
 resource "google_cloud_run_v2_service" "service" {
   name     = var.service_name
   location = var.location
-  ingress  = var.ingress
+  ingress  = lookup(local.ingress_map, var.ingress, var.ingress)
 
   labels = var.labels
 
@@ -59,25 +72,25 @@ resource "google_cloud_run_v2_service" "service" {
       # Startup probe
       startup_probe {
         http_get {
-          path = "/health"
+          path = var.health_check_path
           port = var.port
         }
-        initial_delay_seconds = 0
-        timeout_seconds       = 1
-        period_seconds        = 3
-        failure_threshold     = 3
+        initial_delay_seconds = var.startup_probe.initial_delay_seconds
+        timeout_seconds       = var.startup_probe.timeout_seconds
+        period_seconds        = var.startup_probe.period_seconds
+        failure_threshold     = var.startup_probe.failure_threshold
       }
 
       # Liveness probe
       liveness_probe {
         http_get {
-          path = "/health"
+          path = var.health_check_path
           port = var.port
         }
-        initial_delay_seconds = 0
-        timeout_seconds       = 1
-        period_seconds        = 10
-        failure_threshold     = 3
+        initial_delay_seconds = var.liveness_probe.initial_delay_seconds
+        timeout_seconds       = var.liveness_probe.timeout_seconds
+        period_seconds        = var.liveness_probe.period_seconds
+        failure_threshold     = var.liveness_probe.failure_threshold
       }
     }
 
@@ -86,7 +99,7 @@ resource "google_cloud_run_v2_service" "service" {
       for_each = var.vpc_connector != null ? [1] : []
       content {
         connector = var.vpc_connector
-        egress    = var.vpc_egress
+        egress    = lookup(local.vpc_egress_map, var.vpc_egress, var.vpc_egress)
       }
     }
 
@@ -97,13 +110,6 @@ resource "google_cloud_run_v2_service" "service" {
   traffic {
     type    = "TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST"
     percent = 100
-  }
-
-  lifecycle {
-    ignore_changes = [
-      # Ignore changes to image tag to allow CI/CD updates
-      template[0].containers[0].image,
-    ]
   }
 }
 

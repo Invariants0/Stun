@@ -1,0 +1,86 @@
+# Cloud Build Ignore - Optimizes upload by excluding dependencies and build artifacts
+# Applies to all gcloud builds submit commands (backend, web, root)
+
+# Dependencies & node modules
+node_modules/
+*/node_modules/
+pnpm-lock.yaml
+yarn.lock
+bun.lockb
+
+# Build outputs
+dist/
+build/
+.next/
+.nuxt/
+out/
+*.tsbuildinfo
+
+# Environment files
+.env
+.env.local
+.env.development
+.env.production
+.env.*.local
+
+# Version control
+.git/
+.gitignore
+.github/
+.gitlab-ci.yml
+.gitattributes
+
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+*.sublime-project
+*.sublime-workspace
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Test & Coverage
+coverage/
+.nyc_output/
+jest.config.js
+*.test.ts
+*.spec.ts
+tests/
+test/
+
+# Terraform state
+terraform.tfstate
+terraform.tfstate.*
+*.tfvars
+**/.terraform/
+
+# OS & Temp
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+tmp/
+temp/
+*.tmp
+
+# Docker
+.dockerignore
+Dockerfile
+
+# Misc
+.eslintcache
+.turbo/
+.cache/
+uploads/
+dist/
+*.backup

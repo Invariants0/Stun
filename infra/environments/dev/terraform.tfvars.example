@@ -10,6 +10,9 @@ region = "us-central1"
 # Firestore database location (must match region)
 firestore_location = "us-central1"
 
+# Public frontend URL used by backend CORS and OAuth callback redirects
+frontend_url = "http://localhost:3000"
+
 # Container images (update after building)
 # Use placeholder images for initial deployment
 backend_image  = "us-docker.pkg.dev/cloudrun/container/hello"

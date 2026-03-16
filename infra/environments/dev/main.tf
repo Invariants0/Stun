@@ -118,13 +118,12 @@ module "backend" {
   ingress               = "all"
 
   environment_variables = {
-    PORT                = "8080"
     NODE_ENV            = "production"
     GCP_PROJECT_ID      = var.project_id
     GCP_REGION          = var.region
     BOARDS_COLLECTION   = "boards"
-    VERTEX_MODEL        = "gemini-2.0-flash-exp"
-    FRONTEND_URL        = module.frontend.service_url
+    VERTEX_MODEL        = "gemini-2.5-flash"
+    FRONTEND_URL        = var.frontend_url
   }
 
   secrets = {
@@ -176,6 +175,7 @@ module "frontend" {
 
   allow_unauthenticated = true
   ingress               = "all"
+  health_check_path     = "/"
 
   environment_variables = {
     NEXT_PUBLIC_API_BASE_URL        = module.backend.service_url

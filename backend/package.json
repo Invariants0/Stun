@@ -4,7 +4,7 @@
   "private": true,
   "main": "dist/index.js",
   "scripts": {
-    "dev": "tsx watch --clear-screen=false src/index.ts",
+    "dev": "node ./node_modules/tsx/dist/cli.mjs watch --clear-screen=false src/index.ts",
     "build": "bun build src/index.ts --outdir dist --target node",
     "start": "bun src/index.ts",
     "test": "bun test",
